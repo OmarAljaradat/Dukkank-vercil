@@ -199,8 +199,7 @@ export default function OrdersDashboardTab() {
     const [tgConfig, setTgConfig] = useState({ enabled: true, botToken: "", chatId: "", hasToken: false });
   const [tgSaving, setTgSaving] = useState(false);
   const [tgTesting, setTgTesting] = useState(false);
-  const [showTgModal, setShowTgModal] = useState(false);
-  const [showSupplierTemplateModal, setShowSupplierTemplateModal] = useState(false);
+  const [activePanel, setActivePanel] = useState(null); // null | "telegram" | "template"
   const [supplierTemplate, setSupplierTemplate] = useState(`السلام عليكم أخي {supplier_name} 👋
 طلب حساب جديد من متجر دُكانك 🎮:
 
@@ -473,7 +472,7 @@ export default function OrdersDashboardTab() {
         })}
       </div>
 
-            {/* ── Search and Reload Bar ──────────────────────────────────────────── */}
+                  {/* ── Search and Reload Bar ──────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Search Input */}
         <div className="relative flex-1">
@@ -492,25 +491,33 @@ export default function OrdersDashboardTab() {
           )}
         </div>
 
-        {/* Supplier Template Modal Button */}
+        {/* Supplier Template Toggle Button */}
         <button
           type="button"
-          onClick={() => setShowSupplierTemplateModal(true)}
+          onClick={() => setActivePanel((prev) => (prev === "template" ? null : "template"))}
           data-testid="open-supplier-template-btn"
-          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold shadow-sm transition-all shrink-0"
+          className={`flex items-center justify-center gap-2 px-4 h-11 rounded-2xl border text-xs font-bold shadow-sm transition-all shrink-0 cursor-pointer ${
+            activePanel === "template"
+              ? "bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-500/30"
+              : "bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+          }`}
         >
-          <MessageCircle className="w-4 h-4 text-emerald-600" />
+          <MessageCircle className="w-4 h-4" />
           <span>قالب رسالة المورد 📝</span>
         </button>
 
-        {/* Telegram Config Modal Button */}
+        {/* Telegram Config Toggle Button */}
         <button
           type="button"
-          onClick={() => setShowTgModal(true)}
+          onClick={() => setActivePanel((prev) => (prev === "telegram" ? null : "telegram"))}
           data-testid="open-tg-modal-btn"
-          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-sky-700 dark:text-sky-300 border border-sky-500/30 text-xs font-bold shadow-sm transition-all shrink-0"
+          className={`flex items-center justify-center gap-2 px-4 h-11 rounded-2xl border text-xs font-bold shadow-sm transition-all shrink-0 cursor-pointer ${
+            activePanel === "telegram"
+              ? "bg-sky-600 text-white border-sky-600 ring-2 ring-sky-500/30"
+              : "bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-sky-700 dark:text-sky-300 border-sky-500/30"
+          }`}
         >
-          <Bot className="w-4 h-4 text-sky-600" />
+          <Bot className="w-4 h-4" />
           <span>إعدادات التيليجرام 🤖</span>
         </button>
 
@@ -523,6 +530,215 @@ export default function OrdersDashboardTab() {
           تحديث البيانات
         </button>
       </div>
+
+      {/* ── Expandable Panel: Supplier Message Template ───────────────────── */}
+      {activePanel === "template" && (
+        <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 border border-emerald-500/40 rounded-3xl p-6 text-white shadow-2xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30">
+                📝
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">تخصيص قالب رسالة طلب الحساب للمورد (WhatsApp)</h3>
+                <p className="text-xs text-slate-400">
+                  هذا النص يُستخدم تلقائياً عند النقر على إرسال الطلب للمورد بالموقع وعبر أزرار التيليجرام.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePanel(null)}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Editor */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-emerald-200">
+                صيغة الرسالة (انقر على الكلمات الذكية بالأسفل لإضافتها تلقائياً):
+              </label>
+              <textarea
+                rows={7}
+                value={supplierTemplate}
+                onChange={(e) => setSupplierTemplate(e.target.value)}
+                dir="rtl"
+                className="w-full rounded-2xl border border-emerald-500/30 bg-black/40 p-3.5 text-xs font-mono text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 leading-relaxed shadow-inner"
+              />
+
+              {/* Variable Badges */}
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 block mb-1.5">اضغط لإدراج المتغير التلقائي:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { tag: "{supplier_name}", label: "اسم المورد" },
+                    { tag: "{game_name}", label: "اسم اللعبة" },
+                    { tag: "{platform}", label: "المنصة (PS5/PS4)" },
+                    { tag: "{order_number}", label: "رقم الطلب" },
+                    { tag: "{customer_name}", label: "اسم العميل" },
+                    { tag: "{paid}", label: "المبلغ" },
+                  ].map((t) => (
+                    <button
+                      key={t.tag}
+                      type="button"
+                      onClick={() => setSupplierTemplate((prev) => prev + " " + t.tag)}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/10 hover:bg-emerald-500/30 text-slate-200 hover:text-emerald-200 border border-white/10 transition-colors"
+                    >
+                      + {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Live WhatsApp Preview */}
+            <div className="flex flex-col">
+              <label className="block text-xs font-bold text-emerald-200 mb-1.5 flex items-center gap-1.5">
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400" /> معاينة الرسالة الحية كما ستصل للمورد:
+              </label>
+              <div className="flex-1 bg-black/60 border border-emerald-500/20 rounded-2xl p-4 text-xs font-mono text-emerald-100 whitespace-pre-wrap leading-relaxed shadow-inner overflow-y-auto max-h-56">
+                {supplierTemplate
+                  .replace(/\{supplier_name\}/g, "أبو خالد")
+                  .replace(/\{game_name\}/g, "Grand Theft Auto VI (GTA 6)")
+                  .replace(/\{platform\}/g, "PS5")
+                  .replace(/\{order_number\}/g, "ORD-9021")
+                  .replace(/\{customer_name\}/g, "عمر الجرادات")
+                  .replace(/\{paid\}/g, "$69.99")}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-white/10 flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                setSupplierTemplate(
+                  `السلام عليكم أخي {supplier_name} 👋\nطلب حساب جديد من متجر دُكانك 🎮:\n\n🏷️ اللعبة / المنتج: *{game_name}* ({platform})\n📦 رقم الطلب: *#{order_number}*\n\nيرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`
+                )
+              }
+              className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
+            >
+              استعادة الصيغة الافتراضية 🔄
+            </button>
+
+            <button
+              type="button"
+              disabled={savingTemplate}
+              onClick={async () => {
+                setSavingTemplate(true);
+                try {
+                  await apiUpdateSupplierTemplate(supplierTemplate);
+                  toast.success("تم حفظ وتحديث قالب رسالة المورد بنجاح 💾✅");
+                  setActivePanel(null);
+                } catch (e) {
+                  toast.error("فشل حفظ القالب: " + formatApiError(e));
+                } finally {
+                  setSavingTemplate(false);
+                }
+              }}
+              className="flex items-center gap-2 px-6 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
+            >
+              {savingTemplate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span>حفظ قالب رسالة المورد 💾</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Expandable Panel: Telegram Bot Configuration ─────────────────── */}
+      {activePanel === "telegram" && (
+        <div className="bg-gradient-to-br from-slate-900 via-sky-950 to-blue-950 border border-sky-500/40 rounded-3xl p-6 text-white shadow-2xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl border border-sky-500/30">
+                <Bot className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">إعدادات بوت التيليجرام للطلبات الفورية 🤖</h3>
+                <p className="text-xs text-sky-200/70">
+                  ضع هنا توكن البوت ومعرف الشات لاستلام إشعارات الطلبات على هاتفك.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePanel(null)}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form onSubmit={async (e) => {
+            await handleSaveTelegram(e);
+            setActivePanel(null);
+          }} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-sky-200 mb-1">
+                  1. توكن البوت (Bot Token من BotFather):
+                </label>
+                <input
+                  type="text"
+                  value={tgConfig.botToken}
+                  onChange={(e) => setTgConfig((prev) => ({ ...prev, botToken: e.target.value }))}
+                  placeholder={tgConfig.hasToken ? "التوكن محفوظ بالفعل (اتركه للإبقاء عليه)" : "مثال: 7123456789:AAHk..."}
+                  className="w-full h-11 px-3.5 rounded-xl border border-sky-500/30 bg-black/40 text-xs font-mono font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 dir-ltr"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sky-200 mb-1">
+                  2. معرف المحادثة (Chat ID من userinfobot أو القناة):
+                </label>
+                <input
+                  type="text"
+                  value={tgConfig.chatId}
+                  onChange={(e) => setTgConfig((prev) => ({ ...prev, chatId: e.target.value }))}
+                  placeholder="مثال: 123456789 أو -100123456789"
+                  className="w-full h-11 px-3.5 rounded-xl border border-sky-500/30 bg-black/40 text-xs font-mono font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 dir-ltr"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setTgConfig((prev) => ({ ...prev, enabled: !prev.enabled }))}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-colors ${
+                  tgConfig.enabled ? "bg-emerald-600 text-white" : "bg-white/20 text-slate-300"
+                }`}
+              >
+                {tgConfig.enabled ? "الإشعارات مفعّلة ✅" : "الإشعارات معطلة ❌"}
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={tgTesting}
+                  onClick={handleTestTelegram}
+                  className="flex items-center gap-1.5 px-4 h-10 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-colors disabled:opacity-50"
+                >
+                  {tgTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4" />}
+                  <span>فحص إشعار تجريبي 📲</span>
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={tgSaving}
+                  className="flex items-center gap-1.5 px-6 h-10 rounded-xl bg-sky-500 hover:bg-sky-600 text-slate-950 text-xs font-black shadow-lg shadow-sky-500/25 transition-all disabled:opacity-50"
+                >
+                  {tgSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>حفظ إعدادات التيليجرام 💾</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
 
 {/* ── Status Filter Tabs ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -665,7 +881,7 @@ export default function OrdersDashboardTab() {
                     onCancel={handleCancel}
                     onDelete={handleDelete}
                     openSupplierWhatsApp={openSupplierWhatsApp}
-            onOpenTemplate={() => setShowSupplierTemplateModal(true)}
+            onOpenTemplate={() => setActivePanel("template")}
                     openCustomerWhatsAppQR={openCustomerWhatsAppQR}
                     openCustomerInstagram={openCustomerInstagram}
                     onViewProfile={(phone) => setProfilePhone(phone)}
@@ -678,232 +894,6 @@ export default function OrdersDashboardTab() {
       )}
 
       
-      {/* ── Modal 1: Telegram Bot Configuration Modal ─────────────────── */}
-      {showTgModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in" onClick={() => setShowTgModal(false)}>
-          <div className="bg-gradient-to-br from-slate-900 via-sky-950 to-blue-950 border border-sky-500/30 rounded-3xl w-full max-w-xl shadow-2xl p-6 text-white relative" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl border border-sky-500/30">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-white">إعدادات بوت التيليجرام 🤖</h3>
-                  <p className="text-xs text-sky-200/70">ربط المتجر مع التيليجرام لاستلام إشعارات الطلبات الفورية</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowTgModal(false)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={async (e) => {
-              await handleSaveTelegram(e);
-              setShowTgModal(false);
-            }} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-sky-200 mb-1">
-                  1. توكن البوت (Bot Token من BotFather):
-                </label>
-                <input
-                  type="text"
-                  value={tgConfig.botToken}
-                  onChange={(e) => setTgConfig((prev) => ({ ...prev, botToken: e.target.value }))}
-                  placeholder={tgConfig.hasToken ? "التوكن محفوظ بالفعل (اتركه للإبقاء عليه)" : "مثال: 7123456789:AAHk..."}
-                  className="w-full h-11 px-3.5 rounded-xl border border-sky-500/30 bg-black/40 text-xs font-mono font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 dir-ltr"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-sky-200 mb-1">
-                  2. معرف المحادثة (Chat ID من userinfobot أو القناة):
-                </label>
-                <input
-                  type="text"
-                  value={tgConfig.chatId}
-                  onChange={(e) => setTgConfig((prev) => ({ ...prev, chatId: e.target.value }))}
-                  placeholder="مثال: 123456789 أو -100123456789"
-                  className="w-full h-11 px-3.5 rounded-xl border border-sky-500/30 bg-black/40 text-xs font-mono font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 dir-ltr"
-                />
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => setTgConfig((prev) => ({ ...prev, enabled: !prev.enabled }))}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${
-                    tgConfig.enabled ? "bg-emerald-600 text-white" : "bg-white/20 text-slate-300"
-                  }`}
-                >
-                  {tgConfig.enabled ? "الإشعارات مفعّلة ✅" : "الإشعارات معطلة ❌"}
-                </button>
-
-                <button
-                  type="button"
-                  disabled={tgTesting}
-                  onClick={handleTestTelegram}
-                  className="flex items-center gap-1.5 px-3.5 h-9 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-colors disabled:opacity-50"
-                >
-                  {tgTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SendHorizonal className="w-3.5 h-3.5" />}
-                  <span>فحص إشعار تجريبي 📲</span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => setShowTgModal(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={tgSaving}
-                  className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-slate-950 text-xs font-black shadow-lg shadow-sky-500/25 transition-all disabled:opacity-50"
-                >
-                  {tgSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  <span>حفظ الإعدادات 💾</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal 2: Supplier Message Template Editor Modal ─────────────── */}
-      {showSupplierTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in" onClick={() => setShowSupplierTemplateModal(false)}>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10 mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl">
-                  📝
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                    تخصيص قالب رسالة طلب الحساب للمورد (WhatsApp)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    هذا النص يُستخدم تلقائياً عند النقر على تحويل الطلب في الموقع وعبر التيليجرام.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSupplierTemplateModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:bg-slate-200"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-2">
-                  نص القالب (يمكنك النقر على الكلمات الذكية بالأسفل لإدراجها تلقائياً):
-                </label>
-                <textarea
-                  rows={7}
-                  value={supplierTemplate}
-                  onChange={(e) => setSupplierTemplate(e.target.value)}
-                  dir="rtl"
-                  className="w-full rounded-2xl border border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-slate-800/80 p-3.5 text-sm font-mono text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none leading-relaxed"
-                />
-              </div>
-
-              {/* Quick Tags */}
-              <div>
-                <span className="text-xs font-bold text-slate-500 block mb-2">المتغيرات الذكية المتاحة (اضغط للإضافة):</span>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { tag: "{supplier_name}", label: "اسم المورد" },
-                    { tag: "{game_name}", label: "اسم اللعبة / المنتج" },
-                    { tag: "{platform}", label: "المنصة (PS5/PS4)" },
-                    { tag: "{order_number}", label: "رقم الطلب" },
-                    { tag: "{customer_name}", label: "اسم العميل" },
-                    { tag: "{paid}", label: "المبلغ المدفوع" },
-                  ].map((t) => (
-                    <button
-                      key={t.tag}
-                      type="button"
-                      onClick={() => setSupplierTemplate((prev) => prev + " " + t.tag)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-slate-200 dark:border-white/5"
-                    >
-                      {t.tag} ({t.label})
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Live Preview */}
-              <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 block mb-1.5 flex items-center gap-1.5">
-                  <MessageCircle className="w-3.5 h-3.5" /> معاينة الرسالة كما ستصل للمورد على الواتساب:
-                </span>
-                <div className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap bg-white dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-white/10">
-                  {supplierTemplate
-                    .replace(/\{supplier_name\}/g, "أبو خالد")
-                    .replace(/\{game_name\}/g, "Grand Theft Auto VI")
-                    .replace(/\{platform\}/g, "PS5")
-                    .replace(/\{order_number\}/g, "ORD-9021")
-                    .replace(/\{customer_name\}/g, "عمر الجرادات")
-                    .replace(/\{paid\}/g, "$69.99")}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-white/10">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSupplierTemplate(
-                      `السلام عليكم أخي {supplier_name} 👋\nطلب حساب جديد من متجر دُكانك 🎮:\n\n🏷️ اللعبة / المنتج: *{game_name}* ({platform})\n📦 رقم الطلب: *#{order_number}*\n\nيرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`
-                    )
-                  }
-                  className="text-xs font-bold text-slate-500 hover:text-slate-800"
-                >
-                  استعادة النص الافتراضي 🔄
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowSupplierTemplateModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="button"
-                    disabled={savingTemplate}
-                    onClick={async () => {
-                      setSavingTemplate(true);
-                      try {
-                        await apiUpdateSupplierTemplate(supplierTemplate);
-                        toast.success("تم حفظ قالب رسالة المورد بنجاح 💾✅");
-                        setShowSupplierTemplateModal(false);
-                      } catch (e) {
-                        toast.error("فشل حفظ القالب: " + formatApiError(e));
-                      } finally {
-                        setSavingTemplate(false);
-                      }
-                    }}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 shadow-md shadow-emerald-600/20 disabled:opacity-50"
-                  >
-                    {savingTemplate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                    حفظ القالب المخصص
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Customer Profile Modal ──────────────────────────────────────── */}
       {profilePhone && (
         <CustomerProfileModal phone={profilePhone} onClose={() => setProfilePhone(null)} />
