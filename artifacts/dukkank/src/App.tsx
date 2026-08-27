@@ -138,8 +138,22 @@ const SECTION_RENDERERS: Record<string, any> = {
         );
     },
     deluxe: ({ subscriptions, content }: any) => {
-        const deluxe = subscriptions.find((s: any) => s.id === "deluxe" || s.id.includes("deluxe"));
-        if (!deluxe || deluxe.visible === false) return null;
+        let deluxe = subscriptions.find((s: any) => s.id === "deluxe" || s.id.includes("deluxe"));
+        if (!deluxe) {
+            deluxe = {
+                id: "deluxe",
+                name: "اشتراك فاخر (Deluxe)",
+                tagline: "الباقة الملكية والشاملة لكافة الألعاب الكلاسيكية والتجريبية",
+                accent: "amber",
+                visible: true,
+                durations: [
+                    { id: "del-1m",  label: "شهر واحد",  four: 11, five: 16.0 },
+                    { id: "del-3m",  label: "٣ شهور",    four: 22, five: 33.0 },
+                    { id: "del-12m", label: "سنة كاملة", four: 49, five: 69.0 },
+                ],
+            };
+        }
+        if (deluxe.visible === false) return null;
         const c = content.deluxe || {};
         return (
             <section id="deluxe" data-testid="deluxe-section" className="max-w-7xl mx-auto px-5 sm:px-8 py-14 sm:py-20">
@@ -258,15 +272,18 @@ function HomePage() {
         return true;
     });
 
-    // Ensure Deluxe section is positioned immediately after Extra if both are visible
-    const isDeluxeSubVisible = (subscriptions || []).find((sub: any) => sub.id === "deluxe" || sub.id.includes("deluxe"))?.visible !== false;
-    const isDeluxeSecVisible = rawSections.some((s: any) => s.id === "deluxe" && s.visible !== false);
-    const isDeluxeVisible = isDeluxeSubVisible && isDeluxeSecVisible;
-    const extraIdx = visibleSections.findIndex((s: any) => s.id === "extra");
-    if (isDeluxeVisible && extraIdx !== -1) {
-        const deluxeItem = visibleSections.find((s: any) => s.id === "deluxe") || { id: "deluxe", visible: true };
-        visibleSections = visibleSections.filter((s: any) => s.id !== "deluxe");
-        visibleSections.splice(extraIdx + 1, 0, deluxeItem);
+    // Ensure Deluxe section is present and positioned right after Extra if Extra exists
+    const hasDeluxeSub = (subscriptions || []).find((sub: any) => sub.id === "deluxe" || sub.id.includes("deluxe"))?.visible !== false;
+    const hasDeluxeSec = rawSections.find((s: any) => s.id === "deluxe")?.visible !== false;
+    if (hasDeluxeSub && hasDeluxeSec) {
+        if (!visibleSections.some((s: any) => s.id === "deluxe")) {
+            const extraIdx = visibleSections.findIndex((s: any) => s.id === "extra");
+            if (extraIdx !== -1) {
+                visibleSections.splice(extraIdx + 1, 0, { id: "deluxe", visible: true });
+            } else {
+                visibleSections.push({ id: "deluxe", visible: true });
+            }
+        }
     }
 
     return (
@@ -426,13 +443,22 @@ function VisitorTracker() {
 }
 
 function ThemeAndSeoLoader() {
-    useEffect(() => {
-        // Apply saved theme overrides
-        const theme = getTheme();
-        if (Object.keys(theme).length > 0) applyTheme(theme);
+    const { theme: storeTheme } = useStoreData();
 
+    useEffect(() => {
+        if (storeTheme && typeof storeTheme === "object" && Object.keys(storeTheme).length > 0) {
+            applyTheme(storeTheme);
+        } else {
+            const saved = getTheme();
+            if (saved && typeof saved === "object" && Object.keys(saved).length > 0) {
+                applyTheme(saved);
+            }
+        }
+    }, [storeTheme]);
+
+    useEffect(() => {
         const handleThemeChange = (e: any) => {
-            applyTheme(e.detail || {});
+            if (e.detail) applyTheme(e.detail);
         };
         window.addEventListener("dukkank-theme-change", handleThemeChange);
 

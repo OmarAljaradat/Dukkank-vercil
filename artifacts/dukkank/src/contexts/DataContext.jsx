@@ -349,7 +349,7 @@ export function DataProvider({ children }) {
     const setTheme = (val) => {
         if (val && typeof val === "object") {
             const overrides = loadOverrides();
-            overrides.theme = { ...(overrides.theme || {}), ...val };
+            overrides.theme = { ...val };
             saveOverrides(overrides);
         }
         setThemeState(val);
@@ -488,14 +488,15 @@ export function DataProvider({ children }) {
 
     const mergeThemeData = (fetched) => {
         const overrides = loadOverrides();
-        const userTheme = overrides.theme || {};
+        const userTheme = overrides.theme;
+        if (userTheme && typeof userTheme === "object" && Object.keys(userTheme).length > 0) {
+            return userTheme;
+        }
         const localTheme = loadLocal("dukkank_live_theme", {});
-        const finalTheme = {
-            ...(fetched && typeof fetched === "object" ? fetched : {}),
-            ...localTheme,
-            ...userTheme
-        };
-        return finalTheme;
+        if (localTheme && typeof localTheme === "object" && Object.keys(localTheme).length > 0) {
+            return localTheme;
+        }
+        return (fetched && typeof fetched === "object") ? fetched : {};
     };
 
     const asArray = (v, fallback) => (Array.isArray(v) && v.length > 0 ? v : fallback);

@@ -57,6 +57,17 @@ export const SUBSCRIPTIONS = [
             { id: "ext-12m", label: "سنة كاملة", four: 42, five: 59   },
         ],
     },
+    {
+        id: "deluxe",
+        name: "اشتراك فاخر (Deluxe)",
+        tagline: "الباقة الملكية والشاملة لكافة الألعاب الكلاسيكية والتجريبية",
+        accent: "amber",
+        durations: [
+            { id: "del-1m",  label: "شهر واحد",  four: 11, five: 16.0 },
+            { id: "del-3m",  label: "٣ شهور",    four: 22, five: 33.0 },
+            { id: "del-12m", label: "سنة كاملة", four: 49, five: 69.0 },
+        ],
+    },
 ];
 
 

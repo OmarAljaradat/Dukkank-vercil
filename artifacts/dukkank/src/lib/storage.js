@@ -159,9 +159,22 @@ export function applyTheme(overrides = {}) {
         style.id = "dk-theme-override";
         document.head.appendChild(style);
     }
-    const vars = Object.entries(overrides)
-        .filter(([, v]) => v)
-        .map(([k, v]) => `  --${k}: ${v};`)
-        .join("\n");
-    style.textContent = vars ? `:root {\n${vars}\n}\n.dark {\n${vars}\n}` : "";
+    if (!overrides || typeof overrides !== "object") {
+        style.textContent = "";
+        return;
+    }
+    const entries = Object.entries(overrides).filter(([, v]) => v && typeof v === "string");
+    if (entries.length === 0) {
+        style.textContent = "";
+        return;
+    }
+    const vars = entries.map(([k, v]) => `  --${k}: ${v} !important;`).join("\n");
+    style.textContent = `
+:root, html, body, #root, [data-theme] {
+${vars}
+}
+.dark, html.dark, body.dark {
+${vars}
+}
+`;
 }
