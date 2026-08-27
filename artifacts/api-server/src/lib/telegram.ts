@@ -106,44 +106,88 @@ export async function sendTelegramOrderNotification(order: any) {
     const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "—";
     const payment = order.payment_platform || "دفع إلكتروني";
 
+    // 1. Fetch active suppliers to create direct WhatsApp buttons
+    let suppliers: Array<{ id: number; name: string; phone: string }> = [];
+    if (pool) {
+      try {
+        const { rows } = await pool.query(
+          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 4"
+        );
+        suppliers = rows;
+      } catch (_) {}
+    }
+
+    // Default supplier if no suppliers in DB
+    if (suppliers.length === 0) {
+      suppliers = [{ id: 1, name: "المورد المعتمد", phone: "962775585112" }];
+    }
+
+    // Formatted Customer WhatsApp Message asking for Sony QR Code
     const qrRequestMsg = encodeURIComponent(
-      `مرحباً أخي ${customerName} 🎮\nشكراً لشرائك من متجر *دُكانك* ⚡\n\nلتسليم وتفعيل طلبك (${game}) فوراً:\nيرجى فتح جهازك السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸.\n\nفريقنا جاهز لإدخالك الحساب وتفعيله بأمان تام 🚀`
+      `مرحباً أخي ${customerName} 🎮\nشكراً لشرائك من متجر *دُكانك* ⚡\n\nلتسليم وتفعيل طلبك (${game}) فوراً:\nيرجى فتح جهازك السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸.\n\nفريقنا جاهز لإدخالك الحساب وتفعيله بجهازك بأمان تام 🚀`
+    );
+
+    // Formatted Supplier WhatsApp Message
+    const getSupplierMsg = (supName: string) => encodeURIComponent(
+      `السلام عليكم أخي ${supName} 👋\nطلب حساب جديد من متجر *دُكانك* 🎮:\n\n🏷️ اللعبة / الاشتراك: *${game}* ${platform}\n📦 رقم الطلب: *#${orderNum}*\n\nيرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`
     );
 
     const messageHtml = `🔥 <b>طلب شراء جديد في دُكانك!</b>
 
 📦 <b>رقم الطلب:</b> <code>${orderNum}</code>
-👤 <b>العميل:</b> ${customerName}
-📱 <b>الهاتف:</b> <code>${rawPhone}</code>
-${igRaw ? `📸 <b>إنستغرام:</b> @${igRaw}\n` : ""}🎮 <b>المنتج:</b> <b>${game}</b> ${platform}
-💰 <b>المبلغ:</b> <b>${paid}</b>
-💳 <b>طريقة الدفع:</b> ${payment}
-⏱️ <b>الحالة:</b> طلب جديد وبانتظار التنفيذ ⚡`;
+👤 <b>العميل:</b> <b>${customerName}</b>
+📱 <b>الهاتف / واتساب:</b> <code>${rawPhone}</code>
+${igRaw ? `📸 <b>إنستغرام العميل:</b> @${igRaw}\n` : ""}🎮 <b>المنتج:</b> <b>${game}</b> ${platform}
+💰 <b>المبلغ المدفوع:</b> <b>${paid}</b>
+💳 <b>وسيلة الدفع:</b> ${payment}
+⏱️ <b>حالة الطلب:</b> طلب جديد وبانتظار التنفيذ ⚡
+
+───────────────
+<b>👇 مسار التنفيذ والأتمتة السريعة:</b>`;
 
     const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
 
-    const row1: Array<{ text: string; url: string }> = [];
+    // ROW 1: Customer Direct Communication (Instagram + WhatsApp)
+    const customerRow: Array<{ text: string; url: string }> = [];
     if (igRaw) {
-      row1.push({
-        text: `💬 إنستغرام العميل (@${igRaw})`,
+      customerRow.push({
+        text: `📸 إنستغرام العميل (@${igRaw})`,
         url: `https://instagram.com/${igRaw}`,
       });
     }
     if (phone) {
-      row1.push({
+      customerRow.push({
         text: `📲 واتساب العميل (طلب QR)`,
         url: `https://wa.me/${phone}?text=${qrRequestMsg}`,
       });
+    } else if (!igRaw) {
+      customerRow.push({
+        text: `📲 مراسلة العميل واتساب`,
+        url: `https://wa.me/?text=${qrRequestMsg}`,
+      });
     }
-    if (row1.length > 0) inlineButtons.push(row1);
+    if (customerRow.length > 0) inlineButtons.push(customerRow);
 
-    const row2: Array<{ text: string; url: string }> = [
+    // ROW 2: Forward to Supplier via WhatsApp (for each active supplier)
+    suppliers.forEach((sup) => {
+      const supCleanPhone = (sup.phone || "").replace(/\D/g, "");
+      if (supCleanPhone) {
+        inlineButtons.push([
+          {
+            text: `📦 تحويل للمورد: ${sup.name} 📲`,
+            url: `https://wa.me/${supCleanPhone}?text=${getSupplierMsg(sup.name)}`,
+          },
+        ]);
+      }
+    });
+
+    // ROW 3: Quick Action & Website Admin Link
+    inlineButtons.push([
       {
-        text: `🚀 فتح الطلب في لوحة التحكم`,
+        text: `🚀 فتح الطلب في لوحة التحكم (الموقع)`,
         url: `https://www.dukkank.store/admin/orders`,
       },
-    ];
-    inlineButtons.push(row2);
+    ]);
 
     return await sendTelegramMessage(messageHtml, inlineButtons);
   } catch (e: any) {

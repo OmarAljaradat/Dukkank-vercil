@@ -48850,6 +48850,19 @@ async function sendTelegramOrderNotification(order) {
     const platform = order.platform ? `(${order.platform})` : "";
     const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "\u2014";
     const payment = order.payment_platform || "\u062F\u0641\u0639 \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A";
+    let suppliers2 = [];
+    if (pool6) {
+      try {
+        const { rows } = await pool6.query(
+          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 4"
+        );
+        suppliers2 = rows;
+      } catch (_) {
+      }
+    }
+    if (suppliers2.length === 0) {
+      suppliers2 = [{ id: 1, name: "\u0627\u0644\u0645\u0648\u0631\u062F \u0627\u0644\u0645\u0639\u062A\u0645\u062F", phone: "962775585112" }];
+    }
     const qrRequestMsg = encodeURIComponent(
       `\u0645\u0631\u062D\u0628\u0627\u064B \u0623\u062E\u064A ${customerName} \u{1F3AE}
 \u0634\u0643\u0631\u0627\u064B \u0644\u0634\u0631\u0627\u0626\u0643 \u0645\u0646 \u0645\u062A\u062C\u0631 *\u062F\u064F\u0643\u0627\u0646\u0643* \u26A1
@@ -48857,40 +48870,67 @@ async function sendTelegramOrderNotification(order) {
 \u0644\u062A\u0633\u0644\u064A\u0645 \u0648\u062A\u0641\u0639\u064A\u0644 \u0637\u0644\u0628\u0643 (${game}) \u0641\u0648\u0631\u0627\u064B:
 \u064A\u0631\u062C\u0649 \u0641\u062A\u062D \u062C\u0647\u0627\u0632\u0643 \u0627\u0644\u0633\u0648\u0646\u064A \u0648\u0627\u062E\u062A\u064A\u0627\u0631 (\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F QR) \u0648\u062A\u0635\u0648\u064A\u0631 \u0627\u0644\u0643\u0648\u062F \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u0644\u0646\u0627 \u0647\u0646\u0627 \u{1F4F8}.
 
-\u0641\u0631\u064A\u0642\u0646\u0627 \u062C\u0627\u0647\u0632 \u0644\u0625\u062F\u062E\u0627\u0644\u0643 \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u062A\u0641\u0639\u064A\u0644\u0647 \u0628\u0623\u0645\u0627\u0646 \u062A\u0627\u0645 \u{1F680}`
+\u0641\u0631\u064A\u0642\u0646\u0627 \u062C\u0627\u0647\u0632 \u0644\u0625\u062F\u062E\u0627\u0644\u0643 \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u062A\u0641\u0639\u064A\u0644\u0647 \u0628\u062C\u0647\u0627\u0632\u0643 \u0628\u0623\u0645\u0627\u0646 \u062A\u0627\u0645 \u{1F680}`
+    );
+    const getSupplierMsg = (supName) => encodeURIComponent(
+      `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064A\u0643\u0645 \u0623\u062E\u064A ${supName} \u{1F44B}
+\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 *\u062F\u064F\u0643\u0627\u0646\u0643* \u{1F3AE}:
+
+\u{1F3F7}\uFE0F \u0627\u0644\u0644\u0639\u0628\u0629 / \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643: *${game}* ${platform}
+\u{1F4E6} \u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: *#${orderNum}*
+
+\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`
     );
     const messageHtml = `\u{1F525} <b>\u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062C\u062F\u064A\u062F \u0641\u064A \u062F\u064F\u0643\u0627\u0646\u0643!</b>
 
 \u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${orderNum}</code>
-\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> ${customerName}
-\u{1F4F1} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${rawPhone}</code>
-${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> @${igRaw}
+\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> <b>${customerName}</b>
+\u{1F4F1} <b>\u0627\u0644\u0647\u0627\u062A\u0641 / \u0648\u0627\u062A\u0633\u0627\u0628:</b> <code>${rawPhone}</code>
+${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644:</b> @${igRaw}
 ` : ""}\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> <b>${game}</b> ${platform}
-\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A:</b> <b>${paid}</b>
-\u{1F4B3} <b>\u0637\u0631\u064A\u0642\u0629 \u0627\u0644\u062F\u0641\u0639:</b> ${payment}
-\u23F1\uFE0F <b>\u0627\u0644\u062D\u0627\u0644\u0629:</b> \u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0648\u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u26A1`;
+\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>${paid}</b>
+\u{1F4B3} <b>\u0648\u0633\u064A\u0644\u0629 \u0627\u0644\u062F\u0641\u0639:</b> ${payment}
+\u23F1\uFE0F <b>\u062D\u0627\u0644\u0629 \u0627\u0644\u0637\u0644\u0628:</b> \u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0648\u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u26A1
+
+\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+<b>\u{1F447} \u0645\u0633\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u0648\u0627\u0644\u0623\u062A\u0645\u062A\u0629 \u0627\u0644\u0633\u0631\u064A\u0639\u0629:</b>`;
     const inlineButtons = [];
-    const row1 = [];
+    const customerRow = [];
     if (igRaw) {
-      row1.push({
-        text: `\u{1F4AC} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644 (@${igRaw})`,
+      customerRow.push({
+        text: `\u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644 (@${igRaw})`,
         url: `https://instagram.com/${igRaw}`
       });
     }
     if (phone) {
-      row1.push({
+      customerRow.push({
         text: `\u{1F4F2} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644 (\u0637\u0644\u0628 QR)`,
         url: `https://wa.me/${phone}?text=${qrRequestMsg}`
       });
+    } else if (!igRaw) {
+      customerRow.push({
+        text: `\u{1F4F2} \u0645\u0631\u0627\u0633\u0644\u0629 \u0627\u0644\u0639\u0645\u064A\u0644 \u0648\u0627\u062A\u0633\u0627\u0628`,
+        url: `https://wa.me/?text=${qrRequestMsg}`
+      });
     }
-    if (row1.length > 0) inlineButtons.push(row1);
-    const row2 = [
+    if (customerRow.length > 0) inlineButtons.push(customerRow);
+    suppliers2.forEach((sup) => {
+      const supCleanPhone = (sup.phone || "").replace(/\D/g, "");
+      if (supCleanPhone) {
+        inlineButtons.push([
+          {
+            text: `\u{1F4E6} \u062A\u062D\u0648\u064A\u0644 \u0644\u0644\u0645\u0648\u0631\u062F: ${sup.name} \u{1F4F2}`,
+            url: `https://wa.me/${supCleanPhone}?text=${getSupplierMsg(sup.name)}`
+          }
+        ]);
+      }
+    });
+    inlineButtons.push([
       {
-        text: `\u{1F680} \u0641\u062A\u062D \u0627\u0644\u0637\u0644\u0628 \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645`,
+        text: `\u{1F680} \u0641\u062A\u062D \u0627\u0644\u0637\u0644\u0628 \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645 (\u0627\u0644\u0645\u0648\u0642\u0639)`,
         url: `https://www.dukkank.store/admin/orders`
       }
-    ];
-    inlineButtons.push(row2);
+    ]);
     return await sendTelegramMessage(messageHtml, inlineButtons);
   } catch (e) {
     console.error("Failed to format/send Telegram order notification:", e);
