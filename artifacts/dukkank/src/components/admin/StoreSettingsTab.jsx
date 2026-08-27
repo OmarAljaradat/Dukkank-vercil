@@ -123,6 +123,21 @@ export default function StoreSettingsTab({ onSaved }) {
                 </Field>
             </div>
 
+            {/* ── Telegram Bot Settings Section ── */}
+            <div className="mt-8 pt-6 border-t border-[hsl(var(--brand-ink))]/10">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xl">🤖</span>
+                    <div>
+                        <h3 className="text-base font-bold text-[hsl(var(--brand-ink))]">
+                            إشعارات بوت التيليجرام للطلبات الفورية
+                        </h3>
+                        <p className="text-xs text-[hsl(var(--brand-ink))]/60">
+                            يمكنك أيضاً ضبط التوكن ومعرف المحادثة مباشرة من أعلى صفحة (إدارة الطلبات).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div className="mt-7 flex justify-end">
                 <button
                     onClick={onSave}
