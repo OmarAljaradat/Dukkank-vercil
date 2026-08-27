@@ -1,8 +1,6 @@
 import pg from "pg";
 
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_wCMA8WdBSc5s@ep-restless-tree-b20it24h-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require",
-});
+const pool = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL }) : null;
 
 export interface TelegramConfig {
   enabled: boolean;
@@ -17,20 +15,22 @@ const DEFAULT_CONFIG: TelegramConfig = {
 };
 
 export async function getTelegramConfig(): Promise<TelegramConfig> {
-  try {
-    const { rows } = await pool.query(
-      `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
-    );
-    if (rows.length > 0 && rows[0].value) {
-      const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
-      return {
-        enabled: cfg.enabled ?? true,
-        botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
-        chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || "",
-      };
+  if (pool) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
+      );
+      if (rows.length > 0 && rows[0].value) {
+        const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
+        return {
+          enabled: cfg.enabled ?? true,
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || "",
+        };
+      }
+    } catch (e) {
+      console.warn("Could not load telegram_config from DB:", e);
     }
-  } catch (e) {
-    console.warn("Could not load telegram_config from DB:", e);
   }
   return DEFAULT_CONFIG;
 }
@@ -43,15 +43,17 @@ export async function saveTelegramConfig(cfg: Partial<TelegramConfig>): Promise<
     chatId: (cfg.chatId !== undefined ? cfg.chatId : current.chatId).trim(),
   };
 
-  try {
-    await pool.query(
-      `INSERT INTO store_config (key, value, updated_at)
-       VALUES ('telegram_config', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [JSON.stringify(updated)]
-    );
-  } catch (e) {
-    console.error("Failed to save telegram config:", e);
+  if (pool) {
+    try {
+      await pool.query(
+        `INSERT INTO store_config (key, value, updated_at)
+         VALUES ('telegram_config', $1, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+        [JSON.stringify(updated)]
+      );
+    } catch (e) {
+      console.error("Failed to save telegram config:", e);
+    }
   }
 
   return updated;

@@ -48762,29 +48762,29 @@ var analytics_default = router6;
 var import_express7 = __toESM(require_express2(), 1);
 
 // src/lib/telegram.ts
-var pool6 = new esm_default.Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_wCMA8WdBSc5s@ep-restless-tree-b20it24h-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-});
+var pool6 = process.env.DATABASE_URL ? new esm_default.Pool({ connectionString: process.env.DATABASE_URL }) : null;
 var DEFAULT_CONFIG = {
   enabled: true,
   botToken: process.env.TELEGRAM_BOT_TOKEN || "",
   chatId: process.env.TELEGRAM_CHAT_ID || ""
 };
 async function getTelegramConfig() {
-  try {
-    const { rows } = await pool6.query(
-      `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
-    );
-    if (rows.length > 0 && rows[0].value) {
-      const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
-      return {
-        enabled: cfg.enabled ?? true,
-        botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
-        chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || ""
-      };
+  if (pool6) {
+    try {
+      const { rows } = await pool6.query(
+        `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
+      );
+      if (rows.length > 0 && rows[0].value) {
+        const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
+        return {
+          enabled: cfg.enabled ?? true,
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || ""
+        };
+      }
+    } catch (e) {
+      console.warn("Could not load telegram_config from DB:", e);
     }
-  } catch (e) {
-    console.warn("Could not load telegram_config from DB:", e);
   }
   return DEFAULT_CONFIG;
 }
@@ -48795,15 +48795,17 @@ async function saveTelegramConfig(cfg) {
     botToken: (cfg.botToken !== void 0 ? cfg.botToken : current.botToken).trim(),
     chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim()
   };
-  try {
-    await pool6.query(
-      `INSERT INTO store_config (key, value, updated_at)
-       VALUES ('telegram_config', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [JSON.stringify(updated)]
-    );
-  } catch (e) {
-    console.error("Failed to save telegram config:", e);
+  if (pool6) {
+    try {
+      await pool6.query(
+        `INSERT INTO store_config (key, value, updated_at)
+         VALUES ('telegram_config', $1, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+        [JSON.stringify(updated)]
+      );
+    } catch (e) {
+      console.error("Failed to save telegram config:", e);
+    }
   }
   return updated;
 }
