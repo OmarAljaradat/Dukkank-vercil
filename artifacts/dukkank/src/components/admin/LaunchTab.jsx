@@ -72,7 +72,19 @@ export default function LaunchTab({ onChanged }) {
             trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
         }));
 
-        toast.success(`تم استيراد كافة بيانات وتفاصيل (${game.name}) بنجاح 🎮!`);
+        toast.success(`تم استيراد وتحديد (${game.name}) للبنر بنجاح 🎮!`);
+    };
+
+    // Clear Selected Store Game Handler
+    const handleClearGameSelection = () => {
+        setForm((prev) => ({
+            ...prev,
+            gameId: null,
+            gameName: prev.theme === "vice" ? "Grand Theft Auto VI" : prev.theme === "eafc" ? "EA SPORTS FC 27" : "Call of Duty: Black Ops 7",
+            image: "",
+            imageUrl: "",
+        }));
+        toast.info("تم إلغاء تحديد اللعبة من المخزون بنجاح 🔄");
     };
 
     const getSavedTheme = (theme) => {
@@ -94,7 +106,7 @@ export default function LaunchTab({ onChanged }) {
 
     // 🎮 GTA VI VICE CITY - Clean Explicit Theme Preset (Toggleable)
     const handleGTAVIPreset = async () => {
-        if (form.enabled && form.theme === "vice") {
+        if (form.enabled && form.theme === "vice" && form.gameName === "Grand Theft Auto VI") {
             const newData = { ...form, enabled: false };
             setForm(newData);
             saveThemeData("vice", newData);
@@ -109,33 +121,33 @@ export default function LaunchTab({ onChanged }) {
             return;
         }
 
-        const saved = getSavedTheme("vice");
         const defaultLaunchIso = "2025-10-28";
 
         const newData = {
-            ...(saved || form),
+            ...form,
             enabled: true,
             theme: "vice",
-            gameName: (saved?.gameName || form.gameName) || "Grand Theft Auto VI",
-            badge: (saved?.badge || form.badge) || "🔥 الإصدار الأضخم في تاريخ الألعاب",
-            subtitle: (saved?.subtitle || form.subtitle) || "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
-            description: (saved?.description || form.description) || "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
-            price5: (saved?.price5 ?? form.price5) ?? 45.0,
-            price4: (saved?.price4 ?? form.price4) ?? 28.0,
-            ctaLabel: (saved?.ctaLabel || form.ctaLabel) || "احجز نسختك الآن 🔥",
-            ctaHref: saved?.ctaHref || form.ctaHref || "#games",
-            image: saved?.image ?? form.image ?? "",
-            imageUrl: saved?.imageUrl ?? form.imageUrl ?? "",
-            bonusGift: (saved?.bonusGift || form.bonusGift) || "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
-            rating: (saved?.rating || form.rating) || "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
-            stockLeft: (saved?.stockLeft ?? form.stockLeft) ?? 12,
-            trailerUrl: (saved?.trailerUrl || form.trailerUrl) || "https://www.youtube.com/embed/QdBZY2fkU-0",
-            countdownTarget: (saved?.countdownTarget || form.countdownTarget) || defaultLaunchIso,
-            launchDate: (saved?.launchDate || form.launchDate) || defaultLaunchIso,
-            note: (saved?.note || form.note) || "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
+            gameId: null,
+            gameName: "Grand Theft Auto VI",
+            badge: "🔥 الإصدار الأضخم في تاريخ الألعاب",
+            subtitle: "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
+            description: "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
+            price5: 45.0,
+            price4: 28.0,
+            ctaLabel: "احجز نسختك الآن 🔥",
+            ctaHref: "#games",
+            image: "",
+            imageUrl: "",
+            bonusGift: "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
+            rating: "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
+            stockLeft: 12,
+            trailerUrl: "https://www.youtube.com/embed/QdBZY2fkU-0",
+            countdownTarget: defaultLaunchIso,
+            launchDate: defaultLaunchIso,
+            note: "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
             currency: "$",
-            platform5: saved?.platform5 || form.platform5 || "PS5",
-            platform4: saved?.platform4 || form.platform4 || "PS4",
+            platform5: "PS5",
+            platform4: "PS4",
         };
 
         setForm(newData);
@@ -144,7 +156,7 @@ export default function LaunchTab({ onChanged }) {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
             await ensureSectionVisible();
-            toast.success("🌴 تم تفعيل ونشر ثيم GTA VI — Vice City بنجاح! 🎮🔥");
+            toast.success("🌴 تم تفعيل ثيم GTA VI الأصلي وإلغاء اختيار اللعبة السابقة بنجاح! 🎮🔥");
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
@@ -153,7 +165,7 @@ export default function LaunchTab({ onChanged }) {
 
     // ⚽ EA SPORTS FC - Clean Explicit Theme Preset (Toggleable)
     const handleEAFCPreset = async () => {
-        if (form.enabled && form.theme === "eafc") {
+        if (form.enabled && form.theme === "eafc" && form.gameName === "EA SPORTS FC 27") {
             const newData = { ...form, enabled: false };
             setForm(newData);
             saveThemeData("eafc", newData);
@@ -168,35 +180,35 @@ export default function LaunchTab({ onChanged }) {
             return;
         }
 
-        const saved = getSavedTheme("eafc");
         const launchDate = new Date();
         launchDate.setDate(launchDate.getDate() + 14);
         const defaultLaunchIso = launchDate.toISOString().split("T")[0];
 
         const newData = {
-            ...(saved || form),
+            ...form,
             enabled: true,
             theme: "eafc",
-            gameName: (saved?.gameName || form.gameName) || "EA SPORTS FC 27",
-            badge: (saved?.badge || form.badge) || "⚽ انطلاقة الموسم الكروي الجديد",
-            subtitle: (saved?.subtitle || form.subtitle) || "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
-            description: (saved?.description || form.description) || "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
-            price5: (saved?.price5 ?? form.price5) ?? 42.0,
-            price4: (saved?.price4 ?? form.price4) ?? 24.0,
-            ctaLabel: (saved?.ctaLabel || form.ctaLabel) || "احصل على نسختك الآن ⚡",
-            ctaHref: saved?.ctaHref || form.ctaHref || "#games",
-            image: saved?.image ?? form.image ?? "",
-            imageUrl: saved?.imageUrl ?? form.imageUrl ?? "",
-            bonusGift: (saved?.bonusGift || form.bonusGift) || "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
-            rating: (saved?.rating || form.rating) || "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
-            stockLeft: (saved?.stockLeft ?? form.stockLeft) ?? 15,
-            trailerUrl: saved?.trailerUrl || form.trailerUrl || "",
-            countdownTarget: (saved?.countdownTarget || form.countdownTarget) || defaultLaunchIso,
-            launchDate: (saved?.launchDate || form.launchDate) || defaultLaunchIso,
-            note: (saved?.note || form.note) || "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
+            gameId: null,
+            gameName: "EA SPORTS FC 27",
+            badge: "⚽ انطلاقة الموسم الكروي الجديد",
+            subtitle: "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
+            description: "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
+            price5: 42.0,
+            price4: 24.0,
+            ctaLabel: "احصل على نسختك الآن ⚡",
+            ctaHref: "#games",
+            image: "",
+            imageUrl: "",
+            bonusGift: "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
+            rating: "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
+            stockLeft: 15,
+            trailerUrl: "",
+            countdownTarget: defaultLaunchIso,
+            launchDate: defaultLaunchIso,
+            note: "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
             currency: "$",
-            platform5: saved?.platform5 || form.platform5 || "PS5",
-            platform4: saved?.platform4 || form.platform4 || "PS4",
+            platform5: "PS5",
+            platform4: "PS4",
         };
 
         setForm(newData);
@@ -205,7 +217,7 @@ export default function LaunchTab({ onChanged }) {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
             await ensureSectionVisible();
-            toast.success("⚽ تم تفعيل ونشر ثيم EA SPORTS FC بنجاح! 🏆");
+            toast.success("⚽ تم تفعيل ثيم EA SPORTS FC الأصلي وإلغاء اختيار اللعبة السابقة بنجاح! 🏆");
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
@@ -562,10 +574,20 @@ https://dukkank.com`;
                         </div>
                     </div>
 
-                    {form.gameName && (
-                        <div className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold self-start sm:self-auto flex items-center gap-1.5">
-                            <span>اللعبة المختارة للبنر:</span>
-                            <span className="text-white font-black">{form.gameName}</span>
+                    {(form.gameId || form.gameName) && (
+                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                            <div className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+                                <span>اللعبة المختارة للبنر:</span>
+                                <span className="text-white font-black">{form.gameName}</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleClearGameSelection}
+                                className="px-2.5 py-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-bold transition cursor-pointer flex items-center gap-1 active:scale-95"
+                                title="إلغاء تحديد اللعبة والعودة للوضع الحر"
+                            >
+                                <span>✕ إلغاء تحديد اللعبة</span>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -595,10 +617,16 @@ https://dukkank.com`;
                     <div>
                         <select
                             value={form.gameId || ""}
-                            onChange={(e) => handleSelectGame(e.target.value)}
+                            onChange={(e) => {
+                                if (e.target.value === "") {
+                                    handleClearGameSelection();
+                                } else {
+                                    handleSelectGame(e.target.value);
+                                }
+                            }}
                             className="w-full h-10 px-3 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white focus:border-amber-400 focus:outline-none cursor-pointer"
                         >
-                            <option value="">-- أو اختر لعبة مباشرة من القائمة الكاملة ({games?.length || 0}) --</option>
+                            <option value="">-- ✕ بدون تحديد لعبة (تخصيص حر / GTA VI / EA FC) --</option>
                             {(games || []).map((g) => (
                                 <option key={g.id} value={g.id}>
                                     {g.name} (PS5: ${g.five || 0} | PS4: ${g.four || 0})
