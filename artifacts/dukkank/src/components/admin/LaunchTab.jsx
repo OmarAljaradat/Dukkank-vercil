@@ -170,6 +170,15 @@ const saveCurrentThemeProfile = (themeKey, currentData) => {
     } catch {}
 };
 
+const AVAILABLE_THEMES = [
+    { key: "vice", name: "GTA VI (فايس سيتي)", label: "🌴 قالب GTA VI فايس سيتي", tag: "Rockstar", icon: "🌴", activeGradient: "from-pink-600 via-purple-600 to-cyan-500", border: "border-pink-500" },
+    { key: "eafc", name: "EA SPORTS FC 27", label: "⚽ قالب EA SPORTS FC", tag: "EA FC 27", icon: "⚽", activeGradient: "from-emerald-600 via-teal-600 to-green-500", border: "border-emerald-500" },
+    { key: "gold", name: "الذهبي الملكي", label: "🏆 قالب الذهبي الملكي", tag: "Royal Gold", icon: "🏆", activeGradient: "from-amber-500 to-yellow-400", border: "border-amber-400" },
+    { key: "red", name: "الأحمر الحماسي", label: "🔴 قالب الأحمر الحماسي", tag: "Crimson", icon: "🔴", activeGradient: "from-red-600 to-rose-500", border: "border-red-500" },
+    { key: "blue", name: "الأزرق البلايستيشن", label: "🟦 قالب الأزرق البلايستيشن", tag: "PS Blue", icon: "🟦", activeGradient: "from-blue-600 to-sky-500", border: "border-blue-500" },
+    { key: "cyber", name: "السايبر النيون", label: "⚡ قالب السايبر النيون", tag: "Cyber Neon", icon: "⚡", activeGradient: "from-purple-600 to-pink-500", border: "border-purple-500" },
+];
+
 export default function LaunchTab({ onChanged }) {
     const { launchAnnouncement, setLaunchAnnouncement, games, sections, setSections } = useStoreData();
     const [form, setForm] = useState(() => {
@@ -423,8 +432,32 @@ export default function LaunchTab({ onChanged }) {
             };
             setLaunchAnnouncement(payload);
             await apiUpdateLaunchAnnouncement(payload);
+            const activeName = AVAILABLE_THEMES.find(t => t.key === form.theme)?.name || form.theme;
+            toast.success(`💾 تم حفظ وتثبيت تعديلات قالب (${activeName}) في الذاكرة والقاعدة بنجاح!`);
+            onChanged?.();
+        } catch (err) {
+            toast.error(formatApiError(err));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // Activate and publish this template directly to the storefront
+    const handleActivateAndPublish = async () => {
+        setSaving(true);
+        try {
+            const allProfiles = saveCurrentThemeProfile(form.theme || "vice", { ...form, enabled: true }) || loadAllThemeProfiles();
+            const payload = {
+                ...form,
+                enabled: true,
+                savedThemes: allProfiles,
+            };
+            setForm(payload);
+            setLaunchAnnouncement(payload);
+            await apiUpdateLaunchAnnouncement(payload);
             await ensureSectionVisible();
-            toast.success("تم حفظ ونشر إعلان الإطلاق وتثبيت تعديلات هذا الثيم بنجاح 📢");
+            const activeName = AVAILABLE_THEMES.find(t => t.key === form.theme)?.name || form.theme;
+            toast.success(`🚀 تم تفعيل ونشر قالب (${activeName}) في واجهة المتجر مباشرة بنجاح! 🔥`);
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
@@ -1052,9 +1085,55 @@ https://dukkank.com`;
                         <h3 className="font-black text-sm text-slate-900 dark:text-white">إعداد حقول وعناصر البنر الإعلاني</h3>
                     </div>
 
+                    {/* 🎛️ Segmented Theme Template Studio Selector */}
+                    <div className="bg-slate-950/90 p-4 rounded-2xl border border-slate-800 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <Palette className="w-4 h-4 text-amber-400" />
+                                <span className="text-xs font-black text-white">اختر قالب الثيم الذي تريد تعديله وتخصيص أسعاره:</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleResetThemeToDefault}
+                                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                                title="استعادة النصوص والأسعار الافتراضية الأصلية لهذا الثيم"
+                            >
+                                <span>🔄 استعادة قالب هذا الثيم الأصلي</span>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                            {AVAILABLE_THEMES.map((th) => {
+                                const isSelected = (form.theme || "vice") === th.key;
+                                return (
+                                    <button
+                                        key={th.key}
+                                        type="button"
+                                        onClick={() => switchToTheme(th.key)}
+                                        className={`p-2.5 rounded-xl text-right transition-all flex flex-col justify-between gap-1.5 cursor-pointer border ${
+                                            isSelected
+                                                ? `bg-gradient-to-r ${th.activeGradient} text-white ${th.border} shadow-lg scale-[1.02] ring-2 ring-white/30`
+                                                : "bg-slate-900/90 hover:bg-slate-800 text-slate-300 border-slate-800 hover:border-slate-700"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between w-full">
+                                            <span className="text-base">{th.icon}</span>
+                                            {isSelected ? (
+                                                <span className="text-[8px] font-black bg-black/40 px-1 py-0.5 rounded text-amber-300">قيد التعديل ✏️</span>
+                                            ) : form.enabled && launchAnnouncement?.theme === th.key ? (
+                                                <span className="text-[8px] font-black bg-emerald-500/30 text-emerald-300 px-1 py-0.5 rounded">مفعّل 🟢</span>
+                                            ) : null}
+                                        </div>
+                                        <div className="text-[11px] font-black truncate w-full">{th.name}</div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">اسم اللعبة المعلن عنها *</label>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">اسم اللعبة بالقالب *</label>
                             <input
                                 type="text"
                                 required
@@ -1078,19 +1157,9 @@ https://dukkank.com`;
                             </div>
 
                             <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">ثيم ولون البنر بالموقع</label>
-                                    <button
-                                        type="button"
-                                        onClick={handleResetThemeToDefault}
-                                        className="text-[10px] text-amber-500 hover:text-amber-400 font-bold underline cursor-pointer"
-                                        title="استعادة النصوص والأسعار الافتراضية الأصلية لهذا الثيم"
-                                    >
-                                        🔄 استعادة قالب الثيم الأصلي
-                                    </button>
-                                </div>
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ثيم ولون البنر بالموقع</label>
                                 <select
-                                    value={form.theme || "gold"}
+                                    value={form.theme || "vice"}
                                     onChange={(e) => switchToTheme(e.target.value)}
                                     className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white"
                                 >
@@ -1233,24 +1302,38 @@ https://dukkank.com`;
                         </div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                         <button
                             type="button"
                             onClick={copyWhatsAppPromoText}
-                            className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 hover:bg-slate-200 transition cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-200 transition cursor-pointer"
                         >
                             <Share2 className="w-4 h-4" />
                             <span>نسخ إعلان الواتساب 📢</span>
                         </button>
 
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="px-8 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-lg transition flex items-center gap-2 cursor-pointer"
-                        >
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            <span>حفظ ونشر بنر الإطلاق فوراً ✅</span>
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="submit"
+                                disabled={saving}
+                                className="flex-1 sm:flex-none px-5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer border border-slate-700 active:scale-95"
+                                title="حفظ وتثبيت تعديلات هذا القالب في الذاكرة"
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 text-amber-400" />}
+                                <span>💾 حفظ وتثبيت هذا القالب</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleActivateAndPublish}
+                                disabled={saving}
+                                className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                title="تفعيل هذا القالب بنصوصه وأسعاره الحالية ونشره فوراً في المتجر"
+                            >
+                                <Zap className="w-4 h-4" />
+                                <span>🚀 تفعيل ونشر هذا القالب بالمتجر</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
 
