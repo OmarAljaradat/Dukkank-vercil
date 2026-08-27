@@ -341,7 +341,15 @@ export function DataProvider({ children }) {
     const setSocialProof = (val) => { setSocialProofState(val); saveLocal("dukkank_live_social_proof", val); };
     const setWATemplates = (val) => { setWATemplatesState(val); saveLocal("dukkank_live_wa_templates", val); };
     const setReviews = (val) => { setReviewsState(val); saveLocal("dukkank_live_reviews", val); saveLocal("store_reviews_list", val); };
-    const setFaqs = (val) => { setFaqsState(val); saveLocal("dukkank_live_faqs", val); saveLocal("store_faqs_list", val); };
+    const setFaqs = (val) => {
+        setFaqsState(val);
+        saveLocal("dukkank_live_faqs", val);
+        saveLocal("store_faqs_list", val);
+        const token = getToken();
+        if (token && Array.isArray(val)) {
+            axios.put(`${API}/admin/faqs`, val, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        }
+    };
     const setContent = (val) => { setContentState(val); saveLocal("dukkank_live_content", val); };
     const setSiteSettings = (val) => { setSiteSettingsState(val); saveLocal("dukkank_live_site_settings", val); };
     const setLaunchAnnouncement = (val) => {

@@ -59,11 +59,23 @@ router.get("/faqs", async (_req, res) => {
   res.json([...list].sort((a: any, b: any) => (a.order ?? 99) - (b.order ?? 99)));
 });
 
+// Admin: Bulk update FAQs list
+router.put("/admin/faqs", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const list = Array.isArray(req.body) ? req.body : req.body?.faqs;
+  if (list) {
+    await dbSave("faqs", list);
+    res.json(list);
+  } else {
+    res.status(400).json({ error: "بيانات الأسئلة غير صحيحة" });
+  }
+});
+
 // Admin: Add FAQ
 router.post("/admin/faqs", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const current = await dbLoad("faqs", DEFAULT_FAQS);
-  const f = { ...req.body, id: Date.now() };
+  const f = { ...req.body, id: req.body?.id || `faq-${Date.now()}` };
   current.push(f);
   await dbSave("faqs", current);
   res.json(f);
@@ -73,8 +85,8 @@ router.post("/admin/faqs", async (req, res) => {
 router.put("/admin/faqs/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const current = await dbLoad("faqs", DEFAULT_FAQS);
-  const id = Number(req.params.id);
-  const idx = current.findIndex((x: any) => x.id === id);
+  const targetId = String(req.params.id);
+  const idx = current.findIndex((x: any) => String(x.id) === targetId);
   if (idx !== -1) {
     current[idx] = { ...current[idx], ...req.body };
     await dbSave("faqs", current);
@@ -88,8 +100,8 @@ router.put("/admin/faqs/:id", async (req, res) => {
 router.delete("/admin/faqs/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const current = await dbLoad("faqs", DEFAULT_FAQS);
-  const id = Number(req.params.id);
-  const idx = current.findIndex((x: any) => x.id === id);
+  const targetId = String(req.params.id);
+  const idx = current.findIndex((x: any) => String(x.id) === targetId);
   if (idx !== -1) {
     current.splice(idx, 1);
     await dbSave("faqs", current);

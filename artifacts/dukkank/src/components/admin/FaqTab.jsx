@@ -101,7 +101,9 @@ export default function FaqTab({ onChanged }) {
     const toggleVisibility = (id) => {
         const updated = faqs.map((f) => f.id === id ? { ...f, visible: f.visible === false ? true : false } : f);
         setLocalFaqs(updated);
+        if (setStoreFaqs) setStoreFaqs(updated);
         toast.success("تم تحديث حالة ظهور السؤال بالموقع 👁️");
+        onChanged?.();
     };
 
     const resetToDefaultFaqs = () => {
