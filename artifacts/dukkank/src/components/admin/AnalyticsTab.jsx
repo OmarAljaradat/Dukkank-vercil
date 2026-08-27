@@ -100,7 +100,7 @@ export default function AnalyticsTab() {
         toast.success(`تم تحميل ملف تقرير إحصائيات دكانك (${days} يوم) بنجاح 📥`);
     };
 
-    const totals = data?.totals || { visits: 3420, users: 145, orders: 84, activeGames: GAMES.length };
+    const totals = data?.totals || { visits: 0, users: 0, orders: 0, activeGames: GAMES.length };
     const timeline = data?.timeline || [];
 
     return (

@@ -6,32 +6,6 @@ import { Plus, Trash2, Wallet, Handshake, CheckCircle2, Clock, RefreshCw, Loader
 import { apiListOrders, apiResetStoreData, formatApiError } from "../../lib/api";
 import { toast } from "sonner";
 
-const PROFIT_CURVE = [
-    { date: "19 يوليو", profit: 120 },
-    { date: "20 يوليو", profit: 340 },
-    { date: "21 يوليو", profit: 890 },
-    { date: "22 يوليو", profit: 410 },
-    { date: "23 يوليو", profit: 280 },
-    { date: "24 يوليو", profit: 360 },
-    { date: "25 يوليو", profit: 420 },
-];
-
-const REVENUE_VS_COST = [
-    { date: "19 يوليو", revenue: 140, cost: 20 },
-    { date: "20 يوليو", revenue: 380, cost: 40 },
-    { date: "21 يوليو", revenue: 950, cost: 60 },
-    { date: "22 يوليو", revenue: 450, cost: 40 },
-    { date: "23 يوليو", revenue: 310, cost: 30 },
-    { date: "24 يوليو", revenue: 400, cost: 40 },
-    { date: "25 يوليو", revenue: 460, cost: 40 },
-];
-
-const DEFAULT_SUPPLIER_COSTS = [
-    { supplier: "المورد أحمد (الخليج للألعاب)", item: "5x حسابات EA SPORTS FC 25 (PS5)", cost: "$110.00", date: "25 يوليو 2026", isPaid: true },
-    { supplier: "متجر السريعة الرقمية", item: "3x اشتراك PS Plus Extra (12 شهر)", cost: "$135.00", date: "23 يوليو 2026", isPaid: true },
-    { supplier: "سيرفر الأكواد المباشرة", item: "4x حسابات GTA V (PS5)", cost: "$48.00", date: "20 يوليو 2026", isPaid: false },
-];
-
 export default function FinanceTab() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -142,6 +116,17 @@ export default function FinanceTab() {
         }
     ] : [];
 
+    const dynamicProfitCurve = orders.map((o) => ({
+        date: o.created_at ? new Date(o.created_at).toLocaleDateString("ar-SA", { day: "numeric", month: "short" }) : "اليوم",
+        profit: (parseFloat(o.customer_paid) || 0) - (parseFloat(o.cost_price) || 0) - (parseFloat(o.gateway_fee) || 0)
+    }));
+
+    const dynamicRevenueVsCost = orders.map((o) => ({
+        date: o.created_at ? new Date(o.created_at).toLocaleDateString("ar-SA", { day: "numeric", month: "short" }) : "اليوم",
+        revenue: parseFloat(o.customer_paid) || 0,
+        cost: parseFloat(o.cost_price) || 0
+    }));
+
     return (
         <div className="space-y-6">
             {/* Top Action Bar */}
@@ -212,21 +197,27 @@ export default function FinanceTab() {
                     <span>منحنى الأرباح الصافية بعد تكاليف الحسابات والمصروفات</span>
                 </h3>
                 <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={PROFIT_CURVE}>
-                            <defs>
-                                <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#64748b" }} />
-                            <YAxis tick={{ fontSize: 10, fill: "#64748b" }} />
-                            <Tooltip contentStyle={{ borderRadius: '12px' }} />
-                            <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#profitGrad)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
+                    {dynamicProfitCurve.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-xs font-bold text-slate-400">
+                            بانتظار تسجيل المبيعات الأولى لرسم منحنى الأرباح 📈
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={dynamicProfitCurve}>
+                                <defs>
+                                    <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#64748b" }} />
+                                <YAxis tick={{ fontSize: 10, fill: "#64748b" }} />
+                                <Tooltip contentStyle={{ borderRadius: '12px' }} />
+                                <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#profitGrad)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    )}
                 </div>
             </div>
 
@@ -236,16 +227,22 @@ export default function FinanceTab() {
                 <div className="bg-white dark:bg-white/[0.04] p-6 rounded-3xl border border-slate-100 dark:border-white/10 shadow-sm space-y-4">
                     <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">إيرادات الألعاب مقابل تكلفة التوريد والحسابات</h3>
                     <div className="h-56 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={REVENUE_VS_COST}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                                <YAxis tick={{ fontSize: 10 }} />
-                                <Tooltip />
-                                <Bar dataKey="revenue" fill="#3b82f6" radius={[6, 6, 0, 0]} name="إجمالي المبيعات" />
-                                <Bar dataKey="cost" fill="#ef4444" radius={[6, 6, 0, 0]} name="تكلفة الحسابات" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {dynamicRevenueVsCost.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-xs font-bold text-slate-400">
+                                بانتظار تسجيل المبيعات الأولى لعرض التكاليف 📊
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={dynamicRevenueVsCost}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                                    <YAxis tick={{ fontSize: 10 }} />
+                                    <Tooltip />
+                                    <Bar dataKey="revenue" fill="#3b82f6" radius={[6, 6, 0, 0]} name="إجمالي المبيعات" />
+                                    <Bar dataKey="cost" fill="#ef4444" radius={[6, 6, 0, 0]} name="تكلفة الحسابات" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
