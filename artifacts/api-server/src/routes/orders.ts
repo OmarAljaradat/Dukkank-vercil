@@ -255,6 +255,7 @@ router.put("/admin/store-orders/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const body = req.body || {};
+  const costNum = body.cost_price !== undefined && body.cost_price !== "" && !isNaN(Number(body.cost_price)) ? Number(body.cost_price) : null;
 
   if (pool) {
     try {
@@ -266,11 +267,13 @@ router.put("/admin/store-orders/:id", async (req, res) => {
           cost_price=COALESCE($4,cost_price),
           account_credentials=COALESCE($5,account_credentials),
           updated_at=NOW()
-         WHERE id=$6 OR order_number=$6 RETURNING *`,
-        [body.customer_name, body.status, body.notes, body.cost_price, body.account_credentials, id]
+         WHERE id::text=$6 OR order_number=$6 RETURNING *`,
+        [body.customer_name || null, body.status || null, body.notes || null, costNum, body.account_credentials || null, id]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error("DB update store-orders error:", e?.message);
+    }
   }
 
   const idx = storeOrders.findIndex(o => String(o.id) === String(id) || o.order_number === String(id));
@@ -285,7 +288,7 @@ router.delete("/admin/store-orders/:id", async (req, res) => {
 
   if (pool) {
     try {
-      await pool.query("DELETE FROM store_orders WHERE id=$1 OR order_number=$1", [id]);
+      await pool.query("DELETE FROM store_orders WHERE id::text=$1 OR order_number=$1", [id]);
     } catch (e) {}
   }
 
@@ -300,24 +303,28 @@ router.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const { supplier_id, cost_price } = req.body || {};
+  const supId = supplier_id && !isNaN(Number(supplier_id)) ? Number(supplier_id) : null;
+  const costNum = cost_price !== undefined && cost_price !== "" && !isNaN(Number(cost_price)) ? Number(cost_price) : null;
   const now = new Date().toISOString();
 
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='supplier_sent', supplier_id=$1, cost_price=COALESCE($2,cost_price),
-         supplier_forwarded_at=NOW(), updated_at=NOW() WHERE id=$3 OR order_number=$3 RETURNING *`,
-        [supplier_id || null, cost_price || null, id]
+        `UPDATE store_orders SET status='supplier_sent', supplier_id=COALESCE($1,supplier_id), cost_price=COALESCE($2,cost_price),
+         supplier_forwarded_at=NOW(), updated_at=NOW() WHERE id::text=$3 OR order_number=$3 RETURNING *`,
+        [supId, costNum, id]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error("DB forward-supplier error:", e?.message);
+    }
   }
 
   const idx = storeOrders.findIndex(o => String(o.id) === String(id) || o.order_number === String(id));
   if (idx === -1) { res.status(404).json({ error: "الطلب غير موجود" }); return; }
   storeOrders[idx].status = "supplier_sent";
-  if (supplier_id !== undefined) storeOrders[idx].supplier_id = supplier_id;
-  if (cost_price !== undefined) storeOrders[idx].cost_price = Number(cost_price);
+  if (supId !== null) storeOrders[idx].supplier_id = supId;
+  if (costNum !== null) storeOrders[idx].cost_price = costNum;
   storeOrders[idx].supplier_forwarded_at = now;
   storeOrders[idx].updated_at = now;
   res.json(storeOrders[idx]);
@@ -327,24 +334,27 @@ router.put("/admin/store-orders/:id/receive-account", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const { account_credentials, cost_price } = req.body || {};
+  const costNum = cost_price !== undefined && cost_price !== "" && !isNaN(Number(cost_price)) ? Number(cost_price) : null;
   const now = new Date().toISOString();
 
   if (pool) {
     try {
       const { rows } = await pool.query(
         `UPDATE store_orders SET status='account_received', account_credentials=$1, cost_price=COALESCE($2,cost_price),
-         account_received_at=NOW(), updated_at=NOW() WHERE id=$3 OR order_number=$3 RETURNING *`,
-        [account_credentials || null, cost_price || null, id]
+         account_received_at=NOW(), updated_at=NOW() WHERE id::text=$3 OR order_number=$3 RETURNING *`,
+        [account_credentials || null, costNum, id]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error("DB receive-account error:", e?.message);
+    }
   }
 
   const idx = storeOrders.findIndex(o => String(o.id) === String(id) || o.order_number === String(id));
   if (idx === -1) { res.status(404).json({ error: "الطلب غير موجود" }); return; }
   storeOrders[idx].status = "account_received";
   if (account_credentials) storeOrders[idx].account_credentials = account_credentials;
-  if (cost_price !== undefined) storeOrders[idx].cost_price = Number(cost_price);
+  if (costNum !== null) storeOrders[idx].cost_price = costNum;
   storeOrders[idx].account_received_at = now;
   storeOrders[idx].updated_at = now;
   res.json(storeOrders[idx]);
@@ -358,11 +368,13 @@ router.put("/admin/store-orders/:id/deliver", async (req, res) => {
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='delivered', delivered_at=NOW(), updated_at=NOW() WHERE id=$1 OR order_number=$1 RETURNING *`,
+        `UPDATE store_orders SET status='delivered', delivered_at=NOW(), updated_at=NOW() WHERE id::text=$1 OR order_number=$1 RETURNING *`,
         [id]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error("DB deliver error:", e?.message);
+    }
   }
 
   const idx = storeOrders.findIndex(o => String(o.id) === String(id) || o.order_number === String(id));
@@ -381,11 +393,13 @@ router.put("/admin/store-orders/:id/complete", async (req, res) => {
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='completed', completed_at=NOW(), updated_at=NOW() WHERE id=$1 OR order_number=$1 RETURNING *`,
+        `UPDATE store_orders SET status='completed', completed_at=NOW(), updated_at=NOW() WHERE id::text=$1 OR order_number=$1 RETURNING *`,
         [id]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
-    } catch (e) {}
+    } catch (e: any) {
+      console.error("DB complete error:", e?.message);
+    }
   }
 
   const idx = storeOrders.findIndex(o => String(o.id) === String(id) || o.order_number === String(id));
