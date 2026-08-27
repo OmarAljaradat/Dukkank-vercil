@@ -132,7 +132,7 @@ const FALLBACK_CONTENT = {
         badge: "متجر موثوق • تسليم فوري ⚡",
         titleLine1: "كل ألعابك وااشتراكاتك",
         titleLine2: "بضغطة زر واحدة.",
-        subtitle: "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودفع مباشر عبر الموقع.",
+        subtitle: "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودعم مباشر على واتساب.",
         ctaBrowse: "تصفّح المنتجات 🎮",
         ctaWhatsApp: "تواصل مع الدعم الفني 💬",
         benefitInstant: "تسليم فوري ⚡",
@@ -246,6 +246,22 @@ const loadLocal = (key, fallback) => {
     }
 };
 
+// Persistent User Override System (Never allow serverless cold start to overwrite explicit admin choices)
+const loadOverrides = () => {
+    try {
+        const item = localStorage.getItem("dukkank_admin_overrides_v2");
+        return item ? JSON.parse(item) : { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {} };
+    } catch {
+        return { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {} };
+    }
+};
+
+const saveOverrides = (overrides) => {
+    try {
+        localStorage.setItem("dukkank_admin_overrides_v2", JSON.stringify(overrides));
+    } catch {}
+};
+
 export function DataProvider({ children }) {
     const [store, setStoreState] = useState(() => loadLocal("dukkank_live_store", FALLBACK_STORE));
     const [subscriptions, setSubscriptionsState] = useState(() => loadLocal("dukkank_live_subscriptions", FALLBACK_SUBS));
@@ -266,11 +282,53 @@ export function DataProvider({ children }) {
     const [error, setError] = useState(null);
 
     const setStore = (val) => { setStoreState(val); saveLocal("dukkank_live_store", val); };
-    const setGames = (val) => { setGamesState(val); saveLocal("dukkank_live_games", val); setAdminGamesState(val); saveLocal("dukkank_live_admin_games", val); };
+    const setGames = (val) => {
+        if (Array.isArray(val)) {
+            const overrides = loadOverrides();
+            val.forEach(g => {
+                if (g && g.id) {
+                    overrides.games[g.id] = { hidden: !!g.hidden, available: g.available !== false, updatedAt: Date.now() };
+                }
+            });
+            saveOverrides(overrides);
+        }
+        setGamesState(val);
+        saveLocal("dukkank_live_games", val);
+        setAdminGamesState(val);
+        saveLocal("dukkank_live_admin_games", val);
+    };
     const setAdminGames = (val) => { setAdminGamesState(val); saveLocal("dukkank_live_admin_games", val); };
-    const setSubscriptions = (val) => { setSubscriptionsState(val); saveLocal("dukkank_live_subscriptions", val); };
+    
+    const setSubscriptions = (val) => {
+        if (Array.isArray(val)) {
+            const overrides = loadOverrides();
+            val.forEach(s => {
+                if (s && s.id) {
+                    overrides.subscriptions[s.id] = { visible: s.visible !== false, hidden: !!s.hidden, updatedAt: Date.now() };
+                }
+            });
+            saveOverrides(overrides);
+        }
+        setSubscriptionsState(val);
+        saveLocal("dukkank_live_subscriptions", val);
+    };
+
     const setBundles = (val) => { setBundlesState(val); saveLocal("dukkank_live_bundles", val); };
-    const setSections = (val) => { setSectionsState(val); saveLocal("dukkank_live_sections", val); };
+    
+    const setSections = (val) => {
+        if (Array.isArray(val)) {
+            const overrides = loadOverrides();
+            val.forEach(s => {
+                if (s && s.id) {
+                    overrides.sections[s.id] = { visible: s.visible !== false, updatedAt: Date.now() };
+                }
+            });
+            saveOverrides(overrides);
+        }
+        setSectionsState(val);
+        saveLocal("dukkank_live_sections", val);
+    };
+
     const setPromo = (val) => { setPromoState(val); saveLocal("dukkank_live_promo", val); };
     const setSocialProof = (val) => { setSocialProofState(val); saveLocal("dukkank_live_social_proof", val); };
     const setWATemplates = (val) => { setWATemplatesState(val); saveLocal("dukkank_live_wa_templates", val); };
@@ -278,11 +336,117 @@ export function DataProvider({ children }) {
     const setFaqs = (val) => { setFaqsState(val); saveLocal("dukkank_live_faqs", val); saveLocal("store_faqs_list", val); };
     const setContent = (val) => { setContentState(val); saveLocal("dukkank_live_content", val); };
     const setSiteSettings = (val) => { setSiteSettingsState(val); saveLocal("dukkank_live_site_settings", val); };
-    const setLaunchAnnouncement = (val) => { setLaunchAnnouncementState(val); saveLocal("dukkank_live_launch", val); };
+    const setLaunchAnnouncement = (val) => {
+        if (val && typeof val === "object") {
+            const overrides = loadOverrides();
+            overrides.launch = { ...val, updatedAt: Date.now() };
+            saveOverrides(overrides);
+        }
+        setLaunchAnnouncementState(val);
+        saveLocal("dukkank_live_launch", val);
+    };
+
     const setTheme = (val) => {
+        if (val && typeof val === "object") {
+            const overrides = loadOverrides();
+            overrides.theme = { ...(overrides.theme || {}), ...val };
+            saveOverrides(overrides);
+        }
         setThemeState(val);
         saveLocal("dukkank_live_theme", val);
         if (val && typeof val === "object") applyTheme(val);
+    };
+
+    const mergeSections = (fetched) => {
+        if (!Array.isArray(fetched) || fetched.length === 0) return sections;
+        const overrides = loadOverrides();
+        const localCurrent = loadLocal("dukkank_live_sections", sections || FALLBACK_SECTIONS);
+        const localMap = new Map((localCurrent || []).map(s => [s.id, s]));
+
+        // Base array: if user has a custom ordering in localCurrent, preserve that order
+        const baseList = (localCurrent && localCurrent.length >= fetched.length) ? localCurrent : fetched;
+
+        return baseList.map(item => {
+            const serverMatch = fetched.find(f => f.id === item.id);
+            const localMatch = localMap.get(item.id);
+            const override = overrides.sections?.[item.id];
+
+            let visible = item.visible !== false;
+            if (override !== undefined && override.visible !== undefined) {
+                visible = override.visible;
+            } else if (localMatch !== undefined && localMatch.visible !== undefined) {
+                visible = localMatch.visible;
+            } else if (serverMatch !== undefined && serverMatch.visible !== undefined) {
+                visible = serverMatch.visible;
+            }
+
+            return {
+                ...item,
+                ...(serverMatch || {}),
+                ...(localMatch || {}),
+                visible
+            };
+        });
+    };
+
+    const mergeSubscriptions = (fetched) => {
+        if (!Array.isArray(fetched) || fetched.length === 0) return subscriptions;
+        const overrides = loadOverrides();
+        const localCurrent = loadLocal("dukkank_live_subscriptions", subscriptions || FALLBACK_SUBS);
+        const localMap = new Map((localCurrent || []).map(s => [s.id, s]));
+
+        return fetched.map(item => {
+            const localMatch = localMap.get(item.id);
+            const override = overrides.subscriptions?.[item.id];
+
+            let visible = item.visible !== false;
+            let hidden = !!item.hidden;
+
+            if (override !== undefined) {
+                if (override.visible !== undefined) visible = override.visible;
+                if (override.hidden !== undefined) hidden = override.hidden;
+            } else if (localMatch !== undefined) {
+                if (localMatch.visible !== undefined) visible = localMatch.visible;
+                if (localMatch.hidden !== undefined) hidden = localMatch.hidden;
+            }
+
+            return {
+                ...item,
+                ...(localMatch || {}),
+                visible,
+                hidden
+            };
+        });
+    };
+
+    const mergeGames = (fetched) => {
+        if (!Array.isArray(fetched) || fetched.length === 0) return games;
+        const overrides = loadOverrides();
+        const localCurrent = loadLocal("dukkank_live_games", games || FALLBACK_GAMES);
+        const localMap = new Map((localCurrent || []).map(g => [g.id, g]));
+
+        return fetched.map(item => {
+            const localMatch = localMap.get(item.id);
+            const override = overrides.games?.[item.id];
+
+            let hidden = !!item.hidden;
+            let available = item.available !== false;
+
+            if (override !== undefined) {
+                if (override.hidden !== undefined) hidden = override.hidden;
+                if (override.available !== undefined) available = override.available;
+            } else if (localMatch !== undefined) {
+                if (localMatch.hidden !== undefined) hidden = localMatch.hidden;
+                if (localMatch.available !== undefined) available = localMatch.available;
+            }
+
+            return {
+                ...item,
+                ...(localMatch || {}),
+                hidden,
+                available
+            };
+        });
     };
 
     const mergeContent = (fetched) => {
@@ -314,8 +478,24 @@ export function DataProvider({ children }) {
     };
 
     const mergeLaunchAnnouncement = (fetched) => {
+        const overrides = loadOverrides();
+        if (overrides.launch && Object.keys(overrides.launch).length > 0) {
+            return { ...(fetched || FALLBACK_LAUNCH_ANNOUNCEMENT), ...overrides.launch };
+        }
         if (!fetched || typeof fetched !== "object" || Array.isArray(fetched)) return launchAnnouncement;
         return fetched;
+    };
+
+    const mergeThemeData = (fetched) => {
+        const overrides = loadOverrides();
+        const userTheme = overrides.theme || {};
+        const localTheme = loadLocal("dukkank_live_theme", {});
+        const finalTheme = {
+            ...(fetched && typeof fetched === "object" ? fetched : {}),
+            ...localTheme,
+            ...userTheme
+        };
+        return finalTheme;
     };
 
     const asArray = (v, fallback) => (Array.isArray(v) && v.length > 0 ? v : fallback);
@@ -360,10 +540,10 @@ export function DataProvider({ children }) {
             const thm = getVal(13);
 
             if (s) setStore(asObject(s, store));
-            if (subs) setSubscriptions(asArray(subs, subscriptions));
-            if (gms) setGames(asArray(gms, games));
+            if (subs) setSubscriptions(mergeSubscriptions(subs));
+            if (gms) setGames(mergeGames(gms));
             if (bnds) setBundles(asArray(bnds, bundles));
-            if (secs) setSections(asArray(secs, sections));
+            if (secs) setSections(mergeSections(secs));
             if (prom) setPromo(mergePromo(prom));
             if (sp) setSocialProof(asObject(sp, socialProof));
             if (wat) setWATemplates(asObject(wat, waTemplates));
@@ -387,7 +567,12 @@ export function DataProvider({ children }) {
             if (cnt) setContent(mergeContent(cnt));
             if (ss) setSiteSettings(asObject(ss, siteSettings));
             if (la) setLaunchAnnouncement(mergeLaunchAnnouncement(la));
-            if (thm && typeof thm === "object" && Object.keys(thm).length > 0) setTheme(thm);
+            if (thm || Object.keys(loadOverrides().theme || {}).length > 0) {
+                const finalTheme = mergeThemeData(thm);
+                if (Object.keys(finalTheme).length > 0) {
+                    setTheme(finalTheme);
+                }
+            }
 
             const token = getToken();
             if (token) {
@@ -395,7 +580,7 @@ export function DataProvider({ children }) {
                     const adminRes = await axios.get(`${API}/admin/games`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
-                    if (adminRes?.data) setAdminGames(asArray(adminRes.data, adminGames));
+                    if (adminRes?.data) setAdminGames(mergeGames(adminRes.data));
                 } catch (_e) { }
             }
             setError(null);
