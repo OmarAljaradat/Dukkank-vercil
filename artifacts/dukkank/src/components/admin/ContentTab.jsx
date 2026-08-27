@@ -7,7 +7,7 @@ import { Input, Field, Textarea } from "./_widgets";
 import {
     FileText, Save, Loader2, Plus, Trash2, Sparkles, Megaphone,
     Crown, GitCompare, Gamepad2, Star, HelpCircle, Layout, Search,
-    RotateCcw, Check, X, Eye
+    RotateCcw, Check, X, Eye, ScrollText
 } from "lucide-react";
 
 // Categorized Sections for easy navigation
@@ -17,6 +17,7 @@ const CMS_CATEGORIES = [
     { id: "subs", label: "📦 الاشتراكات والـ PS Plus", keys: ["essential", "extra", "deluxe", "comparison"] },
     { id: "accountGuide", label: "📖 دليل التفعيل وقواعد الضمان", keys: ["accountGuide"] },
     { id: "guide", label: "🪜 دليل الشراء والضمان الصفحة الرئيسية", keys: ["howItWorks", "goldenGuarantee"] },
+    { id: "policies", label: "📜 سياسات وشروط المتجر", keys: ["policies"] },
     { id: "footer", label: "🏪 عن المتجر والفوتر", keys: ["aboutStore", "reviews", "faq", "footer"] },
 ];
 
@@ -218,6 +219,17 @@ const SECTIONS_MAP = {
             { key: "linksTitle", label: "عنوان قائمة «روابط سريعة»", type: "text" },
             { key: "contactTitle", label: "عنوان قائمة «تواصل معنا»", type: "text" },
             { key: "copyright", label: "نص حقوق النشر والترخيص", type: "text" },
+        ],
+    },
+    policies: {
+        title: "📜 سياسات وشروط المتجر الرسمية",
+        icon: ScrollText,
+        hint: "تحرير سياسة الخصوصية، الشروط والأحكام، سياسة الاسترجاع والاستبدال، والضمان الذهبي.",
+        fields: [
+            { key: "privacy", label: "سياسة الخصوصية وأمان البيانات", type: "textarea", placeholder: "اكتب نصوص وبنود سياسة الخصوصية هنا..." },
+            { key: "terms", label: "الشروط والأحكام واتفاقية الاستخدام", type: "textarea", placeholder: "اكتب الشروط والأحكام وقواعد الشراء هنا..." },
+            { key: "refund", label: "سياسة الاسترجاع والاستبدال", type: "textarea", placeholder: "اكتب سياسة استرجاع الأموال واستبدال الحسابات هنا..." },
+            { key: "warranty", label: "سياسة الضمان الذهبي وتعويض الحسابات", type: "textarea", placeholder: "اكتب شروط وضوابط الضمان الذهبي هنا..." },
         ],
     },
 };

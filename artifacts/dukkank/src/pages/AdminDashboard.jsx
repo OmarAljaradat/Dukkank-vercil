@@ -75,7 +75,7 @@ const TABS = [
     { value: "seo",          label: "🔎 SEO ومحركات البحث", group: "system" },
     { value: "security",     label: "🛡️ الأمان والحماية",  group: "system" },
     { value: "backup",       label: "⚙️ النسخ الاحتياطي",  group: "system" },
-    { value: "siteSettings", label: "🔧 الصيانة والسياسات", group: "system" },
+    { value: "siteSettings", label: "🔧 وضع الصيانة وحماية الموقع", group: "system" },
     { value: "performance",  label: "⚡ الأداء والكاش",     group: "system" },
     { value: "audit",        label: "📜 سجل التدقيق",      group: "system" },
     { value: "account",      label: "👤 الحساب",            group: "system" },
