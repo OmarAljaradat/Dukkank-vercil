@@ -18436,8 +18436,8 @@ var require_escape_html = __commonJS({
   "../../node_modules/.pnpm/escape-html@1.0.3/node_modules/escape-html/index.js"(exports, module) {
     "use strict";
     var matchHtmlRegExp = /["'&<>]/;
-    module.exports = escapeHtml;
-    function escapeHtml(string) {
+    module.exports = escapeHtml2;
+    function escapeHtml2(string) {
       var str = "" + string;
       var match = matchHtmlRegExp.exec(str);
       if (!match) {
@@ -18568,13 +18568,13 @@ var require_finalhandler = __commonJS({
     "use strict";
     var debug = require_src()("finalhandler");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var onFinished = require_on_finished();
     var parseUrl = require_parseurl();
     var statuses = require_statuses();
     var isFinished = onFinished.isFinished;
     function createHtmlDocument(message) {
-      var body = escapeHtml(message).replaceAll("\n", "<br>").replaceAll("  ", " &nbsp;");
+      var body = escapeHtml2(message).replaceAll("\n", "<br>").replaceAll("  ", " &nbsp;");
       return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>Error</title>\n</head>\n<body>\n<pre>' + body + "</pre>\n</body>\n</html>\n";
     }
     module.exports = finalhandler;
@@ -22458,7 +22458,7 @@ var require_send = __commonJS({
     var createError = require_http_errors();
     var debug = require_src()("send");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
     var fs = __require("fs");
@@ -22511,7 +22511,7 @@ var require_send = __commonJS({
       }
       var res = this.res;
       var msg = statuses.message[status] || String(status);
-      var doc = createHtmlDocument("Error", escapeHtml(msg));
+      var doc = createHtmlDocument("Error", escapeHtml2(msg));
       clearHeaders(res);
       if (err && err.headers) {
         setHeaders(res, err.headers);
@@ -22611,7 +22611,7 @@ var require_send = __commonJS({
         return;
       }
       var loc = encodeUrl(collapseLeadingSlashes(this.path + "/"));
-      var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
+      var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml2(loc));
       res.statusCode = 301;
       res.setHeader("Content-Type", "text/html; charset=UTF-8");
       res.setHeader("Content-Length", Buffer.byteLength(doc));
@@ -23015,7 +23015,7 @@ var require_response = __commonJS({
     var createError = require_http_errors();
     var deprecate = require_depd()("express");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var http = __require("node:http");
     var onFinished = require_on_finished();
     var mime = require_mime_types();
@@ -23354,7 +23354,7 @@ var require_response = __commonJS({
           body = statuses.message[status] + ". Redirecting to " + address;
         },
         html: function() {
-          var u = escapeHtml(address);
+          var u = escapeHtml2(address);
           body = "<p>" + statuses.message[status] + ". Redirecting to " + u + "</p>";
         },
         default: function() {
@@ -23482,7 +23482,7 @@ var require_serve_static = __commonJS({
   "../../node_modules/.pnpm/serve-static@2.2.1/node_modules/serve-static/index.js"(exports, module) {
     "use strict";
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var parseUrl = require_parseurl();
     var resolve = __require("path").resolve;
     var send = require_send();
@@ -23568,7 +23568,7 @@ var require_serve_static = __commonJS({
         originalUrl.path = null;
         originalUrl.pathname = collapseLeadingSlashes(originalUrl.pathname + "/");
         var loc = encodeUrl(url.format(originalUrl));
-        var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
+        var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml2(loc));
         res.statusCode = 301;
         res.setHeader("Content-Type", "text/html; charset=UTF-8");
         res.setHeader("Content-Length", Buffer.byteLength(doc));
@@ -29102,23 +29102,23 @@ var require_helpers = __commonJS({
   "../../node_modules/.pnpm/ip-address@10.3.1/node_modules/ip-address/dist/v6/helpers.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.escapeHtml = escapeHtml;
+    exports.escapeHtml = escapeHtml2;
     exports.spanAllZeroes = spanAllZeroes;
     exports.spanAll = spanAll;
     exports.spanLeadingZeroes = spanLeadingZeroes;
     exports.simpleGroup = simpleGroup;
-    function escapeHtml(s) {
+    function escapeHtml2(s) {
       return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     }
     function spanAllZeroes(s) {
-      return escapeHtml(s).replace(/(0+)/g, '<span class="zero">$1</span>');
+      return escapeHtml2(s).replace(/(0+)/g, '<span class="zero">$1</span>');
     }
     function spanAll(s, offset = 0) {
       const letters = s.split("");
-      return letters.map((n, i) => `<span class="digit value-${escapeHtml(n)} position-${i + offset}">${spanAllZeroes(n)}</span>`).join("");
+      return letters.map((n, i) => `<span class="digit value-${escapeHtml2(n)} position-${i + offset}">${spanAllZeroes(n)}</span>`).join("");
     }
     function spanLeadingZeroesSimple(group) {
-      return escapeHtml(group).replace(/^(0+)/, '<span class="zero">$1</span>');
+      return escapeHtml2(group).replace(/^(0+)/, '<span class="zero">$1</span>');
     }
     function spanLeadingZeroes(address) {
       const groups = address.split(":");
@@ -48768,6 +48768,9 @@ var DEFAULT_CONFIG = {
   botToken: process.env.TELEGRAM_BOT_TOKEN || "",
   chatId: process.env.TELEGRAM_CHAT_ID || ""
 };
+function escapeHtml(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 async function getTelegramConfig() {
   if (pool6) {
     try {
@@ -48816,23 +48819,46 @@ async function sendTelegramMessage(text, inlineKeyboard) {
   }
   try {
     const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    const sanitizedKeyboard = [];
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      inlineKeyboard.forEach((row) => {
+        const validRow = row.filter((btn) => {
+          if (btn.url) {
+            return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(btn.url);
+          }
+          return !!btn.callback_data;
+        });
+        if (validRow.length > 0) sanitizedKeyboard.push(validRow);
+      });
+    }
     const payload = {
       chat_id: config.chatId,
       text,
       parse_mode: "HTML",
       disable_web_page_preview: false
     };
-    if (inlineKeyboard && inlineKeyboard.length > 0) {
-      payload.reply_markup = {
-        inline_keyboard: inlineKeyboard
-      };
+    if (sanitizedKeyboard.length > 0) {
+      payload.reply_markup = { inline_keyboard: sanitizedKeyboard };
     }
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
+    let data = await res.json();
+    if (!data.ok) {
+      console.warn("Telegram send failed, retrying plain text:", data.description);
+      const plainText = text.replace(/<[^>]+>/g, "");
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: config.chatId,
+          text: plainText
+        })
+      });
+      data = await res.json();
+    }
     return data;
   } catch (err) {
     console.error("Telegram notification error:", err);
@@ -48842,92 +48868,85 @@ async function sendTelegramMessage(text, inlineKeyboard) {
 async function sendTelegramOrderNotification(order) {
   try {
     const orderNum = order.order_number || `#${order.id}`;
-    const customerName = order.customer_name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643";
-    const phone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
-    const rawPhone = order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F";
+    const customerName = escapeHtml(order.customer_name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643");
+    const cleanPhone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
+    const rawPhone = escapeHtml(order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F");
     const igRaw = (order.contact_instagram || "").replace(/^@/, "").trim();
-    const game = order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A";
-    const platform = order.platform ? `(${order.platform})` : "";
+    const game = escapeHtml(order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A");
+    const platform = order.platform ? escapeHtml(`(${order.platform})`) : "";
     const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "\u2014";
-    const payment = order.payment_platform || "\u062F\u0641\u0639 \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A";
+    const payment = escapeHtml(order.payment_platform || "\u062F\u0641\u0639 \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A");
     let suppliers2 = [];
     if (pool6) {
       try {
         const { rows } = await pool6.query(
-          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 4"
+          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 3"
         );
         suppliers2 = rows;
       } catch (_) {
       }
     }
     if (suppliers2.length === 0) {
-      suppliers2 = [{ id: 1, name: "\u0627\u0644\u0645\u0648\u0631\u062F \u0627\u0644\u0645\u0639\u062A\u0645\u062F", phone: "962775585112" }];
+      suppliers2 = [{ id: 1, name: "\u0627\u0644\u0645\u0648\u0631\u062F", phone: "962775585112" }];
     }
-    const qrRequestMsg = encodeURIComponent(
-      `\u0645\u0631\u062D\u0628\u0627\u064B \u0623\u062E\u064A ${customerName} \u{1F3AE}
-\u0634\u0643\u0631\u0627\u064B \u0644\u0634\u0631\u0627\u0626\u0643 \u0645\u0646 \u0645\u062A\u062C\u0631 *\u062F\u064F\u0643\u0627\u0646\u0643* \u26A1
+    const qrRequestText = encodeURIComponent(
+      `\u0645\u0631\u062D\u0628\u0627\u064B \u0623\u062E\u064A ${order.customer_name || "\u0627\u0644\u0639\u0645\u064A\u0644"} \u{1F3AE}
+\u0634\u0643\u0631\u0627\u064B \u0644\u0634\u0631\u0627\u0626\u0643 \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u26A1
 
-\u0644\u062A\u0633\u0644\u064A\u0645 \u0648\u062A\u0641\u0639\u064A\u0644 \u0637\u0644\u0628\u0643 (${game}) \u0641\u0648\u0631\u0627\u064B:
-\u064A\u0631\u062C\u0649 \u0641\u062A\u062D \u062C\u0647\u0627\u0632\u0643 \u0627\u0644\u0633\u0648\u0646\u064A \u0648\u0627\u062E\u062A\u064A\u0627\u0631 (\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F QR) \u0648\u062A\u0635\u0648\u064A\u0631 \u0627\u0644\u0643\u0648\u062F \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u0644\u0646\u0627 \u0647\u0646\u0627 \u{1F4F8}.
-
-\u0641\u0631\u064A\u0642\u0646\u0627 \u062C\u0627\u0647\u0632 \u0644\u0625\u062F\u062E\u0627\u0644\u0643 \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u062A\u0641\u0639\u064A\u0644\u0647 \u0628\u062C\u0647\u0627\u0632\u0643 \u0628\u0623\u0645\u0627\u0646 \u062A\u0627\u0645 \u{1F680}`
+\u0644\u062A\u0633\u0644\u064A\u0645 \u0648\u062A\u0641\u0639\u064A\u0644 \u0637\u0644\u0628\u0643 (${order.game_name || "\u0627\u0644\u0637\u0644\u0628"}) \u0641\u0648\u0631\u0627\u064B:
+\u064A\u0631\u062C\u0649 \u0641\u062A\u062D \u0634\u0627\u0634\u0629 \u0627\u0644\u0633\u0648\u0646\u064A \u0648\u0627\u062E\u062A\u064A\u0627\u0631 (\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F QR) \u0648\u062A\u0635\u0648\u064A\u0631 \u0627\u0644\u0643\u0648\u062F \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u0644\u0646\u0627 \u0647\u0646\u0627 \u{1F4F8}`
     );
-    const getSupplierMsg = (supName) => encodeURIComponent(
+    const supplierMsgText = (supName) => encodeURIComponent(
       `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064A\u0643\u0645 \u0623\u062E\u064A ${supName} \u{1F44B}
-\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 *\u062F\u064F\u0643\u0627\u0646\u0643* \u{1F3AE}:
+\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F3AE}:
 
-\u{1F3F7}\uFE0F \u0627\u0644\u0644\u0639\u0628\u0629 / \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643: *${game}* ${platform}
-\u{1F4E6} \u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: *#${orderNum}*
+\u0627\u0644\u0637\u0644\u0628: ${order.game_name || "\u062D\u0633\u0627\u0628"} ${order.platform || ""}
+\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: #${orderNum}
 
-\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`
+\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u26A1`
     );
     const messageHtml = `\u{1F525} <b>\u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062C\u062F\u064A\u062F \u0641\u064A \u062F\u064F\u0643\u0627\u0646\u0643!</b>
 
-\u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${orderNum}</code>
+\u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${escapeHtml(orderNum)}</code>
 \u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> <b>${customerName}</b>
-\u{1F4F1} <b>\u0627\u0644\u0647\u0627\u062A\u0641 / \u0648\u0627\u062A\u0633\u0627\u0628:</b> <code>${rawPhone}</code>
-${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644:</b> @${igRaw}
+\u{1F4F1} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${rawPhone}</code>
+${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> @${escapeHtml(igRaw)}
 ` : ""}\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> <b>${game}</b> ${platform}
-\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>${paid}</b>
-\u{1F4B3} <b>\u0648\u0633\u064A\u0644\u0629 \u0627\u0644\u062F\u0641\u0639:</b> ${payment}
-\u23F1\uFE0F <b>\u062D\u0627\u0644\u0629 \u0627\u0644\u0637\u0644\u0628:</b> \u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0648\u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u26A1
+\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A:</b> <b>${paid}</b>
+\u{1F4B3} <b>\u0637\u0631\u064A\u0642\u0629 \u0627\u0644\u062F\u0641\u0639:</b> ${payment}
+\u23F1\uFE0F <b>\u0627\u0644\u062D\u0627\u0644\u0629:</b> \u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0648\u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u26A1
 
 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-<b>\u{1F447} \u0645\u0633\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u0648\u0627\u0644\u0623\u062A\u0645\u062A\u0629 \u0627\u0644\u0633\u0631\u064A\u0639\u0629:</b>`;
+<b>\u{1F447} \u0645\u0633\u0627\u0631 \u0627\u0644\u062A\u0648\u0627\u0635\u0644 \u0648\u0627\u0644\u062A\u0646\u0641\u064A\u0630:</b>`;
     const inlineButtons = [];
-    const customerRow = [];
+    const row1 = [];
     if (igRaw) {
-      customerRow.push({
-        text: `\u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644 (@${igRaw})`,
+      row1.push({
+        text: `\u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 (@${igRaw})`,
         url: `https://instagram.com/${igRaw}`
       });
     }
-    if (phone) {
-      customerRow.push({
-        text: `\u{1F4F2} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644 (\u0637\u0644\u0628 QR)`,
-        url: `https://wa.me/${phone}?text=${qrRequestMsg}`
-      });
-    } else if (!igRaw) {
-      customerRow.push({
-        text: `\u{1F4F2} \u0645\u0631\u0627\u0633\u0644\u0629 \u0627\u0644\u0639\u0645\u064A\u0644 \u0648\u0627\u062A\u0633\u0627\u0628`,
-        url: `https://wa.me/?text=${qrRequestMsg}`
+    if (cleanPhone && cleanPhone.length >= 8) {
+      row1.push({
+        text: `\u{1F4F2} \u0648\u0627\u062A\u0633\u0627\u0628 (\u0637\u0644\u0628 QR)`,
+        url: `https://wa.me/${cleanPhone}?text=${qrRequestText}`
       });
     }
-    if (customerRow.length > 0) inlineButtons.push(customerRow);
+    if (row1.length > 0) inlineButtons.push(row1);
     suppliers2.forEach((sup) => {
-      const supCleanPhone = (sup.phone || "").replace(/\D/g, "");
-      if (supCleanPhone) {
+      const supClean = (sup.phone || "").replace(/\D/g, "");
+      if (supClean && supClean.length >= 8) {
         inlineButtons.push([
           {
             text: `\u{1F4E6} \u062A\u062D\u0648\u064A\u0644 \u0644\u0644\u0645\u0648\u0631\u062F: ${sup.name} \u{1F4F2}`,
-            url: `https://wa.me/${supCleanPhone}?text=${getSupplierMsg(sup.name)}`
+            url: `https://wa.me/${supClean}?text=${supplierMsgText(sup.name)}`
           }
         ]);
       }
     });
     inlineButtons.push([
       {
-        text: `\u{1F680} \u0641\u062A\u062D \u0627\u0644\u0637\u0644\u0628 \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645 (\u0627\u0644\u0645\u0648\u0642\u0639)`,
+        text: `\u{1F680} \u0641\u062A\u062D \u0627\u0644\u0637\u0644\u0628 \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645`,
         url: `https://www.dukkank.store/admin/orders`
       }
     ]);

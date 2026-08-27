@@ -14,6 +14,13 @@ const DEFAULT_CONFIG: TelegramConfig = {
   chatId: process.env.TELEGRAM_CHAT_ID || "",
 };
 
+function escapeHtml(str: string): string {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   if (pool) {
     try {
@@ -67,6 +74,21 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
 
   try {
     const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+
+    // Filter and sanitize keyboard buttons to ensure valid HTTP/HTTPS URLs
+    const sanitizedKeyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [];
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      inlineKeyboard.forEach((row) => {
+        const validRow = row.filter((btn) => {
+          if (btn.url) {
+            return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(btn.url);
+          }
+          return !!btn.callback_data;
+        });
+        if (validRow.length > 0) sanitizedKeyboard.push(validRow);
+      });
+    }
+
     const payload: any = {
       chat_id: config.chatId,
       text,
@@ -74,19 +96,33 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
       disable_web_page_preview: false,
     };
 
-    if (inlineKeyboard && inlineKeyboard.length > 0) {
-      payload.reply_markup = {
-        inline_keyboard: inlineKeyboard,
-      };
+    if (sanitizedKeyboard.length > 0) {
+      payload.reply_markup = { inline_keyboard: sanitizedKeyboard };
     }
 
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    let data = await res.json();
+
+    // If HTML parsing or keyboard failed, retry with plain text and no keyboard as fallback
+    if (!data.ok) {
+      console.warn("Telegram send failed, retrying plain text:", data.description);
+      const plainText = text.replace(/<[^>]+>/g, "");
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: config.chatId,
+          text: plainText,
+        }),
+      });
+      data = await res.json();
+    }
+
     return data;
   } catch (err: any) {
     console.error("Telegram notification error:", err);
@@ -97,94 +133,87 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
 export async function sendTelegramOrderNotification(order: any) {
   try {
     const orderNum = order.order_number || `#${order.id}`;
-    const customerName = order.customer_name || "عميل دُكانك";
-    const phone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
-    const rawPhone = order.customer_phone || order.contact_whatsapp || "غير محدد";
+    const customerName = escapeHtml(order.customer_name || "عميل دُكانك");
+    const cleanPhone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
+    const rawPhone = escapeHtml(order.customer_phone || order.contact_whatsapp || "غير محدد");
     const igRaw = (order.contact_instagram || "").replace(/^@/, "").trim();
-    const game = order.game_name || order.subscription_type || order.product_type || "منتج رقمي";
-    const platform = order.platform ? `(${order.platform})` : "";
+    const game = escapeHtml(order.game_name || order.subscription_type || order.product_type || "منتج رقمي");
+    const platform = order.platform ? escapeHtml(`(${order.platform})`) : "";
     const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "—";
-    const payment = order.payment_platform || "دفع إلكتروني";
+    const payment = escapeHtml(order.payment_platform || "دفع إلكتروني");
 
-    // 1. Fetch active suppliers to create direct WhatsApp buttons
+    // Fetch suppliers from DB if available
     let suppliers: Array<{ id: number; name: string; phone: string }> = [];
     if (pool) {
       try {
         const { rows } = await pool.query(
-          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 4"
+          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 3"
         );
         suppliers = rows;
       } catch (_) {}
     }
 
-    // Default supplier if no suppliers in DB
+    // Default supplier if no suppliers configured yet
     if (suppliers.length === 0) {
-      suppliers = [{ id: 1, name: "المورد المعتمد", phone: "962775585112" }];
+      suppliers = [{ id: 1, name: "المورد", phone: "962775585112" }];
     }
 
-    // Formatted Customer WhatsApp Message asking for Sony QR Code
-    const qrRequestMsg = encodeURIComponent(
-      `مرحباً أخي ${customerName} 🎮\nشكراً لشرائك من متجر *دُكانك* ⚡\n\nلتسليم وتفعيل طلبك (${game}) فوراً:\nيرجى فتح جهازك السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸.\n\nفريقنا جاهز لإدخالك الحساب وتفعيله بجهازك بأمان تام 🚀`
+    const qrRequestText = encodeURIComponent(
+      `مرحباً أخي ${order.customer_name || "العميل"} 🎮\nشكراً لشرائك من متجر دُكانك ⚡\n\nلتسليم وتفعيل طلبك (${order.game_name || "الطلب"}) فوراً:\nيرجى فتح شاشة السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸`
     );
 
-    // Formatted Supplier WhatsApp Message
-    const getSupplierMsg = (supName: string) => encodeURIComponent(
-      `السلام عليكم أخي ${supName} 👋\nطلب حساب جديد من متجر *دُكانك* 🎮:\n\n🏷️ اللعبة / الاشتراك: *${game}* ${platform}\n📦 رقم الطلب: *#${orderNum}*\n\nيرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`
+    const supplierMsgText = (supName: string) => encodeURIComponent(
+      `السلام عليكم أخي ${supName} 👋\nطلب حساب جديد من متجر دُكانك 🎮:\n\nالطلب: ${order.game_name || "حساب"} ${order.platform || ""}\nرقم الطلب: #${orderNum}\n\nيرجى تجهيز الحساب والتكلفة وإرساله ⚡`
     );
 
     const messageHtml = `🔥 <b>طلب شراء جديد في دُكانك!</b>
 
-📦 <b>رقم الطلب:</b> <code>${orderNum}</code>
+📦 <b>رقم الطلب:</b> <code>${escapeHtml(orderNum)}</code>
 👤 <b>العميل:</b> <b>${customerName}</b>
-📱 <b>الهاتف / واتساب:</b> <code>${rawPhone}</code>
-${igRaw ? `📸 <b>إنستغرام العميل:</b> @${igRaw}\n` : ""}🎮 <b>المنتج:</b> <b>${game}</b> ${platform}
-💰 <b>المبلغ المدفوع:</b> <b>${paid}</b>
-💳 <b>وسيلة الدفع:</b> ${payment}
-⏱️ <b>حالة الطلب:</b> طلب جديد وبانتظار التنفيذ ⚡
+📱 <b>الهاتف:</b> <code>${rawPhone}</code>
+${igRaw ? `📸 <b>إنستغرام:</b> @${escapeHtml(igRaw)}\n` : ""}🎮 <b>المنتج:</b> <b>${game}</b> ${platform}
+💰 <b>المبلغ:</b> <b>${paid}</b>
+💳 <b>طريقة الدفع:</b> ${payment}
+⏱️ <b>الحالة:</b> طلب جديد وبانتظار التنفيذ ⚡
 
 ───────────────
-<b>👇 مسار التنفيذ والأتمتة السريعة:</b>`;
+<b>👇 مسار التواصل والتنفيذ:</b>`;
 
     const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
 
-    // ROW 1: Customer Direct Communication (Instagram + WhatsApp)
-    const customerRow: Array<{ text: string; url: string }> = [];
+    // ROW 1: Customer Direct Communication
+    const row1: Array<{ text: string; url: string }> = [];
     if (igRaw) {
-      customerRow.push({
-        text: `📸 إنستغرام العميل (@${igRaw})`,
+      row1.push({
+        text: `📸 إنستغرام (@${igRaw})`,
         url: `https://instagram.com/${igRaw}`,
       });
     }
-    if (phone) {
-      customerRow.push({
-        text: `📲 واتساب العميل (طلب QR)`,
-        url: `https://wa.me/${phone}?text=${qrRequestMsg}`,
-      });
-    } else if (!igRaw) {
-      customerRow.push({
-        text: `📲 مراسلة العميل واتساب`,
-        url: `https://wa.me/?text=${qrRequestMsg}`,
+    if (cleanPhone && cleanPhone.length >= 8) {
+      row1.push({
+        text: `📲 واتساب (طلب QR)`,
+        url: `https://wa.me/${cleanPhone}?text=${qrRequestText}`,
       });
     }
-    if (customerRow.length > 0) inlineButtons.push(customerRow);
+    if (row1.length > 0) inlineButtons.push(row1);
 
-    // ROW 2: Forward to Supplier via WhatsApp (for each active supplier)
+    // ROW 2: Suppliers WhatsApp
     suppliers.forEach((sup) => {
-      const supCleanPhone = (sup.phone || "").replace(/\D/g, "");
-      if (supCleanPhone) {
+      const supClean = (sup.phone || "").replace(/\D/g, "");
+      if (supClean && supClean.length >= 8) {
         inlineButtons.push([
           {
             text: `📦 تحويل للمورد: ${sup.name} 📲`,
-            url: `https://wa.me/${supCleanPhone}?text=${getSupplierMsg(sup.name)}`,
+            url: `https://wa.me/${supClean}?text=${supplierMsgText(sup.name)}`,
           },
         ]);
       }
     });
 
-    // ROW 3: Quick Action & Website Admin Link
+    // ROW 3: Store Admin Dashboard Link
     inlineButtons.push([
       {
-        text: `🚀 فتح الطلب في لوحة التحكم (الموقع)`,
+        text: `🚀 فتح الطلب في لوحة التحكم`,
         url: `https://www.dukkank.store/admin/orders`,
       },
     ]);
