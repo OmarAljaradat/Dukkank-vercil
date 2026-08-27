@@ -330,7 +330,14 @@ export function DataProvider({ children }) {
         saveLocal("dukkank_live_sections", val);
     };
 
-    const setPromo = (val) => { setPromoState(val); saveLocal("dukkank_live_promo", val); };
+    const setPromo = (val) => {
+        setPromoState(val);
+        saveLocal("dukkank_live_promo", val);
+        const token = getToken();
+        if (token) {
+            axios.put(`${API}/admin/promo`, val, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        }
+    };
     const setSocialProof = (val) => { setSocialProofState(val); saveLocal("dukkank_live_social_proof", val); };
     const setWATemplates = (val) => { setWATemplatesState(val); saveLocal("dukkank_live_wa_templates", val); };
     const setReviews = (val) => { setReviewsState(val); saveLocal("dukkank_live_reviews", val); saveLocal("store_reviews_list", val); };

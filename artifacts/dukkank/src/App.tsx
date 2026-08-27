@@ -289,6 +289,7 @@ function HomePage() {
     return (
         <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg" data-testid="app-root">
             <SEO title={homeTitle} description={heroDesc} canonical={origin} image="" jsonLd={[]} />
+            <PromoBanner />
             <Header onOpenCart={() => setCartOpen(true)} onOpenWishlist={() => setWishOpen(true)} onOpenCustomerAuth={() => setCustomerAuthOpen(true)} />
             {isHeroVisible && <Hero />}
             <FlashSaleBanner />

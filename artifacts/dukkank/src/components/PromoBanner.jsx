@@ -35,11 +35,8 @@ export const PromoBanner = () => {
     const [left, setLeft] = useState(() => calcLeft(promo?.endsAt));
 
     useEffect(() => {
-        try {
-            const key = `promo_dismissed_${promo?.title || ""}`;
-            if (sessionStorage.getItem(key) === "1") setClosed(true);
-        } catch {}
-    }, [promo?.title]);
+        setClosed(false);
+    }, [promo?.enabled, promo?.title]);
 
     useEffect(() => {
         if (!promo?.enabled || !promo?.endsAt) {
@@ -52,15 +49,11 @@ export const PromoBanner = () => {
         return () => clearInterval(id);
     }, [promo?.enabled, promo?.endsAt]);
 
-    if (!promo?.enabled) return null;
+    if (!promo || promo.enabled === false) return null;
     if (closed) return null;
-    if (promo.endsAt && !left) return null; // ended
 
     const handleClose = () => {
         setClosed(true);
-        try {
-            sessionStorage.setItem(`promo_dismissed_${promo.title || ""}`, "1");
-        } catch {}
     };
 
     return (
