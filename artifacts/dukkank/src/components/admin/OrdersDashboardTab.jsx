@@ -434,231 +434,6 @@ export default function OrdersDashboardTab() {
   return (
     <div className="space-y-6">
 
-      {/* ── Prominent Inline Telegram Bot Configuration Card ────────────────── */}
-      <div className="bg-gradient-to-br from-slate-900 via-sky-950 to-blue-950 rounded-3xl p-6 text-white shadow-2xl border border-sky-500/30 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center shrink-0">
-              <Bot className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-black text-white">إعدادات وربط بوت التيليجرام للطلبات الفورية 🤖</h3>
-                <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full border ${
-                  tgConfig.enabled ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-red-500/20 text-red-300 border-red-500/30"
-                }`}>
-                  {tgConfig.enabled ? "مفعّل 🟢" : "معطل 🔴"}
-                </span>
-              </div>
-              <p className="text-xs text-sky-200/70 mt-0.5">
-                ضع هنا التوكن ومعرف المحادثة لتصلك إشعارات الطلبات الجديدة على هاتفك مباشرة مع أزرار التحويل
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setShowTgCard(!showTgCard)}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors"
-          >
-            {showTgCard ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {showTgCard && (
-          <form onSubmit={handleSaveTelegram} className="pt-2 border-t border-white/10 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Bot Token */}
-              <div>
-                <label className="block text-xs font-bold text-sky-200 mb-1">
-                  1. توكن البوت (Bot Token من BotFather):
-                </label>
-                <input
-                  type="text"
-                  value={tgConfig.botToken}
-                  onChange={(e) => setTgConfig((prev) => ({ ...prev, botToken: e.target.value }))}
-                  placeholder={tgConfig.hasToken ? "التوكن محفوظ بالفعل (اتركه للإبقاء عليه)" : "مثال: 7123456789:AAHk..."}
-                  className="w-full h-11 px-3.5 rounded-xl border border-sky-500/30 bg-black/40 text-xs font-mono font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 dir-ltr"
-                />
-              </div>
-
-              {/* Chat ID */}
-              <div>
-                <label className="block text-xs font-bold text-sky-200 mb-1">
-                  2. معرف المحادثة (Chat ID من userinfobot أو القناة):
-                </label>
-                <input
-                  type="text"
-                  value={tgConfig.chatId}
-                  onChange={(e) => setTgConfig((prev) => ({ ...prev, chatId: e.target.value }))}
-                  placeholder="مثال: 123456789 أو -100123456789"
-                  className="w-full h-11 px-3.5 rounded-xl border border-sky-500/30 bg-black/40 text-xs font-mono font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-400 dir-ltr"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setTgConfig((prev) => ({ ...prev, enabled: !prev.enabled }))}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${
-                    tgConfig.enabled ? "bg-emerald-600 text-white" : "bg-white/20 text-slate-300"
-                  }`}
-                >
-                  {tgConfig.enabled ? "الإشعارات مفعّلة ✅" : "الإشعارات معطلة ❌"}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  disabled={tgTesting}
-                  onClick={handleTestTelegram}
-                  className="flex items-center gap-1.5 px-4 h-10 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-colors disabled:opacity-50"
-                >
-                  {tgTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4" />}
-                  <span>فحص وإرسال إشعار تجريبي 📲</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={tgSaving}
-                  className="flex items-center gap-1.5 px-6 h-10 rounded-xl bg-sky-500 hover:bg-sky-600 text-slate-950 text-xs font-black shadow-lg shadow-sky-500/25 transition-all disabled:opacity-50"
-                >
-                  {tgSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  <span>حفظ إعدادات التيليجرام 💾</span>
-                </button>
-              </div>
-            </div>
-          </form>
-        )}
-      </div>
-
-      {/* ── Card: Inline Supplier Message Template Editor ───────────────────── */}
-      <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 border border-emerald-500/30 rounded-3xl p-5 text-white shadow-xl">
-        <div className="flex items-center justify-between cursor-pointer select-none" onClick={() => setShowSupplierTemplateCard(!showSupplierTemplateCard)}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30 shadow-inner">
-              📝
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-black text-sm text-white">قالب رسالة طلب الحساب للمورد (WhatsApp)</h3>
-                <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                  جاهز ومفعّل
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                عدّل نص الرسالة التي تُرسل للمورد على الواتساب عند تحويل أي طلب (بالموقع والتيليجرام).
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 transition-colors"
-          >
-            {showSupplierTemplateCard ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {showSupplierTemplateCard && (
-          <div className="mt-5 space-y-4 pt-4 border-t border-white/10 animate-in fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Left Column: Text Editor & Tags */}
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-emerald-200">
-                  صيغة الرسالة (انقر على الكلمات الذكية بالأسفل لإضافتها تلقائياً):
-                </label>
-                <textarea
-                  rows={6}
-                  value={supplierTemplate}
-                  onChange={(e) => setSupplierTemplate(e.target.value)}
-                  dir="rtl"
-                  placeholder="اكتب صيغة الرسالة هنا..."
-                  className="w-full rounded-2xl border border-emerald-500/30 bg-black/40 p-3.5 text-xs font-mono text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 leading-relaxed shadow-inner"
-                />
-
-                {/* Variable Badges */}
-                <div>
-                  <span className="text-[11px] font-bold text-slate-400 block mb-1.5">اضغط لإدراج المتغير التلقائي:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { tag: "{supplier_name}", label: "اسم المورد" },
-                      { tag: "{game_name}", label: "اسم اللعبة" },
-                      { tag: "{platform}", label: "المنصة (PS5/PS4)" },
-                      { tag: "{order_number}", label: "رقم الطلب" },
-                      { tag: "{customer_name}", label: "اسم العميل" },
-                      { tag: "{paid}", label: "المبلغ" },
-                    ].map((t) => (
-                      <button
-                        key={t.tag}
-                        type="button"
-                        onClick={() => setSupplierTemplate((prev) => prev + " " + t.tag)}
-                        className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/10 hover:bg-emerald-500/30 text-slate-200 hover:text-emerald-200 border border-white/10 transition-colors"
-                      >
-                        + {t.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Live WhatsApp Preview */}
-              <div className="flex flex-col">
-                <label className="block text-xs font-bold text-emerald-200 mb-1.5 flex items-center gap-1.5">
-                  <MessageCircle className="w-3.5 h-3.5 text-emerald-400" /> معاينة الرسالة الحية كما ستصل للمورد:
-                </label>
-                <div className="flex-1 bg-black/60 border border-emerald-500/20 rounded-2xl p-3.5 text-xs font-mono text-emerald-100 whitespace-pre-wrap leading-relaxed shadow-inner overflow-y-auto max-h-48">
-                  {supplierTemplate
-                    .replace(/\{supplier_name\}/g, "أبو خالد")
-                    .replace(/\{game_name\}/g, "Grand Theft Auto VI (GTA 6)")
-                    .replace(/\{platform\}/g, "PS5")
-                    .replace(/\{order_number\}/g, "ORD-9021")
-                    .replace(/\{customer_name\}/g, "عمر الجرادات")
-                    .replace(/\{paid\}/g, "$69.99")}
-                </div>
-              </div>
-            </div>
-
-            {/* Actions Bar */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/10 flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  setSupplierTemplate(
-                    `السلام عليكم أخي {supplier_name} 👋\nطلب حساب جديد من متجر دُكانك 🎮:\n\n🏷️ اللعبة / المنتج: *{game_name}* ({platform})\n📦 رقم الطلب: *#{order_number}*\n\nيرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`
-                  )
-                }
-                className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
-              >
-                استعادة الصيغة الافتراضية 🔄
-              </button>
-
-              <button
-                type="button"
-                disabled={savingTemplate}
-                onClick={async () => {
-                  setSavingTemplate(true);
-                  try {
-                    await apiUpdateSupplierTemplate(supplierTemplate);
-                    toast.success("تم حفظ وتحديث قالب رسالة المورد بنجاح 💾✅");
-                  } catch (e) {
-                    toast.error("فشل حفظ القالب: " + formatApiError(e));
-                  } finally {
-                    setSavingTemplate(false);
-                  }
-                }}
-                className="flex items-center gap-2 px-6 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
-              >
-                {savingTemplate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                <span>حفظ قالب رسالة المورد 💾</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* ── Modern SaaS Glassmorphic Stat Cards ──────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
@@ -682,7 +457,7 @@ export default function OrdersDashboardTab() {
         })}
       </div>
 
-      {/* ── Search and Reload Bar ──────────────────────────────────────────── */}
+            {/* ── Search and Reload Bar ──────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Search Input */}
         <div className="relative flex-1">
@@ -701,23 +476,25 @@ export default function OrdersDashboardTab() {
           )}
         </div>
 
-                {/* Supplier Template Button */}
+        {/* Supplier Template Modal Button */}
         <button
+          type="button"
           onClick={() => setShowSupplierTemplateModal(true)}
           data-testid="open-supplier-template-btn"
-          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-xs font-bold shadow-sm transition-all shrink-0"
+          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold shadow-sm transition-all shrink-0"
         >
           <MessageCircle className="w-4 h-4 text-emerald-600" />
           <span>قالب رسالة المورد 📝</span>
         </button>
 
-        {/* Telegram Config Button */}
+        {/* Telegram Config Modal Button */}
         <button
-          onClick={() => setShowTgConfig(!showTgConfig)}
-          data-testid="toggle-tg-card-btn"
-          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold shadow-sm transition-all shrink-0"
+          type="button"
+          onClick={() => setShowTgModal(true)}
+          data-testid="open-tg-modal-btn"
+          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 dark:hover:bg-sky-900/50 text-sky-700 dark:text-sky-300 border border-sky-500/30 text-xs font-bold shadow-sm transition-all shrink-0"
         >
-          <Bot className="w-4 h-4 text-blue-600" />
+          <Bot className="w-4 h-4 text-sky-600" />
           <span>إعدادات التيليجرام 🤖</span>
         </button>
 
@@ -731,7 +508,7 @@ export default function OrdersDashboardTab() {
         </button>
       </div>
 
-      {/* ── Status Filter Tabs ─────────────────────────────────────────────── */}
+{/* ── Status Filter Tabs ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {filterTabs.map((t) => {
           const Icon = t.icon;
