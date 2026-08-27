@@ -138,15 +138,19 @@ const DEFAULT_THEME_PROFILES = {
     },
 };
 
-const loadAllThemeProfiles = () => {
+const loadAllThemeProfiles = (sourceData) => {
+    let localData = {};
     try {
-        const raw = localStorage.getItem("dukkank_theme_profiles_v2");
-        if (raw) {
-            const parsed = JSON.parse(raw);
-            return { ...DEFAULT_THEME_PROFILES, ...parsed };
-        }
+        const raw = localStorage.getItem("dukkank_theme_profiles_v3");
+        if (raw) localData = JSON.parse(raw);
     } catch {}
-    return { ...DEFAULT_THEME_PROFILES };
+
+    const backendData = (sourceData && typeof sourceData === "object" && sourceData.savedThemes) ? sourceData.savedThemes : {};
+    return {
+        ...DEFAULT_THEME_PROFILES,
+        ...localData,
+        ...backendData,
+    };
 };
 
 const saveCurrentThemeProfile = (themeKey, currentData) => {
@@ -161,14 +165,21 @@ const saveCurrentThemeProfile = (themeKey, currentData) => {
                 theme: themeKey,
             }
         };
-        localStorage.setItem("dukkank_theme_profiles_v2", JSON.stringify(updated));
+        localStorage.setItem("dukkank_theme_profiles_v3", JSON.stringify(updated));
         return updated;
     } catch {}
 };
 
 export default function LaunchTab({ onChanged }) {
     const { launchAnnouncement, setLaunchAnnouncement, games, sections, setSections } = useStoreData();
-    const [form, setForm] = useState(launchAnnouncement || DEFAULT_THEME_PROFILES.vice);
+    const [form, setForm] = useState(() => {
+        const initialProfiles = loadAllThemeProfiles(launchAnnouncement);
+        const activeTheme = launchAnnouncement?.theme || "vice";
+        return {
+            ...(initialProfiles[activeTheme] || DEFAULT_THEME_PROFILES[activeTheme]),
+            ...(launchAnnouncement || {}),
+        };
+    });
     const [saving, setSaving] = useState(false);
     const [aiPrompt, setAiPrompt] = useState("");
     const [aiGenerating, setAiGenerating] = useState(false);
@@ -176,10 +187,19 @@ export default function LaunchTab({ onChanged }) {
     const [showAllGames, setShowAllGames] = useState(false);
 
     useEffect(() => {
-        if (launchAnnouncement) {
-            setForm(launchAnnouncement);
-            if (launchAnnouncement.theme) {
-                saveCurrentThemeProfile(launchAnnouncement.theme, launchAnnouncement);
+        if (launchAnnouncement && typeof launchAnnouncement === "object") {
+            const profiles = loadAllThemeProfiles(launchAnnouncement);
+            const activeTheme = launchAnnouncement.theme || "vice";
+            const themeProfile = profiles[activeTheme] || DEFAULT_THEME_PROFILES[activeTheme] || {};
+            setForm((prev) => {
+                // If same theme is open, merge without destroying user's active inputs
+                if (prev.theme === activeTheme && prev.gameName) {
+                    return { ...themeProfile, ...launchAnnouncement, ...prev };
+                }
+                return { ...themeProfile, ...launchAnnouncement };
+            });
+            if (activeTheme) {
+                saveCurrentThemeProfile(activeTheme, { ...themeProfile, ...launchAnnouncement });
             }
         }
     }, [launchAnnouncement]);
@@ -277,7 +297,7 @@ export default function LaunchTab({ onChanged }) {
         }
 
         // 2. Load all profiles and get the target theme profile
-        const profiles = loadAllThemeProfiles();
+        const profiles = loadAllThemeProfiles(launchAnnouncement);
         const targetSaved = profiles[targetThemeKey] || DEFAULT_THEME_PROFILES[targetThemeKey] || {
             ...form,
             theme: targetThemeKey,
@@ -289,6 +309,7 @@ export default function LaunchTab({ onChanged }) {
             ...targetSaved,
             theme: targetThemeKey,
             enabled: isNextEnabled,
+            savedThemes: profiles,
         };
 
         setForm(nextForm);
@@ -300,7 +321,7 @@ export default function LaunchTab({ onChanged }) {
             if (isNextEnabled) await ensureSectionVisible();
             onChanged?.();
             const themeLabel = targetThemeKey === "vice" ? "GTA VI 🌴" : targetThemeKey === "eafc" ? "EA SPORTS FC ⚽" : targetThemeKey === "gold" ? "الثيم الذهبي 🏆" : targetThemeKey;
-            toast.success(`تم تفعيل (${themeLabel}) واسترجاع كافة تعديلاتك المحفوظة له بنجاح ✨`);
+            toast.success(`تم تفعيل (${themeLabel}) واسترجاع كافة تعديلاتك وأسعارك المحفوظة له بنجاح ✨`);
         } catch (err) {
             toast.error(formatApiError(err));
         }
@@ -336,11 +357,9 @@ export default function LaunchTab({ onChanged }) {
     // Global Master Toggle (Enable / Disable without losing any text)
     const handleToggleGlobal = async () => {
         const nextEnabled = !form.enabled;
-        const newData = { ...form, enabled: nextEnabled };
+        const allProfiles = saveCurrentThemeProfile(form.theme || "vice", { ...form, enabled: nextEnabled }) || loadAllThemeProfiles();
+        const newData = { ...form, enabled: nextEnabled, savedThemes: allProfiles };
         setForm(newData);
-        if (form.theme) {
-            saveCurrentThemeProfile(form.theme, newData);
-        }
         try {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
@@ -397,9 +416,13 @@ export default function LaunchTab({ onChanged }) {
         e?.preventDefault?.();
         setSaving(true);
         try {
-            saveCurrentThemeProfile(form.theme || "vice", form);
-            setLaunchAnnouncement(form);
-            await apiUpdateLaunchAnnouncement(form);
+            const allProfiles = saveCurrentThemeProfile(form.theme || "vice", form) || loadAllThemeProfiles();
+            const payload = {
+                ...form,
+                savedThemes: allProfiles,
+            };
+            setLaunchAnnouncement(payload);
+            await apiUpdateLaunchAnnouncement(payload);
             await ensureSectionVisible();
             toast.success("تم حفظ ونشر إعلان الإطلاق وتثبيت تعديلات هذا الثيم بنجاح 📢");
             onChanged?.();

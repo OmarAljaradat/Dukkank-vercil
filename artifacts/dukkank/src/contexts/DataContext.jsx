@@ -502,12 +502,16 @@ export function DataProvider({ children }) {
     };
 
     const mergeLaunchAnnouncement = (fetched) => {
+        if (fetched && typeof fetched === "object" && !Array.isArray(fetched) && Object.keys(fetched).length > 0) {
+            return fetched;
+        }
+        const local = loadLocal("dukkank_live_launch", null);
+        if (local && typeof local === "object") return local;
         const overrides = loadOverrides();
         if (overrides.launch && Object.keys(overrides.launch).length > 0) {
-            return { ...(fetched || FALLBACK_LAUNCH_ANNOUNCEMENT), ...overrides.launch };
+            return { ...FALLBACK_LAUNCH_ANNOUNCEMENT, ...overrides.launch };
         }
-        if (!fetched || typeof fetched !== "object" || Array.isArray(fetched)) return launchAnnouncement;
-        return fetched;
+        return FALLBACK_LAUNCH_ANNOUNCEMENT;
     };
 
     const mergeThemeData = (fetched) => {
