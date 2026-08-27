@@ -156,16 +156,6 @@ export default function AnalyticsTab() {
                         <Download className="w-4 h-4" />
                         <span>تصدير CSV</span>
                     </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setShowResetConfirm(true)}
-                        title="تصفير الإحصائيات كمتجر جديد"
-                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                    >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>تصفير المتجر كجديد 0️⃣</span>
-                    </button>
                 </div>
             </div>
 

@@ -168,19 +168,10 @@ export default function FinanceTab() {
                     <button
                         onClick={fetchOrders}
                         disabled={loading}
-                        className="flex items-center gap-1.5 px-4 h-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
+                        className="flex items-center gap-1.5 px-4 h-9 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
                     >
                         <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
                         <span>تحديث</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setShowResetConfirm(true)}
-                        className="flex items-center gap-1.5 px-4 h-10 rounded-2xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 text-xs font-black transition-all shadow-sm cursor-pointer"
-                    >
-                        <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-                        <span>تصفير المتجر كجديد 0️⃣</span>
                     </button>
                 </div>
             </div>

@@ -178,6 +178,15 @@ export default function AdminDashboard() {
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <ThemeToggle variant="light" />
+                        <button
+                            type="button"
+                            onClick={() => setShowResetConfirm(true)}
+                            title="تصفير شامل لجميع بيانات وإحصائيات المتجر للبدء من الصفر كمتجر جديد"
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 h-8 bg-rose-500/25 hover:bg-rose-500/40 text-rose-100 border border-rose-400/30 text-xs font-bold transition-colors cursor-pointer"
+                        >
+                            <RotateCcw className="w-3.5 h-3.5 text-rose-300" />
+                            <span>تصفير المتجر 0️⃣</span>
+                        </button>
                         <a href="/" target="_blank" rel="noopener noreferrer"
                             className="hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 h-8 bg-white/10 hover:bg-white/20 text-xs font-semibold transition-colors">
                             <ExternalLink className="w-3.5 h-3.5" />
