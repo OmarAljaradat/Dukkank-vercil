@@ -37,53 +37,37 @@ export default function AnalyticsTab() {
     const [days, setDays]       = useState(7);
     const [data, setData]       = useState(null);
     const [loading, setLoading] = useState(false);
-    const [online, setOnline]   = useState(4);
-
-    // Live heartbeat pulse for online visitors count
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setOnline(Math.floor(Math.random() * 4) + 3); // 3 to 6
-        }, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Generate period-specific dynamic data
-    const getPeriodData = useCallback((d) => {
-        const multiplier = d === 7 ? 1 : d === 14 ? 1.8 : d === 30 ? 3.5 : 9;
-        const visits = Math.round(3420 * multiplier);
-        const users = Math.round(145 * multiplier);
-        const orders = Math.round(84 * multiplier);
-
-        const daysCount = d === 7 ? 7 : d === 14 ? 14 : d === 30 ? 15 : 20;
-        const timeline = Array.from({ length: daysCount }).map((_, i) => {
-            const dateStr = `07-${10 + i}`;
-            const cartAdds = Math.floor(Math.random() * 15) + 8;
-            const buys = Math.floor(cartAdds * 0.6);
-            return { date: dateStr, cartAdds, subscribers: buys };
-        });
-
-        return {
-            totals: { visits, users, orders, activeGames: GAMES.length },
-            timeline,
-        };
-    }, []);
+    const [online, setOnline]   = useState(1);
 
     const reload = useCallback(async (d = days) => {
         setLoading(true);
         try {
             const r = await apiGetAnalytics(d);
-            setData(r);
-        } catch {
-            setData(getPeriodData(d));
+            if (r) {
+                setData(r);
+                if (typeof r.online === "number") setOnline(r.online);
+            }
+        } catch (e) {
+            console.error("Failed to load analytics:", e);
         } finally {
-            setTimeout(() => {
-                setLoading(false);
-            }, 300);
+            setLoading(false);
         }
-    }, [days, getPeriodData]);
+    }, [days]);
 
+    // Initial load + interval reload for live data every 15s
     useEffect(() => {
         reload(days);
+        const timer = setInterval(() => {
+            fetch("/api/analytics/live-visitors")
+                .then((res) => res.json())
+                .then((resData) => {
+                    if (typeof resData?.online === "number") {
+                        setOnline(resData.online);
+                    }
+                })
+                .catch(() => {});
+        }, 15000);
+        return () => clearInterval(timer);
     }, [days, reload]);
 
     const handleRangeChange = (rVal) => {
@@ -249,7 +233,7 @@ export default function AnalyticsTab() {
                     </div>
 
                     <div className="space-y-3 pt-2">
-                        {DUKKANK_TOP_ITEMS.map((s, idx) => (
+                        {(data?.topItems && data.topItems.length > 0 ? data.topItems : DUKKANK_TOP_ITEMS).map((s, idx) => (
                             <div key={idx} className="space-y-1.5">
                                 <div className="flex items-center justify-between text-xs font-bold">
                                     <span className="text-slate-800 dark:text-slate-200">{s.name}</span>
@@ -270,13 +254,13 @@ export default function AnalyticsTab() {
                             <Activity className="w-4 h-4" />
                         </div>
                         <div>
-                            <h3>سجل عمليات حسابات الألعاب</h3>
-                            <p className="text-xs text-slate-400 font-normal">تسليم الحسابات وحالة الضمان الذهبي للطلبات</p>
+                            <h3>سجل عمليات وتتبع الطلبات</h3>
+                            <p className="text-xs text-slate-400 font-normal">تسليم الحسابات والطلبات الحديثة بالمتجر</p>
                         </div>
                     </div>
 
                     <div className="space-y-3 pt-2">
-                        {DUKKANK_AUDIT_LOGS.map((item) => (
+                        {(data?.auditLogs && data.auditLogs.length > 0 ? data.auditLogs : DUKKANK_AUDIT_LOGS).map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
