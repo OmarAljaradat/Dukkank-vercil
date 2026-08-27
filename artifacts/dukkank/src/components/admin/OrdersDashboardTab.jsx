@@ -10,13 +10,14 @@ import {
   PackageCheck, PackagePlus, AlertCircle, TrendingUp, Hash, Calendar,
   ExternalLink, Copy, X, ArrowUpRight, Zap, ShieldCheck, CreditCard,
   Sparkles, ChevronLeft, KeyRound, EyeOff, Bot, SendHorizonal, QrCode,
-  Instagram, Settings, Check, ChevronRight
+  Instagram, Settings, Check, ChevronRight, Save, FileText
 } from "lucide-react";
 import {
   apiListOrders, apiUpdateOrder, apiDeleteOrder,
   apiForwardToSupplier, apiReceiveAccount, apiDeliverOrder, apiCompleteOrder,
   apiListSuppliers, apiGetCustomerProfile, formatApiError,
-  apiGetTelegramConfig, apiUpdateTelegramConfig, apiTestTelegramNotification
+  apiGetTelegramConfig, apiUpdateTelegramConfig, apiTestTelegramNotification,
+  apiGetSupplierTemplate, apiUpdateSupplierTemplate
 } from "../../lib/api";
 import { Input, Textarea, Field } from "./_widgets";
 
