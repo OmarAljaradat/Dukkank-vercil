@@ -49129,6 +49129,8 @@ router7.post("/admin/store-orders", async (req, res) => {
       }
     } catch (e) {
       console.error("DB insert error in store-orders:", e?.message);
+      res.status(500).json({ error: "\u0641\u0634\u0644 \u0625\u062F\u062E\u0627\u0644 \u0627\u0644\u0637\u0644\u0628 \u0641\u064A \u0642\u0627\u0639\u062F\u0629 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A: " + e?.message });
+      return;
     }
   }
   const newOrder = {
@@ -49438,6 +49440,46 @@ router7.post("/admin/telegram/test", async (req, res) => {
   } else {
     res.status(400).json({ error: result?.description || result?.error || result?.reason || "\u0641\u0634\u0644 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629. \u062A\u0623\u0643\u062F \u0645\u0646 \u0625\u062F\u062E\u0627\u0644 Bot Token \u0648 Chat ID" });
   }
+});
+router7.post("/admin/run-migration", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (!pool7) {
+    res.status(500).json({ error: "No DB connection pool" });
+    return;
+  }
+  const migrations = [
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(200)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS subscription_duration VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS contact_instagram VARCHAR(100)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS contact_whatsapp VARCHAR(100)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_email VARCHAR(200)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_credentials TEXT",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS platform VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS notes TEXT",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS payment_platform VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS gateway_fee NUMERIC(10,2) DEFAULT 0",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier VARCHAR(200)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier_id INTEGER",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier_forwarded_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_received_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS order_source VARCHAR(30) DEFAULT 'manual'",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS paytabs_tran_ref VARCHAR(100)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS items_json JSONB"
+  ];
+  const results = [];
+  for (const m of migrations) {
+    try {
+      await pool7.query(m);
+      results.push({ query: m, status: "ok" });
+    } catch (e) {
+      results.push({ query: m, status: "error", error: e.message });
+    }
+  }
+  res.json({ ok: true, results });
 });
 router7.post("/orders", (req, res) => {
   const o = req.body || {};

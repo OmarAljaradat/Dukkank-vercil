@@ -213,6 +213,8 @@ router.post("/admin/store-orders", async (req, res) => {
       }
     } catch (e: any) {
       console.error("DB insert error in store-orders:", e?.message);
+      res.status(500).json({ error: "فشل إدخال الطلب في قاعدة البيانات: " + e?.message });
+      return;
     }
   }
 
@@ -524,6 +526,44 @@ router.post("/admin/telegram/test", async (req, res) => {
   } else {
     res.status(400).json({ error: result?.description || result?.error || result?.reason || "فشل إرسال الرسالة. تأكد من إدخال Bot Token و Chat ID" });
   }
+});
+
+router.post("/admin/run-migration", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (!pool) { res.status(500).json({ error: "No DB connection pool" }); return; }
+  const migrations = [
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(200)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS subscription_duration VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS contact_instagram VARCHAR(100)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS contact_whatsapp VARCHAR(100)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_email VARCHAR(200)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_credentials TEXT",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS platform VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS notes TEXT",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS payment_platform VARCHAR(50)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS gateway_fee NUMERIC(10,2) DEFAULT 0",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier VARCHAR(200)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier_id INTEGER",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier_forwarded_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_received_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS order_source VARCHAR(30) DEFAULT 'manual'",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS paytabs_tran_ref VARCHAR(100)",
+    "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS items_json JSONB",
+  ];
+  const results = [];
+  for (const m of migrations) {
+    try {
+      await pool.query(m);
+      results.push({ query: m, status: "ok" });
+    } catch (e: any) {
+      results.push({ query: m, status: "error", error: e.message });
+    }
+  }
+  res.json({ ok: true, results });
 });
 
 // ── Legacy Routes (Compatibility) ────────────────────────────────────────────
