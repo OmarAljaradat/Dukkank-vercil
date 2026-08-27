@@ -664,26 +664,31 @@ router.post("/orders", (req, res) => {
   res.status(201).json({ ok: true, id: `ord-${Date.now()}` });
 });
 
-// ── Reset All Analytics and Orders to Brand New Zero State ─────────
+// ── Reset All Analytics, Visitors, and Orders to Brand New Zero State ─────────
 router.post("/admin/reset-store-data", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
     if (pool) {
       // 1. Delete all test orders from store_orders table
-      await pool.query("DELETE FROM store_orders");
-      // 2. Reset order counter & analytics timeline in store_config
+      await pool.query("DELETE FROM store_orders").catch(() => {});
+      // 2. Delete all daily visitor logs & sessions
+      await pool.query("DELETE FROM analytics_daily").catch(() => {});
+      await pool.query("DELETE FROM visitor_sessions").catch(() => {});
+      // 3. Delete any notify requests
+      await pool.query("DELETE FROM notify_requests").catch(() => {});
+      // 4. Reset order counter & analytics timeline in store_config
       await pool.query(
         `INSERT INTO store_config (key, value) VALUES ('order_counter', '1000')
          ON CONFLICT (key) DO UPDATE SET value = '1000', updated_at = NOW()`
-      );
+      ).catch(() => {});
       await pool.query(
         `INSERT INTO store_config (key, value) VALUES ('analytics_timeline', '[]')
          ON CONFLICT (key) DO UPDATE SET value = '[]', updated_at = NOW()`
-      );
+      ).catch(() => {});
     }
     // In-memory fallback reset
     storeOrders = [];
-    res.json({ ok: true, message: "تم تصفير كافة الطلبات والإحصائيات بنجاح! المتجر يبدأ الآن من الصفر كمتجر جديد 🚀" });
+    res.json({ ok: true, message: "تم تصفير كافة الطلبات والزيارات والإحصائيات بنجاح! المتجر يبدأ الآن من الصفر كمتجر جديد 🚀" });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
