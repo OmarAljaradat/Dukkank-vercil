@@ -52,7 +52,6 @@ const TABS = [
     // ── المتجر والمنتجات
     { value: "games",        label: "🎮 الألعاب والمخزون",   group: "store" },
     { value: "subscriptions",label: "📦 الاشتراكات",       group: "store" },
-    { value: "store",        label: "⚙️ إعدادات المتجر",   group: "store" },
     { value: "suppliers",    label: "🚚 إدارة الموردين",       group: "store" },
     { value: "gifts",        label: "🎁 طلبات الهدايا الرقمية",group: "store" },
     { value: "coupons",      label: "🎟️ الكوبونات والعروض", group: "store" },
@@ -70,6 +69,7 @@ const TABS = [
     { value: "notify",       label: "🔔 إشعارات وتنبيهات المخزون",group: "customers" },
     { value: "marketing",    label: "🚀 الحملات التسويقية", group: "customers" },
     // ── النظام
+    { value: "store",        label: "⚙️ إعدادات المتجر العامة",group: "system" },
     { value: "seo",          label: "🔎 SEO ومحركات البحث", group: "system" },
     { value: "security",     label: "🛡️ الأمان والحماية",  group: "system" },
     { value: "backup",       label: "⚙️ النسخ الاحتياطي",  group: "system" },
