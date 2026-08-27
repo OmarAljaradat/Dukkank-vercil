@@ -15,15 +15,11 @@ const DataContext = createContext(null);
 const FALLBACK_SECTIONS = [
     { id: "hero",          label: "الواجهة الرئيسية (Hero)",     visible: true },
     { id: "gamelaunch",    label: "إعلان إصدار لعبة",             visible: true },
-    { id: "recommender",   label: "مساعدك الشخصي (Recommender)", visible: true },
     { id: "essential",     label: "الاشتراك الأساسي",            visible: true },
     { id: "extra",         label: "الاشتراك الإضافي",            visible: true },
     { id: "deluxe",        label: "الاشتراك الفاخر (Deluxe)",   visible: true },
     { id: "comparison",    label: "مقارنة الاشتراكات",           visible: true },
-    { id: "bundles",       label: "الباقات المدمجة",             visible: true },
-    { id: "bundleBuilder", label: "ابني باقتك",                  visible: true },
     { id: "games",         label: "الألعاب",                     visible: true },
-    { id: "emailSignup",   label: "اشتراك للحصول على خصم",       visible: true },
     { id: "reviews",       label: "آراء العملاء",                visible: true },
     { id: "faq",           label: "الأسئلة الشائعة",             visible: true },
 ];

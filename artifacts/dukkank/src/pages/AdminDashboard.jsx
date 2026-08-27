@@ -52,7 +52,6 @@ const TABS = [
     // ── المتجر والمنتجات
     { value: "games",        label: "🎮 الألعاب والمخزون",   group: "store" },
     { value: "subscriptions",label: "📦 الاشتراكات",       group: "store" },
-    { value: "bundles",      label: "🎁 الباقات المدمجة",   group: "store" },
     { value: "store",        label: "⚙️ إعدادات المتجر",   group: "store" },
     { value: "suppliers",    label: "🚚 إدارة الموردين",       group: "store" },
     { value: "gifts",        label: "🎁 طلبات الهدايا الرقمية",group: "store" },
