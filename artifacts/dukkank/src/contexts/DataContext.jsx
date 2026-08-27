@@ -124,7 +124,12 @@ const FALLBACK_REVIEWS = [
 ];
 
 const FALLBACK_FAQS = [
-    { id: "delivery", icon: "truck", q: "كيف يتم تسليم الطلب؟", a: "يتم التسليم فوراً عبر الموقع أو الإيميل.", order: 0 },
+    { id: "faq-1", icon: "zap", q: "كيف يتم تسليم الحساب أو الاشتراك بعد الدفع؟", a: "بعد إتمام الطلب، يتواصل معك فريقنا مباشرة عبر إنستغرام أو واتساب لطلب صورة كود الـ (QR Code) من شاشة السوني، وندخلك الحساب فوراً خلال دقائق ⚡", visible: true },
+    { id: "faq-2", icon: "shield-check", q: "هل الحسابات والاشتراكات رسمية ومضمونة 100%؟", a: "نعم بكل تأكيد، جميع الحسابات والاشتراكات رسمية ومحمية بالضمان الذهبي طوال كامل فترة الاشتراك ❤️", visible: true },
+    { id: "faq-3", icon: "help-circle", q: "ما الفرق بين الحساب الأساسي والحساب الثانوي؟", a: "الحساب الأساسي يتيح لك اللعب من حسابك الشخصي والتروفيات، بينما الحساب الثانوي تلعب منه مباشرة عبر الإنترنت بسعر أوفر 🎮", visible: true },
+    { id: "faq-4", icon: "credit-card", q: "ما هي طرق الدفع المتاحة داخل المتجر؟", a: "نوفر الدفع الآمن عبر البطاقات البنكية، خدمة أبل باي (Apple Pay)، نظام كليك (CliQ)، والمحافظ الرقمية 💳", visible: true },
+    { id: "faq-5", icon: "truck", q: "كيف يتم تفعيل اللعبة أو الاشتراك على جهازي البلايستيشن؟", a: "تختار من شاشة السوني تسجيل الدخول عبر كود (QR Code) وتصوره وترسله لنا في المحادثة؛ نقوم بمسح الكود وتفعيل الحساب بجهازك فوراً بأمان 🛠️", visible: true },
+    { id: "faq-6", icon: "headphones", q: "ماذا أفعل إذا واجهت أي مشكلة أو استفسار؟", a: "تواصل معنا مباشرة عبر زر الواتساب أو إنستغرام، وفريق الدعم متواجد لخدمتك ومساعدتك خطوة بخطوة 💬", visible: true }
 ];
 
 const FALLBACK_CONTENT = {
@@ -558,12 +563,7 @@ export function DataProvider({ children }) {
             }
 
             if (fqs) {
-                const localFaq = loadLocal("store_faqs_list", null);
-                if (localFaq && Array.isArray(localFaq) && localFaq.length >= 8) {
-                    setFaqs(localFaq);
-                } else {
-                    setFaqs(asArray(fqs, faqs));
-                }
+                setFaqs(asArray(fqs, faqs));
             }
             if (cnt) setContent(mergeContent(cnt));
             if (ss) setSiteSettings(asObject(ss, siteSettings));

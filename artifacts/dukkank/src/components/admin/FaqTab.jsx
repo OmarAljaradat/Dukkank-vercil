@@ -69,15 +69,18 @@ const DEFAULT_SIMPLE_FAQS = [
 export default function FaqTab({ onChanged }) {
     const { faqs: storeFaqs, setFaqs: setStoreFaqs } = useStoreData();
     const [faqs, setLocalFaqs] = useState(() => {
-        const saved = lsGet("store_faqs_list", lsGet("dukkank_live_faqs", null));
-        if (saved && Array.isArray(saved) && saved.length >= 8) return saved;
-        lsSet("store_faqs_list", DEFAULT_SIMPLE_FAQS);
-        lsSet("dukkank_live_faqs", DEFAULT_SIMPLE_FAQS);
+        if (Array.isArray(storeFaqs) && storeFaqs.length > 0) return storeFaqs;
         return DEFAULT_SIMPLE_FAQS;
     });
 
     const [editing, setEditing] = useState(null);
     const [busy, setBusy] = useState(false);
+
+    useEffect(() => {
+        if (Array.isArray(storeFaqs) && storeFaqs.length > 0) {
+            setLocalFaqs(storeFaqs);
+        }
+    }, [storeFaqs]);
 
     useEffect(() => {
         lsSet("store_faqs_list", faqs);
@@ -101,11 +104,12 @@ export default function FaqTab({ onChanged }) {
         toast.success("تم تحديث حالة ظهور السؤال بالموقع 👁️");
     };
 
-    const resetTo10Faqs = () => {
+    const resetToDefaultFaqs = () => {
         setLocalFaqs(DEFAULT_SIMPLE_FAQS);
         lsSet("store_faqs_list", DEFAULT_SIMPLE_FAQS);
+        lsSet("dukkank_live_faqs", DEFAULT_SIMPLE_FAQS);
         if (setStoreFaqs) setStoreFaqs(DEFAULT_SIMPLE_FAQS);
-        toast.success("تم اعادة تحميل الـ 10 أسئلة الشائعة بنجاح 🌟");
+        toast.success("تم تحميل الأسئلة الـ 6 المعتمدة بنجاح 🌟");
     };
 
     const saveFaq = async () => {
@@ -171,11 +175,11 @@ export default function FaqTab({ onChanged }) {
 
                 <div className="flex items-center gap-2 shrink-0">
                     <button
-                        onClick={resetTo10Faqs}
+                        onClick={resetToDefaultFaqs}
                         className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
                     >
                         <Sparkles className="w-4 h-4 text-amber-500" />
-                        <span>تحميل الـ 10 أسئلة 🌟</span>
+                        <span>تحميل الأسئلة الـ 6 المعتمدة 🌟</span>
                     </button>
 
                     <button
