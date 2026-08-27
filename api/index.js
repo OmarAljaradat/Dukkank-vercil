@@ -46800,93 +46800,9 @@ var visitors_default = router5;
 
 // src/routes/analytics.ts
 var import_express6 = __toESM(require_express2(), 1);
-var pool4 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
-var router6 = (0, import_express6.Router)();
-router6.get("/admin/analytics", async (req, res) => {
-  const email = verifyToken(req.headers.authorization);
-  if (!email) {
-    res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D" });
-    return;
-  }
-  const days = Math.min(Number(req.query.days) || 30, 365);
-  try {
-    const [totalsRes, timelineRes] = await Promise.all([
-      pool4.query(`
-        SELECT
-          COALESCE(SUM(visits),0)      AS visits,
-          COALESCE(SUM(cart_adds),0)   AS cart_adds,
-          COALESCE(SUM(subscribers),0) AS subscribers
-        FROM analytics_daily
-      `),
-      pool4.query(`
-        WITH dates AS (
-          SELECT generate_series(
-            CURRENT_DATE - ($1 - 1) * INTERVAL '1 day',
-            CURRENT_DATE,
-            '1 day'::interval
-          )::date AS date
-        )
-        SELECT
-          d.date,
-          COALESCE(a.visits, 0)      AS visits,
-          COALESCE(a.cart_adds, 0)   AS cart_adds,
-          COALESCE(a.subscribers, 0) AS subscribers
-        FROM dates d
-        LEFT JOIN analytics_daily a ON a.date = d.date
-        ORDER BY d.date
-      `, [days])
-    ]);
-    const t = totalsRes.rows[0];
-    const timeline = timelineRes.rows.map((r) => ({
-      date: r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date).slice(0, 10),
-      visits: Number(r.visits),
-      subscribers: Number(r.subscribers),
-      cartAdds: Number(r.cart_adds)
-    }));
-    res.json({
-      totals: {
-        visits: Number(t.visits),
-        subscribers: Number(t.subscribers),
-        cartEvents: Number(t.cart_adds),
-        notifyRequests: 0,
-        auditLog: 0
-      },
-      timeline,
-      topItems: [],
-      auditActions: []
-    });
-  } catch (e) {
-    console.warn("[analytics] DB query failed, using fallback mock data:", e.message);
-    const mockTimeline = Array.from({ length: days }, (_, i) => {
-      const d = new Date(Date.now() - (days - 1 - i) * 864e5);
-      return {
-        date: d.toISOString().slice(0, 10),
-        visits: Math.floor(45 + Math.random() * 30),
-        subscribers: Math.floor(1 + Math.random() * 4),
-        cartAdds: Math.floor(5 + Math.random() * 12)
-      };
-    });
-    res.json({
-      totals: {
-        visits: 1240,
-        subscribers: 38,
-        cartEvents: 185,
-        notifyRequests: 12,
-        auditLog: 45
-      },
-      timeline: mockTimeline,
-      topItems: [],
-      auditActions: []
-    });
-  }
-});
-var analytics_default = router6;
-
-// src/routes/orders.ts
-var import_express7 = __toESM(require_express2(), 1);
 
 // src/lib/storeDb.ts
-var pool5 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool4 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var memSuppliers = [
   { id: 1, name: "\u0623\u0628\u0648 \u062E\u0627\u0644\u062F (\u0645\u0648\u0631\u062F \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629)", phone: "962775585112", notes: "\u062A\u0648\u0641\u064A\u0631 \u0641\u0648\u0631\u064A \u062E\u0644\u0627\u0644 15 \u062F\u0642\u064A\u0642\u0629", is_active: true, created_at: new Date(Date.now() - 864e5 * 10).toISOString() },
   { id: 2, name: "\u0634\u0631\u0643\u0629 \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A\u0629 (\u0645\u0648\u0631\u062F \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A)", phone: "962791234567", notes: "\u0645\u062A\u062E\u0635\u0635 \u0628\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A \u0628\u0644\u0633 \u0625\u0643\u0633\u062A\u0631\u0627 \u0648\u0641\u0627\u062E\u0631", is_active: true, created_at: new Date(Date.now() - 864e5 * 5).toISOString() }
@@ -46918,7 +46834,7 @@ var memOrders = [
 var memStoreConfig = /* @__PURE__ */ new Map();
 async function dbLoad(key, defaultVal) {
   try {
-    const { rows } = await pool5.query("SELECT value FROM store_config WHERE key = $1", [key]);
+    const { rows } = await pool4.query("SELECT value FROM store_config WHERE key = $1", [key]);
     if (rows.length > 0) {
       memStoreConfig.set(key, rows[0].value);
       return rows[0].value;
@@ -46930,7 +46846,7 @@ async function dbLoad(key, defaultVal) {
 async function dbSave(key, value) {
   memStoreConfig.set(key, value);
   try {
-    await pool5.query(
+    await pool4.query(
       `INSERT INTO store_config (key, value, updated_at)
        VALUES ($1, $2::jsonb, NOW())
        ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, updated_at = NOW()`,
@@ -46993,9 +46909,1468 @@ var DEFAULT_SUBSCRIPTIONS = [
   }
 ];
 var DEFAULT_GAMES = [
-  { id: "blackops7", name: "Call of Duty: Black Ops 7", sub: "FPS \u2022 Multiplayer & Zombies Mode", image: "/games/blackops7.jpg", gradientFrom: "#1f2310", gradientTo: "#080a04", four: 17.09, five: 38.68, available: true, bestSeller: true, order: 0 },
-  { id: "eafc26", name: "EA Sports FC 26", sub: "\u0643\u0631\u0629 \u0627\u0644\u0642\u062F\u0645 \u2022 Career & Ultimate Team", image: "/games/eafc26.jpg", gradientFrom: "#1c5e3a", gradientTo: "#0f2e1c", four: 15.13, five: 22.98, available: true, bestSeller: true, order: 1 },
-  { id: "gta5", name: "Grand Theft Auto V", sub: "\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0623\u0643\u0634\u0646 \u0648\u0645\u063A\u0627\u0645\u0631\u0629", image: "/games/gta5.jpg", gradientFrom: "#13343f", gradientTo: "#04141a", four: 14.15, five: 18.07, available: true, bestSeller: true, order: 2 }
+  {
+    "id": "arc-raiders",
+    "name": "Arc Raiders",
+    "sub": "\u062A\u0635\u0648\u064A\u0628 \u0648\u062E\u064A\u0627\u0644 \u0639\u0644\u0645\u064A \u2022 \u0645\u063A\u0627\u0645\u0631\u0629 \u0628\u0642\u0627\u0621 \u0623\u0633\u0637\u0648\u0631\u064A\u0629",
+    "image": "/games/arc-raiders.jpg",
+    "gradientFrom": "#2a3340",
+    "gradientTo": "#0a0e14",
+    "four": null,
+    "five": 22.82,
+    "secondary": 14.41,
+    "costFour": null,
+    "costFive": 16.82,
+    "costSecondary": 8.41,
+    "available": true,
+    "bestSeller": false,
+    "order": 0
+  },
+  {
+    "id": "ac-mirage",
+    "name": "Assassin's Creed Mirage (\u0639\u0631\u0628\u064A)",
+    "sub": "\u062A\u062E\u0641\u064A \u0648\u0623\u0643\u0634\u0646 \u2022 \u0628\u0627\u0644\u062F\u0628\u0644\u062C\u0629 \u0648\u0627\u0644\u062A\u0631\u062C\u0645\u0629 \u0627\u0644\u0639\u0631\u0628\u064A\u0629 \u0641\u064A \u0628\u063A\u062F\u0627\u062F",
+    "image": "/games/ac-mirage.jpg",
+    "gradientFrom": "#4a3010",
+    "gradientTo": "#140a04",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": false,
+    "order": 1
+  },
+  {
+    "id": "ac-origins",
+    "name": "Assassin's Creed Origins",
+    "sub": "\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0623\u0633\u0627\u0637\u064A\u0631 \u0627\u0644\u0641\u0631\u0627\u0639\u0646\u0629 \u0641\u064A \u0645\u0635\u0631 \u0627\u0644\u0642\u062F\u064A\u0645\u0629",
+    "image": "/games/ac-origins.jpg",
+    "gradientFrom": "#4a3b10",
+    "gradientTo": "#140e02",
+    "four": 8.8,
+    "five": 9.74,
+    "secondary": 7.87,
+    "costFour": 2.8,
+    "costFive": 3.74,
+    "costSecondary": 1.87,
+    "available": true,
+    "bestSeller": false,
+    "order": 2
+  },
+  {
+    "id": "ac-shadows",
+    "name": "Assassin's Creed Shadows",
+    "sub": "\u0633\u0627\u0645\u0648\u0631\u0627\u064A \u0648\u0646\u064A\u0646\u062C\u0627 \u2022 \u0645\u0644\u062D\u0645\u0629 \u0627\u0644\u064A\u0627\u0628\u0627\u0646 \u0627\u0644\u0625\u0642\u0637\u0627\u0639\u064A\u0629 \u0627\u0644\u062C\u062F\u064A\u062F\u0629",
+    "image": "/games/ac-shadows.jpg",
+    "gradientFrom": "#3a0d10",
+    "gradientTo": "#0f0304",
+    "four": null,
+    "five": 29.36,
+    "secondary": 21.89,
+    "costFour": null,
+    "costFive": 23.36,
+    "costSecondary": 15.89,
+    "available": true,
+    "bestSeller": false,
+    "order": 3
+  },
+  {
+    "id": "ac-valhalla",
+    "name": "Assassin's Creed Valhalla",
+    "sub": "\u0641\u0627\u064A\u0643\u0646\u062C \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u062D\u0631\u0648\u0628 \u0648\u063A\u0632\u0648\u0627\u062A \u0625\u0646\u062C\u0644\u062A\u0631\u0627",
+    "image": "/games/ac-valhalla.jpg",
+    "gradientFrom": "#1b3a30",
+    "gradientTo": "#07120e",
+    "four": 11.14,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 5.14,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 4
+  },
+  {
+    "id": "astrobot",
+    "name": "Astro Bot",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0645\u0646\u0635\u0627\u062A \u2022 \u0644\u0639\u0628\u0629 \u0627\u0644\u0633\u0646\u0629 \u0648\u0627\u0644\u0623\u0639\u0644\u0649 \u062A\u0642\u064A\u064A\u0645\u0627\u064B",
+    "image": "/games/astrobot.jpg",
+    "gradientFrom": "#103a5a",
+    "gradientTo": "#03111f",
+    "four": null,
+    "five": 31.23,
+    "secondary": 21.89,
+    "costFour": null,
+    "costFive": 25.23,
+    "costSecondary": 15.89,
+    "available": true,
+    "bestSeller": false,
+    "order": 5
+  },
+  {
+    "id": "away-out",
+    "name": "A Way Out",
+    "sub": "\u062A\u0639\u0627\u0648\u0646\u064A \u062B\u0646\u0627\u0626\u064A \u2022 \u062E\u0637\u0629 \u0627\u0644\u0647\u0631\u0648\u0628 \u0645\u0646 \u0627\u0644\u0633\u062C\u0646",
+    "image": "/games/away-out.jpg",
+    "gradientFrom": "#2d241e",
+    "gradientTo": "#0e0a07",
+    "four": 9.74,
+    "five": 10.67,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 4.67,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 6
+  },
+  {
+    "id": "batman-arkham",
+    "name": "Batman: Arkham Collection",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u0623\u0628\u0637\u0627\u0644 \u062E\u0627\u0631\u0642\u064A\u0646 \u2022 \u062B\u0644\u0627\u062B\u064A\u0629 \u0628\u0627\u062A\u0645\u0627\u0646 \u0627\u0644\u0623\u0633\u0637\u0648\u0631\u064A\u0629",
+    "image": "/games/batman-arkham.jpg",
+    "gradientFrom": "#18202c",
+    "gradientTo": "#06090d",
+    "four": 9.74,
+    "five": 12.54,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 6.54,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 7
+  },
+  {
+    "id": "battlefield6",
+    "name": "Battlefield 6",
+    "sub": "\u062D\u0631\u0648\u0628 \u0636\u062E\u0645\u0629 \u2022 \u0627\u0644\u062C\u064A\u0644 \u0627\u0644\u0642\u0627\u062F\u0645 \u0645\u0646 \u0627\u0644\u0645\u0639\u0627\u0631\u0643 \u0627\u0644\u0634\u0627\u0645\u0644\u0629",
+    "image": "/games/bf6.jpg",
+    "gradientFrom": "#3d2a14",
+    "gradientTo": "#160e05",
+    "four": null,
+    "five": 34.04,
+    "secondary": 21.89,
+    "costFour": null,
+    "costFive": 28.04,
+    "costSecondary": 15.89,
+    "available": true,
+    "bestSeller": false,
+    "order": 8
+  },
+  {
+    "id": "blackops3",
+    "name": "Call of Duty: Black Ops 3",
+    "sub": "\u062A\u0635\u0648\u064A\u0628 \u0645\u0633\u062A\u0642\u0628\u0644\u064A \u2022 \u0637\u0648\u0631 \u0627\u0644\u0632\u0648\u0645\u0628\u064A \u0648\u0627\u0644\u0644\u0639\u0628 \u0627\u0644\u062C\u0645\u0627\u0639\u064A",
+    "image": "/games/blackops3.jpg",
+    "gradientFrom": "#3a200a",
+    "gradientTo": "#120902",
+    "four": 14.41,
+    "five": 16.28,
+    "secondary": 12.54,
+    "costFour": 8.41,
+    "costFive": 10.28,
+    "costSecondary": 6.54,
+    "available": true,
+    "bestSeller": false,
+    "order": 9
+  },
+  {
+    "id": "blackops4",
+    "name": "Call of Duty: Black Ops 4",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u062A\u0635\u0648\u064A\u0628 \u2022 \u0628\u0627\u062A\u0644 \u0631\u0648\u064A\u0627\u0644 \u0648\u0637\u0648\u0631 \u0627\u0644\u0632\u0648\u0645\u0628\u064A",
+    "image": "/games/blackops4.jpg",
+    "gradientFrom": "#3a1508",
+    "gradientTo": "#120502",
+    "four": 9.74,
+    "five": 10.67,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 4.67,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 10
+  },
+  {
+    "id": "blackops6",
+    "name": "Call of Duty: Black Ops 6",
+    "sub": "\u062A\u0635\u0648\u064A\u0628 \u0648\u062D\u0631\u0628 \u2022 \u0637\u0648\u0631 \u0627\u0644\u0642\u0635\u0629 \u0648\u0627\u0644\u0644\u0639\u0628 \u0627\u0644\u062C\u0645\u0627\u0639\u064A",
+    "image": "/games/blackops6.jpg",
+    "gradientFrom": "#1f2310",
+    "gradientTo": "#080a04",
+    "four": 14.41,
+    "five": 24.69,
+    "secondary": 16.28,
+    "costFour": 8.41,
+    "costFive": 18.69,
+    "costSecondary": 10.28,
+    "available": true,
+    "bestSeller": false,
+    "order": 11
+  },
+  {
+    "id": "blackops7",
+    "name": "Call of Duty: Black Ops 7",
+    "sub": "\u062A\u0635\u0648\u064A\u0628 \u0645\u0644\u062D\u0645\u064A \u2022 \u0623\u062D\u062F\u062B \u0625\u0635\u062F\u0627\u0631\u0627\u062A \u0633\u0644\u0633\u0644\u0629 \u0628\u0644\u0627\u0643 \u0623\u0648\u0628\u0633",
+    "image": "/games/blackops7.jpg",
+    "gradientFrom": "#2a2f1a",
+    "gradientTo": "#0d0f08",
+    "four": 16.28,
+    "five": 36.84,
+    "secondary": 15.35,
+    "costFour": 10.28,
+    "costFive": 30.84,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": true,
+    "order": 12
+  },
+  {
+    "id": "cod-coldwar",
+    "name": "Call of Duty: Black Ops Cold War",
+    "sub": "\u0627\u0644\u062D\u0631\u0628 \u0627\u0644\u0628\u0627\u0631\u062F\u0629 \u2022 \u0637\u0648\u0631 \u0627\u0644\u0642\u0635\u0629 \u0648\u0627\u0644\u0632\u0648\u0645\u0628\u064A",
+    "image": "/games/cod-coldwar.jpg",
+    "gradientFrom": "#202a35",
+    "gradientTo": "#080d13",
+    "four": 14.41,
+    "five": 17.21,
+    "secondary": 12.54,
+    "costFour": 8.41,
+    "costFive": 11.21,
+    "costSecondary": 6.54,
+    "available": true,
+    "bestSeller": false,
+    "order": 13
+  },
+  {
+    "id": "cod-mwii",
+    "name": "Call of Duty: Modern Warfare II",
+    "sub": "\u0639\u0645\u0644\u064A\u0627\u062A \u062E\u0627\u0635\u0629 \u2022 \u0641\u0631\u0642\u0629 Task Force 141",
+    "image": "/games/cod-mwii.jpg",
+    "gradientFrom": "#152c1a",
+    "gradientTo": "#051108",
+    "four": 16.28,
+    "five": 20.02,
+    "secondary": 15.35,
+    "costFour": 10.28,
+    "costFive": 14.02,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 14
+  },
+  {
+    "id": "cod-mwiii",
+    "name": "Call of Duty: Modern Warfare III",
+    "sub": "\u062D\u0631\u0628 \u062D\u062F\u064A\u062B\u0629 \u2022 \u0645\u0648\u0627\u062C\u0647\u0629 \u0645\u0627\u0643\u0627\u0631\u0648\u0641 \u0648\u0623\u0637\u0648\u0627\u0631 \u0627\u0644\u0644\u0639\u0628",
+    "image": "/games/cod-mwiii.jpg",
+    "gradientFrom": "#3a1010",
+    "gradientTo": "#120303",
+    "four": 16.28,
+    "five": 20.02,
+    "secondary": 15.35,
+    "costFour": 10.28,
+    "costFive": 14.02,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 15
+  },
+  {
+    "id": "cod-wwii",
+    "name": "Call of Duty: WWII",
+    "sub": "\u0627\u0644\u062D\u0631\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629 \u2022 \u0645\u0639\u0627\u0631\u0643 \u0646\u0648\u0631\u0645\u0627\u0646\u062F\u064A \u0627\u0644\u062A\u0627\u0631\u064A\u062E\u064A\u0629",
+    "image": "/games/cod-wwii.jpg",
+    "gradientFrom": "#2e2418",
+    "gradientTo": "#0f0b07",
+    "four": 10.67,
+    "five": 10.67,
+    "secondary": 9.27,
+    "costFour": 4.67,
+    "costFive": 4.67,
+    "costSecondary": 3.27,
+    "available": true,
+    "bestSeller": false,
+    "order": 16
+  },
+  {
+    "id": "crash-ctr",
+    "name": "Crash Bandicoot Trilogy + CTR",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0633\u0628\u0627\u0642\u0627\u062A \u2022 \u0643\u0631\u0627\u0634 \u0628\u0627\u0646\u062F\u064A\u0643\u0648\u062A + \u0633\u0628\u0627\u0642 \u0627\u0644\u0633\u064A\u0627\u0631\u0627\u062A",
+    "image": "/games/crash-ctr.jpg",
+    "gradientFrom": "#4a2808",
+    "gradientTo": "#140a02",
+    "four": 10.67,
+    "five": 12.54,
+    "secondary": 8.8,
+    "costFour": 4.67,
+    "costFive": 6.54,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 17
+  },
+  {
+    "id": "crew-motorfest",
+    "name": "The Crew Motorfest",
+    "sub": "\u0633\u0628\u0627\u0642\u0627\u062A \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u062C\u0632\u064A\u0631\u0629 \u0647\u0627\u0648\u0627\u064A \u0648\u0645\u0647\u0631\u062C\u0627\u0646 \u0627\u0644\u0633\u0631\u0639\u0629",
+    "image": "/games/crew-motorfest.jpg",
+    "gradientFrom": "#1a4f7a",
+    "gradientTo": "#04161f",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": false,
+    "order": 18
+  },
+  {
+    "id": "crimson-desert",
+    "name": "Crimson Desert",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D RPG \u2022 \u0631\u0633\u0648\u0645\u0627\u062A \u0627\u0644\u062C\u064A\u0644 \u0627\u0644\u0642\u0627\u062F\u0645",
+    "image": "/games/crimson-desert.jpg",
+    "gradientFrom": "#3d1f14",
+    "gradientTo": "#130905",
+    "four": null,
+    "five": 39.64,
+    "secondary": 28.43,
+    "costFour": null,
+    "costFive": 33.64,
+    "costSecondary": 22.43,
+    "available": true,
+    "bestSeller": false,
+    "order": 19
+  },
+  {
+    "id": "cyberpunk",
+    "name": "Cyberpunk 2077",
+    "sub": "\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u0648\u062E\u064A\u0627\u0644 \u0639\u0644\u0645\u064A \u2022 \u0645\u062F\u064A\u0646\u0629 \u0646\u0627\u064A\u062A \u0633\u064A\u062A\u064A \u0627\u0644\u0645\u0633\u062A\u0642\u0628\u0644\u064A\u0629",
+    "image": "/games/cyberpunk.jpg",
+    "gradientFrom": "#4a3d08",
+    "gradientTo": "#141002",
+    "four": 14.41,
+    "five": 20.02,
+    "secondary": 16.28,
+    "costFour": 8.41,
+    "costFive": 14.02,
+    "costSecondary": 10.28,
+    "available": true,
+    "bestSeller": false,
+    "order": 20
+  },
+  {
+    "id": "days-gone",
+    "name": "Days Gone Remastered",
+    "sub": "\u0628\u0642\u0627\u0621 \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0645\u0648\u0627\u062C\u0647\u0629 \u062C\u062D\u0627\u0641\u0644 \u0627\u0644\u0632\u0648\u0645\u0628\u064A \u0628\u0627\u0644\u062F\u0631\u0627\u062C\u0629",
+    "image": "/games/days-gone.jpg",
+    "gradientFrom": "#262b20",
+    "gradientTo": "#090d07",
+    "four": 16.28,
+    "five": 20.02,
+    "secondary": 14.41,
+    "costFour": 10.28,
+    "costFive": 14.02,
+    "costSecondary": 8.41,
+    "available": true,
+    "bestSeller": false,
+    "order": 21
+  },
+  {
+    "id": "darwins-paradox",
+    "name": "Darwin's Paradox",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u062E\u064A\u0627\u0644 \u0639\u0644\u0645\u064A \u2022 \u0645\u063A\u0627\u0645\u0631\u0629 \u0627\u0644\u062C\u064A\u0644 \u0627\u0644\u062C\u062F\u064A\u062F",
+    "image": "/games/darwins-paradox.jpg",
+    "gradientFrom": "#102f3a",
+    "gradientTo": "#030f14",
+    "four": null,
+    "five": 24.69,
+    "secondary": 15.35,
+    "costFour": null,
+    "costFive": 18.69,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 22
+  },
+  {
+    "id": "detroit",
+    "name": "Detroit: Become Human (\u0639\u0631\u0628\u064A)",
+    "sub": "\u0642\u0635\u0629 \u0648\u062A\u0641\u0627\u0639\u0644 \u0633\u064A\u0646\u0645\u0627\u0626\u064A \u2022 \u0628\u0627\u0644\u062F\u0628\u0644\u062C\u0629 \u0648\u0627\u0644\u062A\u0631\u062C\u0645\u0629 \u0627\u0644\u0639\u0631\u0628\u064A\u0629",
+    "image": "/games/detroit.jpg",
+    "gradientFrom": "#14283d",
+    "gradientTo": "#040e17",
+    "four": 12.54,
+    "five": 13.48,
+    "secondary": 11.61,
+    "costFour": 6.54,
+    "costFive": 7.48,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": false,
+    "order": 23
+  },
+  {
+    "id": "elden-nightreign",
+    "name": "Elden Ring: Nightreign",
+    "sub": "\u0633\u0648\u0644\u0632 \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0627\u0644\u062A\u0648\u0633\u0639\u0629 \u0648\u0627\u0644\u0645\u063A\u0627\u0645\u0631\u0629 \u0627\u0644\u0643\u0628\u0631\u0649",
+    "image": "/games/elden-nightreign.jpg",
+    "gradientFrom": "#2c1c0a",
+    "gradientTo": "#0d0702",
+    "four": 17.21,
+    "five": 20.02,
+    "secondary": 15.35,
+    "costFour": 11.21,
+    "costFive": 14.02,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 24
+  },
+  {
+    "id": "elden-ring",
+    "name": "Elden Ring (\u0639\u0631\u0628\u064A)",
+    "sub": "\u0633\u0648\u0644\u0632 \u0648\u0645\u0644\u062D\u0645\u0629 \u062E\u064A\u0627\u0644\u064A\u0629 \u2022 \u0627\u0644\u0641\u0627\u0626\u0632\u0629 \u0628\u062C\u0627\u0626\u0632\u0629 \u0644\u0639\u0628\u0629 \u0627\u0644\u0633\u0646\u0629",
+    "image": "/games/elden-ring.jpg",
+    "gradientFrom": "#3a2710",
+    "gradientTo": "#100905",
+    "four": 18.15,
+    "five": 22.82,
+    "secondary": 20.02,
+    "costFour": 12.15,
+    "costFive": 16.82,
+    "costSecondary": 14.02,
+    "available": true,
+    "bestSeller": true,
+    "order": 25
+  },
+  {
+    "id": "f1",
+    "name": "EA Sports F1",
+    "sub": "\u0633\u0628\u0627\u0642\u0627\u062A \u0641\u0648\u0631\u0645\u0648\u0644\u0627 1 \u2022 \u0645\u062D\u0627\u0643\u0627\u0629 \u0628\u0637\u0648\u0644\u0629 \u0627\u0644\u0639\u0627\u0644\u0645 \u0627\u0644\u0631\u0633\u0645\u064A\u0629",
+    "image": "/games/f1.jpg",
+    "gradientFrom": "#4a1010",
+    "gradientTo": "#120202",
+    "four": null,
+    "five": 26.56,
+    "secondary": 20.02,
+    "costFour": null,
+    "costFive": 20.56,
+    "costSecondary": 14.02,
+    "available": true,
+    "bestSeller": false,
+    "order": 26
+  },
+  {
+    "id": "farcry6",
+    "name": "Far Cry 6",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0627\u0644\u062B\u0648\u0631\u0629 \u0641\u064A \u062C\u0632\u064A\u0631\u0629 \u064A\u0627\u0631\u0627",
+    "image": "/games/farcry6.jpg",
+    "gradientFrom": "#402d10",
+    "gradientTo": "#120c03",
+    "four": 11.23,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 5.23,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 27
+  },
+  {
+    "id": "eafc26",
+    "name": "EA Sports FC 26",
+    "sub": "\u0643\u0631\u0629 \u0627\u0644\u0642\u062F\u0645 \u0627\u0644\u0623\u0648\u0644\u0649 \u0639\u0627\u0644\u0645\u064A\u0627\u064B \u2022 Ultimate Team \u0648 Career Mode",
+    "image": "/games/eafc26.jpg",
+    "gradientFrom": "#1c5e3a",
+    "gradientTo": "#0f2e1c",
+    "four": 14.41,
+    "five": 21.89,
+    "secondary": 12.54,
+    "costFour": 8.41,
+    "costFive": 15.89,
+    "costSecondary": 6.54,
+    "available": true,
+    "bestSeller": true,
+    "order": 28
+  },
+  {
+    "id": "forza5",
+    "name": "Forza Horizon 5",
+    "sub": "\u0633\u0628\u0627\u0642\u0627\u062A \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0623\u0636\u062E\u0645 \u0645\u0647\u0631\u062C\u0627\u0646 \u0633\u064A\u0627\u0631\u0627\u062A \u0641\u064A \u0627\u0644\u0645\u0643\u0633\u064A\u0643",
+    "image": "/games/forza5.jpg",
+    "gradientFrom": "#0d3a4a",
+    "gradientTo": "#031018",
+    "four": null,
+    "five": 26.56,
+    "secondary": 19.08,
+    "costFour": null,
+    "costFive": 20.56,
+    "costSecondary": 13.08,
+    "available": true,
+    "bestSeller": true,
+    "order": 29
+  },
+  {
+    "id": "gang-beasts",
+    "name": "Gang Beasts",
+    "sub": "\u0642\u062A\u0627\u0644 \u0643\u0648\u0645\u064A\u062F\u064A \u0648\u0645\u0631\u062D \u2022 \u0644\u0639\u0628 \u062C\u0645\u0627\u0639\u064A \u0645\u0645\u062A\u0639 \u0645\u0639 \u0627\u0644\u0623\u0635\u062F\u0642\u0627\u0621",
+    "image": "/games/gang-beasts.jpg",
+    "gradientFrom": "#3a1435",
+    "gradientTo": "#120410",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 30
+  },
+  {
+    "id": "ghost-tsushima",
+    "name": "Ghost of Tsushima (\u0639\u0631\u0628\u064A)",
+    "sub": "\u0633\u0627\u0645\u0648\u0631\u0627\u064A \u0648\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u2022 \u0628\u0627\u0644\u062F\u0628\u0644\u062C\u0629 \u0648\u0627\u0644\u062A\u0631\u062C\u0645\u0629 \u0627\u0644\u0639\u0631\u0628\u064A\u0629",
+    "image": "/games/ghost-tsushima.jpg",
+    "gradientFrom": "#5a1010",
+    "gradientTo": "#1a0405",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": true,
+    "order": 31
+  },
+  {
+    "id": "ghost-yotei",
+    "name": "Ghost of Y\u014Dtei",
+    "sub": "\u0645\u0644\u062D\u0645\u0629 \u0627\u0644\u0633\u0627\u0645\u0648\u0631\u0627\u064A \u0627\u0644\u062C\u062F\u064A\u062F\u0629 \u2022 \u0627\u0633\u062A\u0643\u0634\u0627\u0641 \u062C\u0628\u0644 \u064A\u0648\u062A\u064A \u0627\u0644\u0623\u0633\u0637\u0648\u0631\u064A",
+    "image": "/games/ghost-yotei.jpg",
+    "gradientFrom": "#3a0d0d",
+    "gradientTo": "#120303",
+    "four": null,
+    "five": 39.64,
+    "secondary": 29.36,
+    "costFour": null,
+    "costFive": 33.64,
+    "costSecondary": 23.36,
+    "available": true,
+    "bestSeller": false,
+    "order": 32
+  },
+  {
+    "id": "gow3",
+    "name": "God of War III Remastered",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u0645\u0644\u0627\u062D\u0645 \u0625\u063A\u0631\u064A\u0642\u064A\u0629 \u2022 \u0645\u063A\u0627\u0645\u0631\u0629 \u0643\u0631\u064A\u062A\u0648\u0633 \u0627\u0644\u0623\u0633\u0637\u0648\u0631\u064A\u0629",
+    "image": "/games/gow3.jpg",
+    "gradientFrom": "#3a1510",
+    "gradientTo": "#120504",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 33
+  },
+  {
+    "id": "gow4",
+    "name": "God of War (2018)",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0623\u0633\u0627\u0637\u064A\u0631 \u0627\u0644\u0634\u0645\u0627\u0644 \u2022 \u0631\u062D\u0644\u0629 \u0643\u0631\u064A\u062A\u0648\u0633 \u0648\u0623\u062A\u0631\u064A\u0648\u0633",
+    "image": "/games/gow4.jpg",
+    "gradientFrom": "#202c3a",
+    "gradientTo": "#080e14",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 34
+  },
+  {
+    "id": "gow-ragnarok",
+    "name": "God of War Ragnar\xF6k",
+    "sub": "\u0645\u0639\u0631\u0643\u0629 \u0631\u0627\u062C\u0646\u0627\u0631\u0648\u0643 \u0627\u0644\u0643\u0628\u0631\u0649 \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0623\u0633\u0627\u0633\u064A\u0629",
+    "image": "/games/gow-ragnarok.jpg",
+    "gradientFrom": "#1b2a3d",
+    "gradientTo": "#060c14",
+    "four": 18.15,
+    "five": 21.89,
+    "secondary": 16.28,
+    "costFour": 12.15,
+    "costFive": 15.89,
+    "costSecondary": 10.28,
+    "available": true,
+    "bestSeller": true,
+    "order": 35
+  },
+  {
+    "id": "gow-ragnarok-deluxe",
+    "name": "God of War Ragnar\xF6k (Deluxe)",
+    "sub": "\u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0641\u0627\u062E\u0631\u0629 \u2022 \u0645\u0639 \u0643\u0627\u0641\u0629 \u0627\u0644\u062F\u0631\u0648\u0639 \u0648\u0627\u0644\u0645\u0638\u0627\u0647\u0631 \u0627\u0644\u0625\u0636\u0627\u0641\u064A\u0629",
+    "image": "/games/gow-ragnarok.jpg",
+    "gradientFrom": "#2d1c3a",
+    "gradientTo": "#0d0612",
+    "four": 20.02,
+    "five": 26.56,
+    "secondary": 17.21,
+    "costFour": 14.02,
+    "costFive": 20.56,
+    "costSecondary": 11.21,
+    "available": true,
+    "bestSeller": false,
+    "order": 36
+  },
+  {
+    "id": "gt7",
+    "name": "Gran Turismo 7",
+    "sub": "\u0645\u062D\u0627\u0643\u064A \u0627\u0644\u0642\u064A\u0627\u062F\u0629 \u0627\u0644\u062D\u0642\u064A\u0642\u064A \u2022 \u0623\u062D\u062F\u062B \u0627\u0644\u0633\u064A\u0627\u0631\u0627\u062A \u0648\u062D\u0644\u0628\u0627\u062A \u0627\u0644\u0633\u0628\u0627\u0642",
+    "image": "/games/gt7.jpg",
+    "gradientFrom": "#10253d",
+    "gradientTo": "#030a12",
+    "four": 18.15,
+    "five": 21.89,
+    "secondary": 15.35,
+    "costFour": 12.15,
+    "costFive": 15.89,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 37
+  },
+  {
+    "id": "gta5",
+    "name": "Grand Theft Auto V",
+    "sub": "\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u0648\u0623\u0643\u0634\u0646 \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0645\u062D\u0633\u0646\u0629 + GTA Online",
+    "image": "/games/gta5.jpg",
+    "gradientFrom": "#13343f",
+    "gradientTo": "#04141a",
+    "four": 13.48,
+    "five": 17.21,
+    "secondary": 11.61,
+    "costFour": 7.48,
+    "costFive": 11.21,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": true,
+    "order": 38
+  },
+  {
+    "id": "hitman-woa",
+    "name": "Hitman: World of Assassination",
+    "sub": "\u062A\u062E\u0641\u064A \u0648\u0627\u063A\u062A\u064A\u0627\u0644\u0627\u062A \u2022 \u0627\u0644\u062B\u0644\u0627\u062B\u064A\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0644\u0644\u0639\u0645\u064A\u0644 47",
+    "image": "/games/hitman-woa.jpg",
+    "gradientFrom": "#202020",
+    "gradientTo": "#070707",
+    "four": 17.21,
+    "five": 21.89,
+    "secondary": 15.35,
+    "costFour": 11.21,
+    "costFive": 15.89,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 39
+  },
+  {
+    "id": "hogwarts",
+    "name": "Hogwarts Legacy Deluxe (\u0639\u0631\u0628\u064A)",
+    "sub": "\u0639\u0627\u0644\u0645 \u0647\u0627\u0631\u064A \u0628\u0648\u062A\u0631 \u0627\u0644\u0633\u062D\u0631\u064A \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0641\u0627\u062E\u0631\u0629 \u0645\u0639 \u0627\u0644\u062A\u0631\u062C\u0645\u0629",
+    "image": "/games/hogwarts.jpg",
+    "gradientFrom": "#2a1e38",
+    "gradientTo": "#0d0714",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 11.61,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": false,
+    "order": 40
+  },
+  {
+    "id": "hollow-knight",
+    "name": "Hollow Knight",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0645\u064A\u062A\u0631\u0648\u064A\u062F\u0641\u064A\u0646\u064A\u0627 \u2022 \u062A\u062D\u0641\u0629 \u0641\u0646\u064A\u0629 \u0648\u0627\u0633\u062A\u0643\u0634\u0627\u0641 \u0645\u0645\u062A\u0639",
+    "image": "/games/hollow-knight.jpg",
+    "gradientFrom": "#15202e",
+    "gradientTo": "#05080d",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": false,
+    "order": 41
+  },
+  {
+    "id": "horizon-fw",
+    "name": "Horizon Forbidden West",
+    "sub": "\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D \u0648\u0645\u0633\u062A\u0642\u0628\u0644 \u0622\u0644\u064A \u2022 \u0631\u062D\u0644\u0629 \u0625\u064A\u0644\u0648\u064A \u0644\u0644\u063A\u0631\u0628 \u0627\u0644\u0645\u062D\u0638\u0648\u0631",
+    "image": "/games/horizon-fw.jpg",
+    "gradientFrom": "#143a3d",
+    "gradientTo": "#031214",
+    "four": 16.28,
+    "five": 20.02,
+    "secondary": 15.35,
+    "costFour": 10.28,
+    "costFive": 14.02,
+    "costSecondary": 9.35,
+    "available": true,
+    "bestSeller": false,
+    "order": 42
+  },
+  {
+    "id": "injustice2",
+    "name": "Injustice 2",
+    "sub": "\u0642\u062A\u0627\u0644 \u0648\u0623\u0628\u0637\u0627\u0644 DC \u2022 \u0628\u0627\u062A\u0645\u0627\u0646 \u0648\u0633\u0648\u0628\u0631\u0645\u0627\u0646 \u0648\u0628\u0642\u064A\u0629 \u0627\u0644\u0623\u0628\u0637\u0627\u0644",
+    "image": "/games/injustice2.jpg",
+    "gradientFrom": "#1a2a3a",
+    "gradientTo": "#060c12",
+    "four": 9.74,
+    "five": 9.74,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 3.74,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 43
+  },
+  {
+    "id": "it-takes-two",
+    "name": "It Takes Two",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0629 \u062A\u0639\u0627\u0648\u0646\u064A\u0629 \u062B\u0646\u0627\u0626\u064A\u0629 \u2022 \u0627\u0644\u0641\u0627\u0626\u0632\u0629 \u0628\u062C\u0627\u0626\u0632\u0629 \u0644\u0639\u0628\u0629 \u0627\u0644\u0633\u0646\u0629",
+    "image": "/games/it-takes-two.jpg",
+    "gradientFrom": "#402010",
+    "gradientTo": "#140803",
+    "four": 10.67,
+    "five": 13.48,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 7.48,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 44
+  },
+  {
+    "id": "tlou1",
+    "name": "The Last of Us Part I",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0629 \u0627\u0644\u0628\u0642\u0627\u0621 \u0627\u0644\u062E\u0627\u0644\u062F\u0629 \u2022 \u0631\u064A\u0645\u064A\u0643 \u0627\u0644\u062C\u064A\u0644 \u0627\u0644\u062C\u062F\u064A\u062F \u0644\u0642\u0635\u0629 \u062C\u0648\u0644 \u0648\u0625\u064A\u0644\u064A",
+    "image": "/games/tlou1.jpg",
+    "gradientFrom": "#1d2a18",
+    "gradientTo": "#070a05",
+    "four": 10.67,
+    "five": 10.67,
+    "secondary": 8.8,
+    "costFour": 4.67,
+    "costFive": 4.67,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": true,
+    "order": 45
+  },
+  {
+    "id": "tlou2",
+    "name": "The Last of Us Part II",
+    "sub": "\u062F\u0631\u0627\u0645\u0627 \u0648\u0628\u0642\u0627\u0621 \u0645\u0644\u062D\u0645\u064A \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0623\u0633\u0627\u0633\u064A\u0629 \u0627\u0644\u0645\u062D\u0633\u0646\u0629",
+    "image": "/games/tlou2.jpg",
+    "gradientFrom": "#2c2415",
+    "gradientTo": "#0c0a05",
+    "four": 18.15,
+    "five": 20.02,
+    "secondary": 14.41,
+    "costFour": 12.15,
+    "costFive": 14.02,
+    "costSecondary": 8.41,
+    "available": true,
+    "bestSeller": true,
+    "order": 46
+  },
+  {
+    "id": "tlou2-deluxe",
+    "name": "The Last of Us Part II Deluxe",
+    "sub": "\u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0641\u0627\u062E\u0631\u0629 \u2022 \u0645\u0639 \u0643\u0627\u0641\u0629 \u0627\u0644\u0625\u0636\u0627\u0641\u0627\u062A \u0648\u0627\u0644\u062A\u0631\u0642\u064A\u0627\u062A",
+    "image": "/games/tlou2.jpg",
+    "gradientFrom": "#381e15",
+    "gradientTo": "#120805",
+    "four": 20.02,
+    "five": 21.89,
+    "secondary": 16.28,
+    "costFour": 14.02,
+    "costFive": 15.89,
+    "costSecondary": 10.28,
+    "available": true,
+    "bestSeller": false,
+    "order": 47
+  },
+  {
+    "id": "little-nightmares3",
+    "name": "Little Nightmares III",
+    "sub": "\u0631\u0639\u0628 \u0648\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0623\u0644\u063A\u0627\u0632 \u2022 \u062A\u062C\u0631\u0628\u0629 \u062A\u0639\u0627\u0648\u0646\u064A\u0629 \u0645\u0634\u0648\u0642\u0629",
+    "image": "/games/little-nightmares3.jpg",
+    "gradientFrom": "#2e2410",
+    "gradientTo": "#0d0903",
+    "four": 13.48,
+    "five": 17.21,
+    "secondary": 11.61,
+    "costFour": 7.48,
+    "costFive": 11.21,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": false,
+    "order": 48
+  },
+  {
+    "id": "mafia-trilogy",
+    "name": "Mafia: Trilogy",
+    "sub": "\u0639\u0627\u0644\u0645 \u0627\u0644\u062C\u0631\u064A\u0645\u0629 \u0648\u0627\u0644\u0645\u0627\u0641\u064A\u0627 \u2022 \u0627\u0644\u062B\u0644\u0627\u062B\u064A\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0627\u0644\u0645\u062D\u0633\u0646\u0629",
+    "image": "/games/mafia-trilogy.jpg",
+    "gradientFrom": "#3a1515",
+    "gradientTo": "#120404",
+    "four": 10.67,
+    "five": 10.67,
+    "secondary": 8.8,
+    "costFour": 4.67,
+    "costFive": 4.67,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 49
+  },
+  {
+    "id": "minecraft",
+    "name": "Minecraft",
+    "sub": "\u0628\u0646\u0627\u0621 \u0648\u0639\u0627\u0644\u0645 \u0644\u0627 \u0646\u0647\u0627\u0626\u064A \u2022 \u0627\u0633\u062A\u0643\u0634\u0641 \u0648\u0627\u0628\u0646\u0650 \u0639\u0648\u0627\u0644\u0645\u0643 \u0628\u0644\u0627 \u062D\u062F\u0648\u062F",
+    "image": "/games/minecraft.jpg",
+    "gradientFrom": "#203a18",
+    "gradientTo": "#081205",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 11.61,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": true,
+    "order": 50
+  },
+  {
+    "id": "mk1",
+    "name": "Mortal Kombat 1",
+    "sub": "\u0642\u062A\u0627\u0644 \u0648\u062D\u0631\u0643\u0627\u062A \u0642\u0627\u0636\u064A\u0629 \u062F\u0645\u0648\u064A\u0629 \u2022 \u0625\u0639\u0627\u062F\u0629 \u0628\u0646\u0627\u0621 \u0639\u0627\u0644\u0645 \u0645\u0648\u0631\u062A\u0627\u0644 \u0643\u0648\u0645\u0628\u0627\u062A",
+    "image": "/games/mk1.jpg",
+    "gradientFrom": "#3a1410",
+    "gradientTo": "#120403",
+    "four": null,
+    "five": 18.15,
+    "secondary": 12.54,
+    "costFour": null,
+    "costFive": 12.15,
+    "costSecondary": 6.54,
+    "available": true,
+    "bestSeller": false,
+    "order": 51
+  },
+  {
+    "id": "mk11",
+    "name": "Mortal Kombat 11",
+    "sub": "\u0642\u062A\u0627\u0644 \u0648\u062D\u0645\u0627\u0633 \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0645\u062D\u0633\u0646\u0629 \u0645\u0639 \u0643\u0627\u0645\u0644 \u0627\u0644\u0634\u062E\u0635\u064A\u0627\u062A",
+    "image": "/games/mk11.jpg",
+    "gradientFrom": "#3a1a08",
+    "gradientTo": "#120602",
+    "four": 9.74,
+    "five": 9.74,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 3.74,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 52
+  },
+  {
+    "id": "nba2k26",
+    "name": "NBA 2K26",
+    "sub": "\u0643\u0631\u0629 \u0627\u0644\u0633\u0644\u0629 \u0627\u0644\u0623\u0645\u0631\u064A\u0643\u064A\u0629 \u2022 \u0645\u062D\u0627\u0643\u0627\u0629 \u0648\u0627\u0642\u0639\u064A\u0629 \u0645\u0639 \u0646\u062C\u0648\u0645 \u0627\u0644\u062F\u0648\u0631\u064A",
+    "image": "/games/nba2k26.webp",
+    "gradientFrom": "#3a1820",
+    "gradientTo": "#120508",
+    "four": 15.35,
+    "five": 20.02,
+    "secondary": 13.48,
+    "costFour": 9.35,
+    "costFive": 14.02,
+    "costSecondary": 7.48,
+    "available": true,
+    "bestSeller": false,
+    "order": 53
+  },
+  {
+    "id": "nfs-heat",
+    "name": "Need for Speed Heat",
+    "sub": "\u0633\u0628\u0627\u0642\u0627\u062A \u0634\u0648\u0627\u0631\u0639 \u0648\u0645\u0637\u0627\u0631\u062F\u0627\u062A \u0634\u0631\u0637\u0629 \u2022 \u0633\u0628\u0627\u0642\u0627\u062A \u0644\u064A\u0644\u064A\u0629 \u062D\u0645\u0627\u0633\u064A\u0629",
+    "image": "/games/nfs-heat.jpg",
+    "gradientFrom": "#3d1030",
+    "gradientTo": "#12030f",
+    "four": 9.74,
+    "five": 9.74,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 3.74,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 54
+  },
+  {
+    "id": "overcooked",
+    "name": "Overcooked! All You Can Eat (1+2)",
+    "sub": "\u0637\u0628\u062E \u0648\u0641\u0648\u0636\u0649 \u0639\u0627\u0626\u0644\u064A\u0629 \u2022 \u0627\u0644\u062C\u0632\u0626\u064A\u0646 1 \u0648 2 \u0645\u0639 \u0643\u0627\u0645\u0644 \u0627\u0644\u0625\u0636\u0627\u0641\u0627\u062A",
+    "image": "/games/overcooked.jpg",
+    "gradientFrom": "#3a2a10",
+    "gradientTo": "#120c03",
+    "four": 10.67,
+    "five": 12.54,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 6.54,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 55
+  },
+  {
+    "id": "overcooked2",
+    "name": "Overcooked! 2",
+    "sub": "\u0637\u0628\u062E \u062C\u0645\u0627\u0639\u064A \u0648\u062A\u062D\u062F\u064A\u0627\u062A \u2022 \u0645\u062A\u0639\u0629 \u0648\u062A\u0646\u0633\u064A\u0642 \u0645\u0639 \u0627\u0644\u0623\u0635\u062F\u0642\u0627\u0621",
+    "image": "/games/overcooked2.jpg",
+    "gradientFrom": "#2e3a15",
+    "gradientTo": "#0d1204",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 56
+  },
+  {
+    "id": "pes2019",
+    "name": "eFootball PES 2019",
+    "sub": "\u0643\u0631\u0629 \u0642\u062F\u0645 \u0643\u0644\u0627\u0633\u064A\u0643\u064A\u0629 \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u062A\u0627\u0631\u064A\u062E\u064A\u0629 \u0627\u0644\u0645\u0641\u0636\u0644\u0629",
+    "image": "/games/pes2019.jpg",
+    "gradientFrom": "#15253a",
+    "gradientTo": "#050b12",
+    "four": 26.56,
+    "five": 30.3,
+    "secondary": 22.82,
+    "costFour": 20.56,
+    "costFive": 24.3,
+    "costSecondary": 16.82,
+    "available": true,
+    "bestSeller": false,
+    "order": 57
+  },
+  {
+    "id": "pes2021",
+    "name": "eFootball PES 2021 Season Update",
+    "sub": "\u0643\u0631\u0629 \u0642\u062F\u0645 \u0648\u0627\u0642\u0639\u064A\u0629 \u2022 \u0627\u0644\u062A\u062D\u062F\u064A\u062B \u0627\u0644\u0623\u0633\u0637\u0648\u0631\u064A \u0644\u0642\u0648\u0627\u0626\u0645 \u0627\u0644\u0641\u0631\u0642",
+    "image": "/games/pes2021.jpg",
+    "gradientFrom": "#1a3045",
+    "gradientTo": "#06101a",
+    "four": 21.89,
+    "five": 26.56,
+    "secondary": 19.08,
+    "costFour": 15.89,
+    "costFive": 20.56,
+    "costSecondary": 13.08,
+    "available": true,
+    "bestSeller": true,
+    "order": 58
+  },
+  {
+    "id": "ratchet-clank",
+    "name": "Ratchet & Clank: Rift Apart",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u062A\u0646\u0642\u0644 \u0623\u0628\u0639\u0627\u062F \u2022 \u062A\u062C\u0631\u0628\u0629 \u062D\u0635\u0631\u064A\u0629 \u0644\u0627\u0633\u062A\u0639\u0631\u0627\u0636 \u0642\u0648\u0629 PS5",
+    "image": "/games/ratchet-clank.jpg",
+    "gradientFrom": "#251838",
+    "gradientTo": "#0b0512",
+    "four": null,
+    "five": 14.41,
+    "secondary": 11.61,
+    "costFour": null,
+    "costFive": 8.41,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": false,
+    "order": 59
+  },
+  {
+    "id": "rayman",
+    "name": "Rayman Legends",
+    "sub": "\u0645\u0646\u0635\u0627\u062A \u0648\u0645\u0631\u062D \u0639\u0627\u0626\u0644\u064A \u2022 \u0648\u0627\u062D\u062F\u0629 \u0645\u0646 \u0623\u0641\u0636\u0644 \u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0645\u0646\u0635\u0627\u062A",
+    "image": "/games/rayman.jpg",
+    "gradientFrom": "#3a2c10",
+    "gradientTo": "#120c03",
+    "four": 9.27,
+    "five": 10.21,
+    "secondary": 8.8,
+    "costFour": 3.27,
+    "costFive": 4.21,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 60
+  },
+  {
+    "id": "ready-or-not",
+    "name": "Ready or Not",
+    "sub": "\u0627\u0642\u062A\u062D\u0627\u0645 \u0648\u062A\u0643\u062A\u064A\u0643 SWAT \u2022 \u0648\u0627\u0642\u0639\u064A\u0629 \u0642\u062A\u0627\u0644\u064A\u0629 \u0639\u0627\u0644\u064A\u0629 \u062C\u062F\u0627\u064B",
+    "image": "/games/ready-or-not.jpg",
+    "gradientFrom": "#1a1a1a",
+    "gradientTo": "#050505",
+    "four": null,
+    "five": 28.43,
+    "secondary": 21.89,
+    "costFour": null,
+    "costFive": 22.43,
+    "costSecondary": 15.89,
+    "available": true,
+    "bestSeller": false,
+    "order": 61
+  },
+  {
+    "id": "reanimal",
+    "name": "Reanimal",
+    "sub": "\u0631\u0639\u0628 \u0646\u0641\u0633\u064A \u0648\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0645\u0638\u0644\u0645\u0629 \u2022 \u0645\u0646 \u0645\u0637\u0648\u0631\u064A \u0644\u064A\u062A\u0644 \u0646\u0627\u064A\u062A\u0645\u064A\u0631\u0632",
+    "image": "/games/reanimal.jpg",
+    "gradientFrom": "#252015",
+    "gradientTo": "#0b0904",
+    "four": null,
+    "five": 22.82,
+    "secondary": 19.08,
+    "costFour": null,
+    "costFive": 16.82,
+    "costSecondary": 13.08,
+    "available": true,
+    "bestSeller": false,
+    "order": 62
+  },
+  {
+    "id": "re2",
+    "name": "Resident Evil 2 Remake",
+    "sub": "\u0631\u0639\u0628 \u0648\u0628\u0642\u0627\u0621 \u2022 \u0643\u0627\u0628\u0648\u0633 \u0645\u062F\u064A\u0646\u0629 \u0631\u0627\u0643\u0648\u0646 \u0645\u0639 \u0644\u064A\u0648\u0646 \u0648\u0643\u0644\u064A\u0631",
+    "image": "/games/re2.jpg",
+    "gradientFrom": "#3a1010",
+    "gradientTo": "#120303",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 63
+  },
+  {
+    "id": "re3",
+    "name": "Resident Evil 3 Remake",
+    "sub": "\u0647\u0631\u0648\u0628 \u0648\u0631\u0639\u0628 \u2022 \u0645\u0648\u0627\u062C\u0647\u0629 \u0627\u0644\u0648\u062D\u0634 \u0646\u064A\u0645\u0633\u064A\u0633",
+    "image": "/games/re3.jpg",
+    "gradientFrom": "#301515",
+    "gradientTo": "#100404",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 64
+  },
+  {
+    "id": "rdr2",
+    "name": "Red Dead Redemption 2",
+    "sub": "\u0645\u0644\u062D\u0645\u0629 \u0627\u0644\u063A\u0631\u0628 \u0627\u0644\u0623\u0645\u0631\u064A\u0643\u064A \u2022 \u0622\u0631\u062B\u0631 \u0645\u0648\u0631\u063A\u0627\u0646 \u0648\u0639\u0635\u0627\u0628\u0629 \u0641\u0627\u0646 \u062F\u064A\u0631 \u0644\u064A\u0646\u062F",
+    "image": "/games/rdr2.jpg",
+    "gradientFrom": "#4a2412",
+    "gradientTo": "#180a04",
+    "four": 11.61,
+    "five": 14.41,
+    "secondary": 9.74,
+    "costFour": 5.61,
+    "costFive": 8.41,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": true,
+    "order": 65
+  },
+  {
+    "id": "re4",
+    "name": "Resident Evil 4 Remake",
+    "sub": "\u0631\u064A\u0645\u064A\u0643 \u0623\u0633\u0637\u0648\u0631\u064A \u2022 \u0625\u0646\u0642\u0627\u0630 \u0627\u0628\u0646\u0629 \u0627\u0644\u0631\u0626\u064A\u0633 \u0641\u064A \u0642\u0631\u064A\u0629 \u0627\u0644\u0631\u0639\u0628",
+    "image": "/games/re4.jpg",
+    "gradientFrom": "#351a10",
+    "gradientTo": "#100603",
+    "four": 12.54,
+    "five": 15.35,
+    "secondary": 11.61,
+    "costFour": 6.54,
+    "costFive": 9.35,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": true,
+    "order": 66
+  },
+  {
+    "id": "re4-gold",
+    "name": "Resident Evil 4 Gold Edition",
+    "sub": "\u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0630\u0647\u0628\u064A\u0629 \u2022 \u0645\u0639 \u0625\u0636\u0627\u0641\u0629 Separate Ways \u0648\u0643\u0627\u0645\u0644 \u0627\u0644\u0625\u0636\u0627\u0641\u0627\u062A",
+    "image": "/games/re4-gold.jpg",
+    "gradientFrom": "#4a3510",
+    "gradientTo": "#140e03",
+    "four": 14.41,
+    "five": 18.15,
+    "secondary": 12.54,
+    "costFour": 8.41,
+    "costFive": 12.15,
+    "costSecondary": 6.54,
+    "available": true,
+    "bestSeller": false,
+    "order": 67
+  },
+  {
+    "id": "re9",
+    "name": "Resident Evil 9 - Requiem",
+    "sub": "\u0627\u0644\u0625\u0635\u062F\u0627\u0631 \u0627\u0644\u0623\u062D\u062F\u062B \u0648\u0627\u0644\u0623\u0636\u062E\u0645 \u2022 \u0643\u0627\u0628\u0648\u0633 \u062C\u062F\u064A\u062F \u0644\u0623\u0633\u0637\u0648\u0631\u0629 \u0627\u0644\u0631\u0639\u0628",
+    "image": "/games/re9.jpg",
+    "gradientFrom": "#4a0e0e",
+    "gradientTo": "#1a0303",
+    "four": null,
+    "five": 40.58,
+    "secondary": 31.23,
+    "costFour": null,
+    "costFive": 34.58,
+    "costSecondary": 25.23,
+    "available": true,
+    "bestSeller": false,
+    "order": 68
+  },
+  {
+    "id": "re7",
+    "name": "Resident Evil 7: Biohazard",
+    "sub": "\u0631\u0639\u0628 \u0645\u0646\u0638\u0648\u0631 \u0623\u0648\u0644 \u2022 \u0642\u0635\u0631 \u0639\u0627\u0626\u0644\u0629 \u0628\u064A\u0643\u0631 \u0627\u0644\u0645\u0631\u0639\u0628",
+    "image": "/games/re7.jpg",
+    "gradientFrom": "#2a2012",
+    "gradientTo": "#0d0a04",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 69
+  },
+  {
+    "id": "re8",
+    "name": "Resident Evil Village (RE8)",
+    "sub": "\u0631\u0639\u0628 \u0648\u0642\u0644\u0627\u0639 \u0645\u0635\u0627\u0635\u064A \u0627\u0644\u062F\u0645\u0627\u0621 \u2022 \u0642\u0635\u0629 \u0625\u064A\u062B\u0627\u0646 \u0648\u064A\u0646\u062A\u0631\u0632",
+    "image": "/games/re8.jpg",
+    "gradientFrom": "#2a1010",
+    "gradientTo": "#0a0202",
+    "four": 10.67,
+    "five": 12.54,
+    "secondary": 9.74,
+    "costFour": 4.67,
+    "costFive": 6.54,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 70
+  },
+  {
+    "id": "re8-gold",
+    "name": "Resident Evil Village (Gold)",
+    "sub": "\u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0630\u0647\u0628\u064A\u0629 \u2022 \u0637\u0648\u0631 \u0627\u0644\u0645\u0646\u0638\u0648\u0631 \u0627\u0644\u062B\u0627\u0644\u062B \u0648\u0625\u0636\u0627\u0641\u0629 \u0631\u0648\u0632",
+    "image": "/games/re8-gold.jpg",
+    "gradientFrom": "#422810",
+    "gradientTo": "#140c03",
+    "four": 12.54,
+    "five": 16.28,
+    "secondary": 11.61,
+    "costFour": 6.54,
+    "costFive": 10.28,
+    "costSecondary": 5.61,
+    "available": true,
+    "bestSeller": false,
+    "order": 71
+  },
+  {
+    "id": "sekiro",
+    "name": "Sekiro: Shadows Die Twice",
+    "sub": "\u0633\u0627\u0645\u0648\u0631\u0627\u064A \u0648\u0635\u0639\u0648\u0628\u0629 \u0648\u062A\u062D\u062F\u064A \u2022 \u0627\u0644\u0641\u0627\u0626\u0632\u0629 \u0628\u062C\u0627\u0626\u0632\u0629 \u0644\u0639\u0628\u0629 \u0627\u0644\u0633\u0646\u0629",
+    "image": "/games/sekiro.jpg",
+    "gradientFrom": "#3a1e10",
+    "gradientTo": "#120803",
+    "four": 11.61,
+    "five": 12.54,
+    "secondary": 9.74,
+    "costFour": 5.61,
+    "costFive": 6.54,
+    "costSecondary": 3.74,
+    "available": true,
+    "bestSeller": false,
+    "order": 72
+  },
+  {
+    "id": "silksong",
+    "name": "Hollow Knight: Silksong",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0645\u0646\u0635\u0627\u062A \u2022 \u0631\u062D\u0644\u0629 \u0647\u0648\u0631\u0646\u064A\u062A \u0641\u064A \u0627\u0644\u0645\u0645\u0644\u0643\u0629 \u0627\u0644\u062C\u062F\u064A\u062F\u0629",
+    "image": "/games/silksong.jpg",
+    "gradientFrom": "#3a1520",
+    "gradientTo": "#120408",
+    "four": 14.41,
+    "five": 18.15,
+    "secondary": 13.48,
+    "costFour": 8.41,
+    "costFive": 12.15,
+    "costSecondary": 7.48,
+    "available": true,
+    "bestSeller": false,
+    "order": 73
+  },
+  {
+    "id": "spiderman2",
+    "name": "Marvel's Spider-Man 2 (\u0639\u0631\u0628\u064A)",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u2022 \u0628\u064A\u062A\u0631 \u0628\u0627\u0631\u0643\u0631 \u0648\u0645\u0627\u064A\u0644\u0632 \u0645\u0648\u0631\u0627\u0644\u064A\u0633 \u0628\u0627\u0644\u0639\u0631\u0628\u064A",
+    "image": "/games/spiderman2.jpg",
+    "gradientFrom": "#5a0a0a",
+    "gradientTo": "#1d0306",
+    "four": null,
+    "five": 28.43,
+    "secondary": 20.95,
+    "costFour": null,
+    "costFive": 22.43,
+    "costSecondary": 14.95,
+    "available": true,
+    "bestSeller": true,
+    "order": 74
+  },
+  {
+    "id": "spiderman-marvel",
+    "name": "Marvel's Spider-Man Remastered",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0646\u064A\u0648\u064A\u0648\u0631\u0643 \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0645\u062D\u0633\u0646\u0629 \u0627\u0644\u0623\u0648\u0644\u0649 \u0644\u0633\u0628\u0627\u064A\u062F\u0631\u0645\u0627\u0646",
+    "image": "/games/spiderman-marvel.jpg",
+    "gradientFrom": "#4a1015",
+    "gradientTo": "#140305",
+    "four": 12.54,
+    "five": 12.54,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 6.54,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": false,
+    "order": 75
+  },
+  {
+    "id": "spiderman-miles",
+    "name": "Spider-Man: Miles Morales",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0627\u0644\u0634\u062A\u0627\u0621 \u2022 \u0642\u0648\u0649 \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0621 \u0648\u0627\u0644\u062A\u062E\u0641\u064A \u0645\u0639 \u0645\u0627\u064A\u0644\u0632",
+    "image": "/games/spiderman-miles.jpg",
+    "gradientFrom": "#381028",
+    "gradientTo": "#10030a",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": false,
+    "order": 76
+  },
+  {
+    "id": "split-fiction",
+    "name": "Split Fiction",
+    "sub": "\u0623\u0643\u0634\u0646 \u0648\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u062E\u064A\u0627\u0644 \u0639\u0644\u0645\u064A \u2022 \u062A\u062C\u0631\u0628\u0629 \u0633\u064A\u0646\u0645\u0627\u0626\u064A\u0629 \u0641\u0631\u064A\u062F\u0629",
+    "image": "/games/split-fiction.jpg",
+    "gradientFrom": "#1a2c3a",
+    "gradientTo": "#060e14",
+    "four": null,
+    "five": 28.43,
+    "secondary": 20.95,
+    "costFour": null,
+    "costFive": 22.43,
+    "costSecondary": 14.95,
+    "available": true,
+    "bestSeller": false,
+    "order": 77
+  },
+  {
+    "id": "stray",
+    "name": "Stray",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0623\u0644\u063A\u0627\u0632 \u2022 \u0627\u0633\u062A\u0643\u0634\u0641 \u0645\u062F\u064A\u0646\u0629 \u0627\u0644\u0633\u0627\u064A\u0628\u0631\u0628\u0627\u0646\u0643 \u0643\u0642\u0637\u0629 \u0644\u0637\u064A\u0641\u0629",
+    "image": "/games/stray.jpg",
+    "gradientFrom": "#382510",
+    "gradientTo": "#120a03",
+    "four": 12.54,
+    "five": 16.28,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 10.28,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": false,
+    "order": 78
+  },
+  {
+    "id": "tekken7",
+    "name": "Tekken 7",
+    "sub": "\u0642\u062A\u0627\u0644 \u0643\u0644\u0627\u0633\u064A\u0643\u064A \u2022 \u0635\u0631\u0627\u0639 \u0639\u0627\u0626\u0644\u0629 \u0645\u064A\u0634\u064A\u0645\u0627 \u0627\u0644\u062A\u0627\u0631\u064A\u062E\u064A",
+    "image": "/games/tekken7.jpg",
+    "gradientFrom": "#3a1510",
+    "gradientTo": "#120403",
+    "four": 10.67,
+    "five": 11.61,
+    "secondary": 8.8,
+    "costFour": 4.67,
+    "costFive": 5.61,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 79
+  },
+  {
+    "id": "tekken8",
+    "name": "TEKKEN 8",
+    "sub": "\u0627\u0644\u062C\u064A\u0644 \u0627\u0644\u0642\u0627\u062F\u0645 \u0645\u0646 \u0627\u0644\u0642\u062A\u0627\u0644 \u2022 \u0631\u0633\u0648\u0645\u0627\u062A Unreal Engine 5 \u0627\u0644\u062E\u0627\u0631\u0642\u0629",
+    "image": "/games/tekken8.jpg",
+    "gradientFrom": "#401018",
+    "gradientTo": "#140206",
+    "four": null,
+    "five": 20.02,
+    "secondary": 14.41,
+    "costFour": null,
+    "costFive": 14.02,
+    "costSecondary": 8.41,
+    "available": true,
+    "bestSeller": true,
+    "order": 80
+  },
+  {
+    "id": "witcher3",
+    "name": "The Witcher 3: Complete Edition",
+    "sub": "\u0639\u0627\u0644\u0645 \u0645\u0641\u062A\u0648\u062D RPG \u2022 \u0627\u0644\u0646\u0633\u062E\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0645\u0639 \u0627\u0644\u0625\u0636\u0627\u0641\u0627\u062A \u0627\u0644\u0623\u0633\u0637\u0648\u0631\u064A\u0629",
+    "image": "/games/witcher3.jpg",
+    "gradientFrom": "#2d2012",
+    "gradientTo": "#0d0803",
+    "four": 9.74,
+    "five": 12.54,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 6.54,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": true,
+    "order": 81
+  },
+  {
+    "id": "tomb-raider",
+    "name": "Tomb Raider: Definitive Survivor Trilogy",
+    "sub": "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0648\u0622\u062B\u0627\u0631 \u2022 \u062B\u0644\u0627\u062B\u064A\u0629 \u0644\u0627\u0631\u0627 \u0643\u0631\u0648\u0641\u062A \u0627\u0644\u0643\u0627\u0645\u0644\u0629",
+    "image": "/games/tomb-raider.jpg",
+    "gradientFrom": "#1d2820",
+    "gradientTo": "#070c08",
+    "four": 9.74,
+    "five": 9.74,
+    "secondary": 8.8,
+    "costFour": 3.74,
+    "costFive": 3.74,
+    "costSecondary": 2.8,
+    "available": true,
+    "bestSeller": false,
+    "order": 82
+  },
+  {
+    "id": "ufc5",
+    "name": "EA Sports UFC 5",
+    "sub": "\u0641\u0646\u0648\u0646 \u0627\u0644\u0642\u062A\u0627\u0644 \u0627\u0644\u0645\u062E\u062A\u0644\u0637\u0629 MMA \u2022 \u0648\u0627\u0642\u0639\u064A\u0629 \u0648\u062F\u0642\u0629 \u0636\u0631\u0628\u0627\u062A \u0641\u0627\u0626\u0642\u0629",
+    "image": "/games/ufc5.jpg",
+    "gradientFrom": "#381810",
+    "gradientTo": "#120603",
+    "four": null,
+    "five": 16.28,
+    "secondary": 14.41,
+    "costFour": null,
+    "costFive": 10.28,
+    "costSecondary": 8.41,
+    "available": true,
+    "bestSeller": false,
+    "order": 83
+  },
+  {
+    "id": "uncharted4",
+    "name": "Uncharted 4: A Thief's End (Bundle)",
+    "sub": "\u0643\u0646\u0648\u0632 \u0648\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0633\u0646\u0645\u0627\u0626\u064A\u0629 \u2022 \u0631\u062D\u0644\u0629 \u0646\u0627\u062B\u0627\u0646 \u062F\u0631\u064A\u0643 \u0627\u0644\u0623\u062E\u064A\u0631\u0629",
+    "image": "/games/uncharted4.jpg",
+    "gradientFrom": "#1f3025",
+    "gradientTo": "#07100a",
+    "four": 12.54,
+    "five": 14.41,
+    "secondary": 10.67,
+    "costFour": 6.54,
+    "costFive": 8.41,
+    "costSecondary": 4.67,
+    "available": true,
+    "bestSeller": true,
+    "order": 84
+  },
+  {
+    "id": "wwe26",
+    "name": "WWE 2K26 Standard",
+    "sub": "\u0627\u0644\u0645\u0635\u0627\u0631\u0639\u0629 \u0627\u0644\u062D\u0631\u0629 \u2022 \u0623\u062D\u062F\u062B \u0646\u062C\u0648\u0645 \u0627\u0644\u062D\u0644\u0628\u0627\u062A \u0648\u0623\u0637\u0648\u0627\u0631 \u0627\u0644\u0644\u0639\u0628",
+    "image": "/games/wwe26.jpg",
+    "gradientFrom": "#3a1a1a",
+    "gradientTo": "#0e0405",
+    "four": null,
+    "five": 39.64,
+    "secondary": 30.3,
+    "costFour": null,
+    "costFive": 33.64,
+    "costSecondary": 24.3,
+    "available": true,
+    "bestSeller": false,
+    "order": 85
+  }
 ];
 var DEFAULT_BUNDLES = [
   {
@@ -47011,7 +48386,12 @@ var DEFAULT_REVIEWS = [
   { id: 1, name: "\u0645\u062D\u0645\u062F \u0627\u0644\u0639\u062A\u064A\u0628\u064A", rating: 5, comment: "\u062E\u062F\u0645\u0629 \u0633\u0631\u064A\u0639\u0629 \u062C\u062F\u0627\u064B \u0648\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u062D\u0633\u0627\u0628 \u0627\u0644\u0628\u0644\u0633 \u062E\u0644\u0627\u0644 10 \u062F\u0642\u0627\u0626\u0642!", date: "\u0642\u0628\u0644 \u064A\u0648\u0645\u064A\u0646", order: 1 }
 ];
 var DEFAULT_FAQS = [
-  { id: 1, q: "\u0643\u064A\u0641 \u064A\u062A\u0645 \u062A\u0633\u0644\u064A\u0645 \u0627\u0644\u062D\u0633\u0627\u0628 \u0628\u0639\u062F \u0627\u0644\u0634\u0631\u0627\u0621\u061F", a: "\u064A\u0635\u0644\u0643 \u0627\u0644\u062D\u0633\u0627\u0628 \u0645\u0628\u0627\u0634\u0631\u0629 \u0639\u0628\u0631 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628 \u0623\u0648 \u0627\u0644\u0625\u064A\u0645\u064A\u0644 \u0645\u0639 \u062E\u0637\u0648\u0627\u062A \u0627\u0644\u062A\u0641\u0639\u064A\u0644 \u0628\u0627\u0644\u062A\u0641\u0635\u064A\u0644.", order: 1 }
+  { id: "faq-1", icon: "zap", q: "\u0643\u064A\u0641 \u064A\u062A\u0645 \u062A\u0633\u0644\u064A\u0645 \u0627\u0644\u062D\u0633\u0627\u0628 \u0623\u0648 \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643 \u0628\u0639\u062F \u0627\u0644\u062F\u0641\u0639\u061F", a: "\u0628\u0639\u062F \u0625\u062A\u0645\u0627\u0645 \u0627\u0644\u0637\u0644\u0628\u060C \u064A\u062A\u0648\u0627\u0635\u0644 \u0645\u0639\u0643 \u0641\u0631\u064A\u0642\u0646\u0627 \u0645\u0628\u0627\u0634\u0631\u0629 \u0639\u0628\u0631 \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0623\u0648 \u0648\u0627\u062A\u0633\u0627\u0628 \u0644\u0637\u0644\u0628 \u0635\u0648\u0631\u0629 \u0643\u0648\u062F \u0627\u0644\u0640 (QR Code) \u0645\u0646 \u0634\u0627\u0634\u0629 \u0627\u0644\u0633\u0648\u0646\u064A\u060C \u0648\u0646\u062F\u062E\u0644\u0643 \u0627\u0644\u062D\u0633\u0627\u0628 \u0641\u0648\u0631\u0627\u064B \u062E\u0644\u0627\u0644 \u062F\u0642\u0627\u0626\u0642 \u26A1", visible: true },
+  { id: "faq-2", icon: "shield-check", q: "\u0647\u0644 \u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0648\u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A \u0631\u0633\u0645\u064A\u0629 \u0648\u0645\u0636\u0645\u0648\u0646\u0629 100%\u061F", a: "\u0646\u0639\u0645 \u0628\u0643\u0644 \u062A\u0623\u0643\u064A\u062F\u060C \u062C\u0645\u064A\u0639 \u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0648\u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A \u0631\u0633\u0645\u064A\u0629 \u0648\u0645\u062D\u0645\u064A\u0629 \u0628\u0627\u0644\u0636\u0645\u0627\u0646 \u0627\u0644\u0630\u0647\u0628\u064A \u0637\u0648\u0627\u0644 \u0643\u0627\u0645\u0644 \u0641\u062A\u0631\u0629 \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643 \u2764\uFE0F", visible: true },
+  { id: "faq-3", icon: "help-circle", q: "\u0645\u0627 \u0627\u0644\u0641\u0631\u0642 \u0628\u064A\u0646 \u0627\u0644\u062D\u0633\u0627\u0628 \u0627\u0644\u0623\u0633\u0627\u0633\u064A \u0648\u0627\u0644\u062D\u0633\u0627\u0628 \u0627\u0644\u062B\u0627\u0646\u0648\u064A\u061F", a: "\u0627\u0644\u062D\u0633\u0627\u0628 \u0627\u0644\u0623\u0633\u0627\u0633\u064A \u064A\u062A\u064A\u062D \u0644\u0643 \u0627\u0644\u0644\u0639\u0628 \u0645\u0646 \u062D\u0633\u0627\u0628\u0643 \u0627\u0644\u0634\u062E\u0635\u064A \u0648\u0627\u0644\u062A\u0631\u0648\u0641\u064A\u0627\u062A\u060C \u0628\u064A\u0646\u0645\u0627 \u0627\u0644\u062D\u0633\u0627\u0628 \u0627\u0644\u062B\u0627\u0646\u0648\u064A \u062A\u0644\u0639\u0628 \u0645\u0646\u0647 \u0645\u0628\u0627\u0634\u0631\u0629 \u0639\u0628\u0631 \u0627\u0644\u0625\u0646\u062A\u0631\u0646\u062A \u0628\u0633\u0639\u0631 \u0623\u0648\u0641\u0631 \u{1F3AE}", visible: true },
+  { id: "faq-4", icon: "credit-card", q: "\u0645\u0627 \u0647\u064A \u0637\u0631\u0642 \u0627\u0644\u062F\u0641\u0639 \u0627\u0644\u0645\u062A\u0627\u062D\u0629 \u062F\u0627\u062E\u0644 \u0627\u0644\u0645\u062A\u062C\u0631\u061F", a: "\u0646\u0648\u0641\u0631 \u0627\u0644\u062F\u0641\u0639 \u0627\u0644\u0622\u0645\u0646 \u0639\u0628\u0631 \u0627\u0644\u0628\u0637\u0627\u0642\u0627\u062A \u0627\u0644\u0628\u0646\u0643\u064A\u0629\u060C \u062E\u062F\u0645\u0629 \u0623\u0628\u0644 \u0628\u0627\u064A (Apple Pay)\u060C \u0646\u0638\u0627\u0645 \u0643\u0644\u064A\u0643 (CliQ)\u060C \u0648\u0627\u0644\u0645\u062D\u0627\u0641\u0638 \u0627\u0644\u0631\u0642\u0645\u064A\u0629 \u{1F4B3}", visible: true },
+  { id: "faq-5", icon: "truck", q: "\u0643\u064A\u0641 \u064A\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0644\u0639\u0628\u0629 \u0623\u0648 \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643 \u0639\u0644\u0649 \u062C\u0647\u0627\u0632\u064A \u0627\u0644\u0628\u0644\u0627\u064A\u0633\u062A\u064A\u0634\u0646\u061F", a: "\u062A\u062E\u062A\u0627\u0631 \u0645\u0646 \u0634\u0627\u0634\u0629 \u0627\u0644\u0633\u0648\u0646\u064A \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F (QR Code) \u0648\u062A\u0635\u0648\u0631\u0647 \u0648\u062A\u0631\u0633\u0644\u0647 \u0644\u0646\u0627 \u0641\u064A \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0629\u061B \u0646\u0642\u0648\u0645 \u0628\u0645\u0633\u062D \u0627\u0644\u0643\u0648\u062F \u0648\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u0633\u0627\u0628 \u0628\u062C\u0647\u0627\u0632\u0643 \u0641\u0648\u0631\u0627\u064B \u0628\u0623\u0645\u0627\u0646 \u{1F6E0}\uFE0F", visible: true },
+  { id: "faq-6", icon: "headphones", q: "\u0645\u0627\u0630\u0627 \u0623\u0641\u0639\u0644 \u0625\u0630\u0627 \u0648\u0627\u062C\u0647\u062A \u0623\u064A \u0645\u0634\u0643\u0644\u0629 \u0623\u0648 \u0627\u0633\u062A\u0641\u0633\u0627\u0631\u061F", a: "\u062A\u0648\u0627\u0635\u0644 \u0645\u0639\u0646\u0627 \u0645\u0628\u0627\u0634\u0631\u0629 \u0639\u0628\u0631 \u0632\u0631 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628 \u0623\u0648 \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645\u060C \u0648\u0641\u0631\u064A\u0642 \u0627\u0644\u062F\u0639\u0645 \u0645\u062A\u0648\u0627\u062C\u062F \u0644\u062E\u062F\u0645\u062A\u0643 \u0648\u0645\u0633\u0627\u0639\u062F\u062A\u0643 \u062E\u0637\u0648\u0629 \u0628\u062E\u0637\u0648\u0629 \u{1F4AC}", visible: true }
 ];
 var DEFAULT_SECTIONS = [
   { id: "gamelaunch", name: "\u0642\u0633\u0645 \u0625\u0637\u0644\u0627\u0642 \u0627\u0644\u0623\u0644\u0639\u0627\u0628 (Vice City / FC 27)", visible: true },
@@ -47129,7 +48509,7 @@ var launchAnnouncement = { ...DEFAULT_LAUNCH_ANNOUNCEMENT };
 var coupons = [...DEFAULT_COUPONS];
 async function initStoreDb() {
   try {
-    await pool5.query(`
+    await pool4.query(`
       CREATE TABLE IF NOT EXISTS store_config (
         key        VARCHAR(100) PRIMARY KEY,
         value      JSONB NOT NULL,
@@ -47172,7 +48552,214 @@ async function initStoreDb() {
 }
 initStoreDb();
 
+// src/routes/analytics.ts
+var pool5 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var router6 = (0, import_express6.Router)();
+var seenSessionsToday = /* @__PURE__ */ new Set();
+setInterval(() => {
+  seenSessionsToday.clear();
+}, 24 * 60 * 60 * 1e3);
+router6.post("/analytics/heartbeat", async (req, res) => {
+  try {
+    const { sessionId } = req.body || {};
+    if (!sessionId) {
+      res.json({ ok: true });
+      return;
+    }
+    const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
+    const userAgent = req.headers["user-agent"] || "";
+    await pool5.query(`
+      INSERT INTO visitor_sessions (session_id, ip, user_agent, last_seen, created_at)
+      VALUES ($1, $2, $3, NOW(), NOW())
+      ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()
+    `, [sessionId, ip, userAgent]).catch(() => {
+    });
+    const todayStr = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const sessionKey = `${todayStr}_${sessionId}`;
+    if (!seenSessionsToday.has(sessionKey)) {
+      seenSessionsToday.add(sessionKey);
+      await pool5.query(`
+        INSERT INTO analytics_daily (date, visits, cart_adds, subscribers)
+        VALUES (CURRENT_DATE, 1, 0, 0)
+        ON CONFLICT (date) DO UPDATE SET visits = analytics_daily.visits + 1
+      `).catch(() => {
+      });
+    }
+    res.json({ ok: true });
+  } catch {
+    res.json({ ok: true });
+  }
+});
+router6.post("/analytics/cart-event", async (_req, res) => {
+  try {
+    await pool5.query(`
+      INSERT INTO analytics_daily (date, visits, cart_adds, subscribers)
+      VALUES (CURRENT_DATE, 0, 1, 0)
+      ON CONFLICT (date) DO UPDATE SET cart_adds = analytics_daily.cart_adds + 1
+    `).catch(() => {
+    });
+    res.json({ ok: true });
+  } catch {
+    res.json({ ok: true });
+  }
+});
+router6.get("/analytics/live-visitors", async (_req, res) => {
+  try {
+    const { rows } = await pool5.query(`
+      SELECT COUNT(DISTINCT session_id) as online
+      FROM visitor_sessions
+      WHERE last_seen > NOW() - INTERVAL '3 minutes'
+    `);
+    const count = Math.max(1, parseInt(rows[0]?.online || "1", 10));
+    res.json({ online: count });
+  } catch {
+    res.json({ online: 1 });
+  }
+});
+router6.get("/admin/analytics", async (req, res) => {
+  const email = verifyToken(req.headers.authorization);
+  if (!email) {
+    res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D" });
+    return;
+  }
+  const days = Math.min(Number(req.query.days) || 7, 365);
+  try {
+    const [
+      onlineRes,
+      customersRes,
+      ordersRes,
+      totalsRes,
+      timelineRes,
+      topItemsRes,
+      recentOrdersRes,
+      gamesRes
+    ] = await Promise.all([
+      // 1. Real online visitors in last 3 minutes
+      pool5.query(`
+        SELECT COUNT(DISTINCT session_id) as online
+        FROM visitor_sessions
+        WHERE last_seen > NOW() - INTERVAL '3 minutes'
+      `).catch(() => ({ rows: [{ online: "1" }] })),
+      // 2. Real registered customers count
+      pool5.query(`
+        SELECT COUNT(*) as total_customers FROM customers
+      `).catch(() => ({ rows: [{ total_customers: "0" }] })),
+      // 3. Real completed orders count
+      pool5.query(`
+        SELECT 
+          COUNT(*) as total_orders,
+          COUNT(*) FILTER (WHERE status IN ('completed', 'delivered')) as completed_orders
+        FROM store_orders
+      `).catch(() => ({ rows: [{ total_orders: "0", completed_orders: "0" }] })),
+      // 4. Real total visits from daily analytics
+      pool5.query(`
+        SELECT
+          COALESCE(SUM(visits), 0) AS visits,
+          COALESCE(SUM(cart_adds), 0) AS cart_adds,
+          COALESCE(SUM(subscribers), 0) AS subscribers
+        FROM analytics_daily
+      `).catch(() => ({ rows: [{ visits: "0", cart_adds: "0", subscribers: "0" }] })),
+      // 5. Real timeline for requested range
+      pool5.query(`
+        WITH dates AS (
+          SELECT generate_series(
+            CURRENT_DATE - ($1 - 1) * INTERVAL '1 day',
+            CURRENT_DATE,
+            '1 day'::interval
+          )::date AS date
+        )
+        SELECT
+          d.date,
+          COALESCE(a.visits, 0) AS visits,
+          COALESCE(a.cart_adds, 0) AS cart_adds,
+          COALESCE(a.subscribers, 0) AS subscribers
+        FROM dates d
+        LEFT JOIN analytics_daily a ON a.date = d.date
+        ORDER BY d.date ASC
+      `, [days]).catch(() => ({ rows: [] })),
+      // 6. Real Top Selling Items from store_orders
+      pool5.query(`
+        SELECT COALESCE(game_name, product_type, '\u0637\u0644\u0628 \u0645\u062A\u062C\u0631') as name, COUNT(*) as count
+        FROM store_orders
+        WHERE game_name IS NOT NULL OR product_type IS NOT NULL
+        GROUP BY name
+        ORDER BY count DESC
+        LIMIT 6
+      `).catch(() => ({ rows: [] })),
+      // 7. Recent Orders Log from store_orders
+      pool5.query(`
+        SELECT id, order_number, customer_name, COALESCE(game_name, product_type, '\u0637\u0644\u0628 \u062C\u062F\u064A\u062F') as product, status, created_at
+        FROM store_orders
+        ORDER BY created_at DESC
+        LIMIT 8
+      `).catch(() => ({ rows: [] })),
+      // 8. Active games count from store_config
+      pool5.query(`
+        SELECT value FROM store_config WHERE key = 'games' LIMIT 1
+      `).catch(() => ({ rows: [] }))
+    ]);
+    let activeGamesCount = DEFAULT_GAMES.length;
+    if (gamesRes.rows.length > 0 && Array.isArray(gamesRes.rows[0].value)) {
+      activeGamesCount = gamesRes.rows[0].value.length;
+    }
+    const onlineCount = Math.max(1, parseInt(onlineRes.rows[0]?.online || "1", 10));
+    const registeredUsersCount = parseInt(customersRes.rows[0]?.total_customers || "0", 10);
+    const completedOrdersCount = parseInt(ordersRes.rows[0]?.completed_orders || "0", 10);
+    const totalVisitsCount = parseInt(totalsRes.rows[0]?.visits || "0", 10);
+    const timeline = timelineRes.rows.map((r) => ({
+      date: r.date instanceof Date ? r.date.toISOString().slice(5, 10) : String(r.date).slice(5, 10),
+      visits: Number(r.visits) || 0,
+      cartAdds: Number(r.cart_adds) || 0,
+      subscribers: Number(r.subscribers) || 0
+    }));
+    const topItems = topItemsRes.rows.length > 0 ? topItemsRes.rows.map((r) => ({
+      name: r.name,
+      count: parseInt(r.count, 10),
+      pct: Math.max(15, Math.min(100, Math.round(parseInt(r.count, 10) / Math.max(1, completedOrdersCount) * 100)))
+    })) : [
+      { name: "Marvel's Spider-Man 2 (\u0639\u0631\u0628\u064A)", count: 0, pct: 10 },
+      { name: "EA Sports FC 26 (\u062D\u0633\u0627\u0628 PS5)", count: 0, pct: 10 },
+      { name: "\u0627\u0634\u062A\u0631\u0627\u0643 PS Plus Extra (12 \u0634\u0647\u0631)", count: 0, pct: 10 },
+      { name: "Grand Theft Auto V (PS5)", count: 0, pct: 10 }
+    ];
+    const auditLogs = recentOrdersRes.rows.map((r) => {
+      const timeAgo = formatRelativeTime(new Date(r.created_at));
+      return {
+        id: r.order_number || String(r.id),
+        text: `\u0637\u0644\u0628 #${r.order_number || r.id} \u2014 ${r.product} (${r.customer_name || "\u0639\u0645\u064A\u0644"})`,
+        time: timeAgo
+      };
+    });
+    res.json({
+      online: onlineCount,
+      totals: {
+        visits: totalVisitsCount,
+        users: registeredUsersCount,
+        orders: completedOrdersCount,
+        activeGames: activeGamesCount
+      },
+      timeline,
+      topItems,
+      auditLogs
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+function formatRelativeTime(date) {
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / (1e3 * 60));
+  if (diffMin < 1) return "\u0627\u0644\u0622\u0646";
+  if (diffMin < 60) return `\u0645\u0646\u0630 ${diffMin} \u062F\u0642\u064A\u0642\u0629`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `\u0645\u0646\u0630 ${diffHours} \u0633\u0627\u0639\u0629`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `\u0645\u0646\u0630 ${diffDays} \u064A\u0648\u0645`;
+}
+var analytics_default = router6;
+
 // src/routes/orders.ts
+var import_express7 = __toESM(require_express2(), 1);
 var router7 = (0, import_express7.Router)();
 var pool6 = process.env.DATABASE_URL ? new esm_default.Pool({ connectionString: process.env.DATABASE_URL }) : null;
 var storeOrders = [
