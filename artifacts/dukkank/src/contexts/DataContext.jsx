@@ -564,33 +564,34 @@ export function DataProvider({ children }) {
             const la = getVal(12);
             const thm = getVal(13);
 
-            if (s) setStore(asObject(s, store));
-            if (subs) setSubscriptions(mergeSubscriptions(subs));
-            if (gms) setGames(mergeGames(gms));
-            if (bnds) setBundles(asArray(bnds, bundles));
-            if (secs) setSections(mergeSections(secs));
-            if (prom) setPromo(mergePromo(prom));
-            if (sp) setSocialProof(asObject(sp, socialProof));
-            if (wat) setWATemplates(asObject(wat, waTemplates));
+            if (s) { const obj = asObject(s, store); setStoreState(obj); saveLocal("dukkank_live_store", obj); }
+            if (subs) { const m = mergeSubscriptions(subs); setSubscriptionsState(m); saveLocal("dukkank_live_subscriptions", m); }
+            if (gms) { const m = mergeGames(gms); setGamesState(m); saveLocal("dukkank_live_games", m); }
+            if (bnds) { const arr = asArray(bnds, bundles); setBundlesState(arr); saveLocal("dukkank_live_bundles", arr); }
+            if (secs) { const m = mergeSections(secs); setSectionsState(m); saveLocal("dukkank_live_sections", m); }
+            if (prom) { const m = mergePromo(prom); setPromoState(m); saveLocal("dukkank_live_promo", m); }
+            if (sp) { const obj = asObject(sp, socialProof); setSocialProofState(obj); saveLocal("dukkank_live_social_proof", obj); }
+            if (wat) { const obj = asObject(wat, waTemplates); setWATemplatesState(obj); saveLocal("dukkank_live_wa_templates", obj); }
             if (rvs) {
                 const localRev = loadLocal("store_reviews_list", null);
                 if (localRev && Array.isArray(localRev) && localRev.length >= 40) {
-                    setReviews(localRev);
+                    setReviewsState(localRev);
                 } else {
-                    setReviews(asArray(rvs, reviews));
+                    const arr = asArray(rvs, reviews);
+                    setReviewsState(arr);
+                    saveLocal("dukkank_live_reviews", arr);
                 }
             }
 
-            if (fqs) {
-                setFaqs(asArray(fqs, faqs));
-            }
-            if (cnt) setContent(mergeContent(cnt));
-            if (ss) setSiteSettings(asObject(ss, siteSettings));
-            if (la) setLaunchAnnouncement(mergeLaunchAnnouncement(la));
+            if (fqs) { const arr = asArray(fqs, faqs); setFaqsState(arr); saveLocal("dukkank_live_faqs", arr); }
+            if (cnt) { const m = mergeContent(cnt); setContentState(m); saveLocal("dukkank_live_content", m); }
+            if (ss) { const obj = asObject(ss, siteSettings); setSiteSettingsState(obj); saveLocal("dukkank_live_site_settings", obj); }
+            if (la) { const m = mergeLaunchAnnouncement(la); setLaunchAnnouncementState(m); saveLocal("dukkank_live_launch", m); }
             if (thm || Object.keys(loadOverrides().theme || {}).length > 0) {
                 const finalTheme = mergeThemeData(thm);
                 if (Object.keys(finalTheme).length > 0) {
-                    setTheme(finalTheme);
+                    setThemeState(finalTheme);
+                    saveLocal("dukkank_live_theme", finalTheme);
                 }
             }
 
