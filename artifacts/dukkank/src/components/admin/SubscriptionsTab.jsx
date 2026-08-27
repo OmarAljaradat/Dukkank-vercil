@@ -20,9 +20,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "blue",
         visible: true,
         durations: [
-            { id: "ess-1m", label: "شهر واحد", four: 6.5, five: 10.0, originalFive: 12.0, costPrice: 7.0, stockStatus: "available" },
-            { id: "ess-3m", label: "٣ شهور", four: 12.0, five: 19.0, originalFive: 24.0, costPrice: 13.0, stockStatus: "available" },
-            { id: "ess-12m", label: "سنة كاملة", four: 24.0, five: 48.0, originalFive: 59.0, costPrice: 25.0, stockStatus: "available" },
+            { id: "ess-1m", label: "شهر واحد", four: 6.5, five: 10.0, originalFive: 12.0, originalFour: 8.0, costPriceFive: 7.0, costPriceFour: 4.5, costPrice: 7.0, stockStatus: "available" },
+            { id: "ess-3m", label: "٣ شهور", four: 12.0, five: 19.0, originalFive: 24.0, originalFour: 16.0, costPriceFive: 13.0, costPriceFour: 8.0, costPrice: 13.0, stockStatus: "available" },
+            { id: "ess-12m", label: "سنة كاملة", four: 24.0, five: 48.0, originalFive: 59.0, originalFour: 32.0, costPriceFive: 25.0, costPriceFour: 15.0, costPrice: 25.0, stockStatus: "available" },
         ],
     },
     {
@@ -32,9 +32,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "red",
         visible: true,
         durations: [
-            { id: "ext-1m", label: "شهر واحد", four: 9.0, five: 14.0, originalFive: 18.0, costPrice: 9.5, stockStatus: "available" },
-            { id: "ext-3m", label: "٣ شهور", four: 19.0, five: 28.0, originalFive: 35.0, costPrice: 19.0, stockStatus: "available" },
-            { id: "ext-12m", label: "سنة كاملة", four: 42.0, five: 59.0, originalFive: 75.0, costPrice: 42.0, stockStatus: "available" },
+            { id: "ext-1m", label: "شهر واحد", four: 9.0, five: 14.0, originalFive: 18.0, originalFour: 12.0, costPriceFive: 9.5, costPriceFour: 6.0, costPrice: 9.5, stockStatus: "available" },
+            { id: "ext-3m", label: "٣ شهور", four: 19.0, five: 28.0, originalFive: 35.0, originalFour: 25.0, costPriceFive: 19.0, costPriceFour: 12.0, costPrice: 19.0, stockStatus: "available" },
+            { id: "ext-12m", label: "سنة كاملة", four: 42.0, five: 59.0, originalFive: 75.0, originalFour: 55.0, costPriceFive: 42.0, costPriceFour: 28.0, costPrice: 42.0, stockStatus: "available" },
         ],
     },
     {
@@ -44,9 +44,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "amber",
         visible: true,
         durations: [
-            { id: "del-1m", label: "شهر واحد", four: 11.0, five: 16.0, originalFive: 20.0, costPrice: 11.0, stockStatus: "available" },
-            { id: "del-3m", label: "٣ شهور", four: 22.0, five: 33.0, originalFive: 42.0, costPrice: 22.0, stockStatus: "available" },
-            { id: "del-12m", label: "سنة كاملة", four: 49.0, five: 69.0, originalFive: 89.0, costPrice: 49.0, stockStatus: "available" },
+            { id: "del-1m", label: "شهر واحد", four: 11.0, five: 16.0, originalFive: 20.0, originalFour: 15.0, costPriceFive: 11.0, costPriceFour: 7.5, costPrice: 11.0, stockStatus: "available" },
+            { id: "del-3m", label: "٣ شهور", four: 22.0, five: 33.0, originalFive: 42.0, originalFour: 30.0, costPriceFive: 22.0, costPriceFour: 15.0, costPrice: 22.0, stockStatus: "available" },
+            { id: "del-12m", label: "سنة كاملة", four: 49.0, five: 69.0, originalFive: 89.0, originalFour: 65.0, costPriceFive: 49.0, costPriceFour: 34.0, costPrice: 49.0, stockStatus: "available" },
         ],
     },
 ];
@@ -65,6 +65,8 @@ const toForm = (sub) => ({
         five: d.five == null ? "" : String(d.five),
         originalFive: d.originalFive == null ? "" : String(d.originalFive),
         originalFour: d.originalFour == null ? "" : String(d.originalFour),
+        costPriceFive: d.costPriceFive != null ? String(d.costPriceFive) : d.costPrice != null ? String(d.costPrice) : "",
+        costPriceFour: d.costPriceFour != null ? String(d.costPriceFour) : d.costPrice != null ? String(d.costPrice) : "",
         costPrice: d.costPrice == null ? "" : String(d.costPrice),
         stockStatus: d.stockStatus || "available",
     })),
@@ -86,7 +88,9 @@ const toPayload = (f) => ({
         five: numOrNull(d.five),
         originalFive: numOrNull(d.originalFive),
         originalFour: numOrNull(d.originalFour),
-        costPrice: numOrNull(d.costPrice),
+        costPriceFive: numOrNull(d.costPriceFive ?? d.costPrice),
+        costPriceFour: numOrNull(d.costPriceFour ?? d.costPrice),
+        costPrice: numOrNull(d.costPriceFive ?? d.costPrice),
         stockStatus: d.stockStatus || "available",
     })),
 });
@@ -137,7 +141,7 @@ export default function SubscriptionsTab({ onChanged }) {
 
     // Instant UI Cell Field Change Handler (0ms response time)
     const handleCellFieldChange = async (sub, durIndex, field, value) => {
-        const isNumeric = field === "five" || field === "four" || field === "costPrice" || field === "originalFive" || field === "originalFour";
+        const isNumeric = field === "five" || field === "four" || field === "costPrice" || field === "costPriceFive" || field === "costPriceFour" || field === "originalFive" || field === "originalFour";
         const parsedVal = isNumeric ? (value === "" ? null : parseFloat(value)) : value;
 
         const updatedDurations = sub.durations.map((d, idx) =>
@@ -151,7 +155,7 @@ export default function SubscriptionsTab({ onChanged }) {
 
         try {
             await apiUpdateSubscription(sub.id, toPayload(updatedSub));
-            toast.success("تم تحديث البيانات بنجاح ✅");
+            toast.success("تم حفظ التعديل بنجاح ✅");
             onChanged?.();
         } catch (e) {
             toast.error("فشل حفظ التعديل: " + (e?.message || ""));
@@ -193,7 +197,7 @@ export default function SubscriptionsTab({ onChanged }) {
     // Bulk Stock Status Setter across all 3 plans
     const handleBulkStockStatus = async (status) => {
         const statusText = status === "available" ? "🟢 متوفر تسليم فوري" : status === "fast" ? "⚡ تسليم خلال 15 دقيقة" : "🔴 نفد المخزون بالكامل";
-        if (!confirm(`هل أنت تأكد من تغيير حالة جميع الباقات والمدد إلى (${statusText})؟`)) return;
+        if (!confirm(`هل أنت متأكد من تغيير حالة جميع الباقات والمدد إلى (${statusText})؟`)) return;
 
         const updatedList = items.map((s) => ({
             ...s,
@@ -223,7 +227,7 @@ export default function SubscriptionsTab({ onChanged }) {
         const mult = adjustDirection === "increase" ? 1 : -1;
         const actionLabel = adjustDirection === "increase" ? `زيادة (+${val}${adjustMode === "fixed" ? "$" : "%"})` : `تخفيض (-${val}${adjustMode === "fixed" ? "$" : "%"})`;
 
-        if (!confirm(`هل أنت تأكد من تطبيق ${actionLabel} على أسعار جميع الاشتراكات؟`)) return;
+        if (!confirm(`هل أنت متأكد من تطبيق ${actionLabel} على أسعار جميع الاشتراكات؟`)) return;
 
         const updatedList = items.map((sub) => {
             const newDurations = (sub.durations || []).map((d) => {
@@ -239,7 +243,11 @@ export default function SubscriptionsTab({ onChanged }) {
 
                 if (adjustTarget === "five" || adjustTarget === "all") copy.five = calc(copy.five);
                 if (adjustTarget === "four" || adjustTarget === "all") copy.four = calc(copy.four);
-                if (adjustTarget === "cost") copy.costPrice = calc(copy.costPrice);
+                if (adjustTarget === "cost" || adjustTarget === "all") {
+                    copy.costPriceFive = calc(copy.costPriceFive ?? copy.costPrice);
+                    copy.costPriceFour = calc(copy.costPriceFour ?? copy.costPrice);
+                    copy.costPrice = calc(copy.costPrice);
+                }
 
                 return copy;
             });
@@ -332,13 +340,25 @@ export default function SubscriptionsTab({ onChanged }) {
     items.forEach((s) => {
         (s.durations || []).forEach((d) => {
             if (d.stockStatus === "out") outOfStockCount++;
-            const sellP = d.five || d.four;
-            const costP = d.costPrice;
-            if (sellP && costP && Number(sellP) > 0 && Number(costP) > 0) {
-                const profit = Number(sellP) - Number(costP);
-                const margin = (profit / Number(sellP)) * 100;
-                sumProfitMargin += margin;
-                totalMarginCount++;
+            
+            // PS5 profit
+            if (d.five && (d.costPriceFive || d.costPrice)) {
+                const cost = Number(d.costPriceFive ?? d.costPrice);
+                const sell = Number(d.five);
+                if (sell > 0 && cost > 0) {
+                    sumProfitMargin += ((sell - cost) / sell) * 100;
+                    totalMarginCount++;
+                }
+            }
+
+            // PS4 profit
+            if (d.four && (d.costPriceFour || d.costPrice)) {
+                const cost = Number(d.costPriceFour ?? d.costPrice);
+                const sell = Number(d.four);
+                if (sell > 0 && cost > 0) {
+                    sumProfitMargin += ((sell - cost) / sell) * 100;
+                    totalMarginCount++;
+                }
             }
         });
     });
@@ -359,7 +379,7 @@ export default function SubscriptionsTab({ onChanged }) {
                             <Sparkles className="w-4 h-4 text-amber-400" />
                         </h2>
                         <p className="text-xs text-slate-300 font-medium">
-                            تحكم كامل بأسعار الأجهزة (PS4 & PS5)، السعر قبل الخصم، تكلفة المورد، وحالة توفر المخزون بلمسة واحدة.
+                            تحكم كامل ومنفصل بأسعار البيع، الأسعار قبل الخصم، تكاليف الموردين، وأرباح (PS4 و PS5) لكل مدة.
                         </p>
                     </div>
                 </div>
@@ -397,7 +417,7 @@ export default function SubscriptionsTab({ onChanged }) {
                     <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                         <div className="flex items-center gap-2">
                             <Percent className="w-5 h-5 text-blue-400" />
-                            <h3 className="font-black text-sm text-blue-300">أداة زيادة أو تخفيض أسعار الباقات الجماعي السريع</h3>
+                            <h3 className="font-black text-sm text-blue-300">أداة زيادة أو تخفيض أسعار وتكاليف الباقات الجماعية</h3>
                         </div>
                         <button onClick={() => setShowMassAdjuster(false)} className="text-slate-400 hover:text-white text-xs">
                             <X className="w-4 h-4" />
@@ -448,10 +468,10 @@ export default function SubscriptionsTab({ onChanged }) {
                                 onChange={(e) => setAdjustTarget(e.target.value)}
                                 className="w-full h-10 rounded-xl bg-slate-800 border border-slate-700 px-3 text-xs font-bold text-white"
                             >
-                                <option value="all">الكل (PS4 + PS5)</option>
-                                <option value="five">أجهزة PS5 فقط</option>
-                                <option value="four">أجهزة PS4 فقط</option>
-                                <option value="cost">تكلفة المورد فقط</option>
+                                <option value="all">الكل (PS4 + PS5 + التكلفة)</option>
+                                <option value="five">أسعار PS5 فقط</option>
+                                <option value="four">أسعار PS4 فقط</option>
+                                <option value="cost">تكلفة الموردين فقط</option>
                             </select>
                         </div>
                     </div>
@@ -484,7 +504,7 @@ export default function SubscriptionsTab({ onChanged }) {
 
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
                     <div>
-                        <div className="text-xs font-bold text-slate-500">الباقات الفعالة والمثبتة</div>
+                        <div className="text-xs font-bold text-slate-500">الباقات الفعالة بالموقع</div>
                         <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-0.5">
                             3 باقات أساسية (الأساسي • الإضافي • الفاخر)
                         </div>
@@ -559,7 +579,7 @@ export default function SubscriptionsTab({ onChanged }) {
                                         title="تبديل إظهار / إخفاء بالموقع"
                                     >
                                         {sub.visible !== false ? (
-                                            <>
+                                             <>
                                                 <Eye className="w-3.5 h-3.5 text-emerald-600" />
                                                 <span>ظاهر بالموقع 👁️</span>
                                             </>
@@ -607,72 +627,117 @@ export default function SubscriptionsTab({ onChanged }) {
 
                                 {/* Durations Table Edit */}
                                 <div className="space-y-3">
-                                    <h4 className="text-xs font-black text-slate-200">المدد والأسعار المخصصة (شاملة السعر الأصلي للخصم):</h4>
-                                    <div className="space-y-3">
+                                    <h4 className="text-xs font-black text-slate-200">المدد والأسعار المخصصة (شاملة سعر الخصم وتكلفة المورد منفصلة لكل جهاز):</h4>
+                                    <div className="space-y-4">
                                         {form.durations.map((d, idx) => (
                                             <div key={idx} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-3">
-                                                <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 items-center">
-                                                    <div>
-                                                        <label className="block text-[10px] text-slate-400 font-bold mb-1">اسم المدة</label>
-                                                        <input
-                                                            value={d.label}
-                                                            onChange={(e) => setDur(idx, "label", e.target.value)}
-                                                            className="w-full h-9 rounded-lg bg-slate-900 border border-slate-700 px-2 text-xs text-white"
-                                                        />
+                                                <div className="flex items-center justify-between border-b border-slate-700/80 pb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-black text-white bg-blue-600/30 border border-blue-500/40 px-2.5 py-1 rounded-lg">
+                                                            {d.label || `مدة #${idx + 1}`}
+                                                        </span>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-[10px] text-slate-400 font-bold mb-1">سعر PS5 الحالي</label>
-                                                        <input
-                                                            type="number"
-                                                            value={d.five}
-                                                            data-testid={`sub-input-${form.id}-${idx}-five`}
-                                                            onChange={(e) => setDur(idx, "five", e.target.value)}
-                                                            className="w-full h-9 rounded-lg bg-slate-900 border border-slate-700 px-2 text-xs text-emerald-400 font-bold"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] text-red-400 font-bold mb-1">سعر PS5 قبل الخصم</label>
-                                                        <input
-                                                            type="number"
-                                                            value={d.originalFive}
-                                                            data-testid={`sub-input-${form.id}-${idx}-originalFive`}
-                                                            onChange={(e) => setDur(idx, "originalFive", e.target.value)}
-                                                            placeholder="اختياري"
-                                                            className="w-full h-9 rounded-lg bg-slate-900 border border-red-500/40 px-2 text-xs text-red-300 font-bold"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] text-slate-400 font-bold mb-1">سعر PS4 الحالي</label>
-                                                        <input
-                                                            type="number"
-                                                            value={d.four}
-                                                            data-testid={`sub-input-${form.id}-${idx}-four`}
-                                                            onChange={(e) => setDur(idx, "four", e.target.value)}
-                                                            className="w-full h-9 rounded-lg bg-slate-900 border border-slate-700 px-2 text-xs text-emerald-400 font-bold"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] text-amber-400 font-bold mb-1">تكلفة المورد</label>
-                                                        <input
-                                                            type="number"
-                                                            value={d.costPrice}
-                                                            data-testid={`sub-input-${form.id}-${idx}-costPrice`}
-                                                            onChange={(e) => setDur(idx, "costPrice", e.target.value)}
-                                                            className="w-full h-9 rounded-lg bg-slate-900 border border-amber-500/50 px-2 text-xs text-amber-300 font-bold"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] text-slate-400 font-bold mb-1">حالة التوفر</label>
                                                         <select
                                                             value={d.stockStatus}
                                                             data-testid={`sub-input-${form.id}-${idx}-stockStatus`}
                                                             onChange={(e) => setDur(idx, "stockStatus", e.target.value)}
-                                                            className="w-full h-9 rounded-lg bg-slate-900 border border-slate-700 px-2 text-xs text-white"
+                                                            className="h-8 rounded-lg bg-slate-900 border border-slate-700 px-2 text-xs text-white"
                                                         >
                                                             <option value="available">🟢 متوفر تسليم فوري</option>
                                                             <option value="fast">⚡ خلال 15 دقيقة</option>
                                                             <option value="out">🔴 نفد المخزون</option>
                                                         </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                                                    {/* PS5 Box */}
+                                                    <div className="p-3 rounded-xl bg-slate-900/90 border border-blue-500/30 space-y-2">
+                                                        <div className="text-xs font-black text-blue-400 flex items-center gap-1.5">
+                                                            <span>🎮 جهاز PlayStation 5 (PS5)</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div>
+                                                                <label className="block text-[10px] text-slate-400 font-bold mb-1">سعر البيع ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.five}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-five`}
+                                                                    onChange={(e) => setDur(idx, "five", e.target.value)}
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-slate-700 px-2 text-xs text-emerald-400 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] text-red-400 font-bold mb-1">قبل الخصم ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.originalFive}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-originalFive`}
+                                                                    onChange={(e) => setDur(idx, "originalFive", e.target.value)}
+                                                                    placeholder="اختياري"
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-red-500/40 px-2 text-xs text-red-300 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] text-amber-400 font-bold mb-1">تكلفة المورد ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.costPriceFive}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-costPriceFive`}
+                                                                    onChange={(e) => setDur(idx, "costPriceFive", e.target.value)}
+                                                                    placeholder="0.00"
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-amber-500/50 px-2 text-xs text-amber-300 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* PS4 Box */}
+                                                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+                                                        <div className="text-xs font-black text-slate-300 flex items-center gap-1.5">
+                                                            <span>🎮 جهاز PlayStation 4 (PS4)</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div>
+                                                                <label className="block text-[10px] text-slate-400 font-bold mb-1">سعر البيع ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.four}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-four`}
+                                                                    onChange={(e) => setDur(idx, "four", e.target.value)}
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-slate-700 px-2 text-xs text-emerald-400 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] text-red-400 font-bold mb-1">قبل الخصم ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.originalFour}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-originalFour`}
+                                                                    onChange={(e) => setDur(idx, "originalFour", e.target.value)}
+                                                                    placeholder="اختياري"
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-red-500/40 px-2 text-xs text-red-300 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] text-amber-400 font-bold mb-1">تكلفة المورد ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.costPriceFour}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-costPriceFour`}
+                                                                    onChange={(e) => setDur(idx, "costPriceFour", e.target.value)}
+                                                                    placeholder="0.00"
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-amber-500/50 px-2 text-xs text-amber-300 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -702,26 +767,62 @@ export default function SubscriptionsTab({ onChanged }) {
                         ) : (
                             /* Live Instant Edit Table View */
                             <div className="p-4 sm:p-6 overflow-x-auto">
-                                <table className="w-full text-right text-xs">
+                                <table className="w-full text-right text-xs min-w-[950px]">
                                     <thead>
-                                        <tr className="text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2">
-                                            <th className="py-2 px-3 font-bold">مدة الاشتراك</th>
-                                            <th className="py-2 px-3 font-bold">سعر PS5 🎮</th>
-                                            <th className="py-2 px-3 font-bold text-red-400">سعر المشطوب (الخصم) 🏷️</th>
-                                            <th className="py-2 px-3 font-bold">سعر PS4 🎮</th>
-                                            <th className="py-2 px-3 font-bold text-amber-500">تكلفة المورد 💵</th>
-                                            <th className="py-2 px-3 font-bold text-emerald-500">صافي الربح 📈</th>
-                                            <th className="py-2 px-3 font-bold">حالة التوفر والبيع ⚡</th>
-                                            <th className="py-2 px-3 font-bold text-blue-400 text-center">نص التسليم للعميل 📲</th>
+                                        {/* Multi-tier Group Header */}
+                                        <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
+                                            <th className="py-2.5 px-3 font-black text-slate-700 dark:text-slate-200 w-28">مدة الخطة</th>
+                                            
+                                            {/* PS5 Header Group */}
+                                            <th colSpan={4} className="py-2.5 px-3 text-center bg-blue-500/10 border-x border-blue-500/20 rounded-t-2xl font-black text-blue-600 dark:text-blue-400">
+                                                🎮 أسعار وتكاليف وأرباح PlayStation 5 (PS5)
+                                            </th>
+
+                                            {/* PS4 Header Group */}
+                                            <th colSpan={4} className="py-2.5 px-3 text-center bg-slate-500/10 border-l border-slate-500/20 rounded-t-2xl font-black text-slate-700 dark:text-slate-300">
+                                                🎮 أسعار وتكاليف وأرباح PlayStation 4 (PS4)
+                                            </th>
+
+                                            <th className="py-2.5 px-3 font-bold text-center">حالة التوفر ⚡</th>
+                                            <th className="py-2.5 px-3 font-bold text-blue-500 text-center">التسليم 📲</th>
+                                        </tr>
+
+                                        {/* Sub Columns Header */}
+                                        <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 text-[11px]">
+                                            <th className="py-2 px-3 font-bold">المدة</th>
+
+                                            {/* PS5 Sub Columns */}
+                                            <th className="py-2 px-2 text-center bg-blue-500/[0.04] text-emerald-600 font-extrabold">سعر البيع 🎮</th>
+                                            <th className="py-2 px-2 text-center bg-blue-500/[0.04] text-red-500 font-extrabold">قبل الخصم 🏷️</th>
+                                            <th className="py-2 px-2 text-center bg-blue-500/[0.04] text-amber-600 font-extrabold">تكلفة المورد 💵</th>
+                                            <th className="py-2 px-2 text-center bg-blue-500/[0.04] border-l border-blue-500/20 text-emerald-600 font-extrabold">صافي الربح 📈</th>
+
+                                            {/* PS4 Sub Columns */}
+                                            <th className="py-2 px-2 text-center bg-slate-500/[0.04] text-emerald-600 font-extrabold">سعر البيع 🎮</th>
+                                            <th className="py-2 px-2 text-center bg-slate-500/[0.04] text-red-500 font-extrabold">قبل الخصم 🏷️</th>
+                                            <th className="py-2 px-2 text-center bg-slate-500/[0.04] text-amber-600 font-extrabold">تكلفة المورد 💵</th>
+                                            <th className="py-2 px-2 text-center bg-slate-500/[0.04] border-l border-slate-500/20 text-emerald-600 font-extrabold">صافي الربح 📈</th>
+
+                                            <th className="py-2 px-3 font-bold text-center">المخزون والطلب</th>
+                                            <th className="py-2 px-3 font-bold text-center">الرسالة</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                                         {(sub.durations || []).map((d, dIdx) => {
-                                            const sellP = d.five || d.four;
-                                            const costP = d.costPrice;
-                                            let netProfit = null;
-                                            if (sellP != null && costP != null && Number(sellP) > 0 && Number(costP) > 0) {
-                                                netProfit = (Number(sellP) - Number(costP)).toFixed(2);
+                                            // PS5 Profit
+                                            const sellFive = d.five;
+                                            const costFive = d.costPriceFive ?? d.costPrice;
+                                            let netProfitFive = null;
+                                            if (sellFive != null && costFive != null && Number(sellFive) > 0 && Number(costFive) > 0) {
+                                                netProfitFive = (Number(sellFive) - Number(costFive)).toFixed(2);
+                                            }
+
+                                            // PS4 Profit
+                                            const sellFour = d.four;
+                                            const costFour = d.costPriceFour ?? d.costPrice;
+                                            let netProfitFour = null;
+                                            if (sellFour != null && costFour != null && Number(sellFour) > 0 && Number(costFour) > 0) {
+                                                netProfitFour = (Number(sellFour) - Number(costFour)).toFixed(2);
                                             }
 
                                             return (
@@ -729,60 +830,111 @@ export default function SubscriptionsTab({ onChanged }) {
                                                     <td className="py-3 px-3 font-black text-slate-900 dark:text-white">
                                                         {d.label}
                                                     </td>
-                                                    <td className="py-3 px-3">
+
+                                                    {/* PS5 Price */}
+                                                    <td className="py-3 px-1.5 text-center bg-blue-500/[0.02]">
                                                         <input
                                                             type="number"
                                                             step="0.5"
                                                             value={d.five ?? ""}
                                                             onChange={(e) => handleCellFieldChange(sub, dIdx, "five", e.target.value)}
                                                             placeholder="فارغ"
-                                                            className="w-18 sm:w-20 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center"
+                                                            className="w-16 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center"
                                                         />
                                                     </td>
-                                                    <td className="py-3 px-3">
+
+                                                    {/* PS5 Strikethrough (Original) */}
+                                                    <td className="py-3 px-1.5 text-center bg-blue-500/[0.02]">
                                                         <input
                                                             type="number"
                                                             step="0.5"
                                                             value={d.originalFive ?? ""}
                                                             onChange={(e) => handleCellFieldChange(sub, dIdx, "originalFive", e.target.value)}
-                                                            placeholder="قبل الخصم"
-                                                            className="w-18 sm:w-22 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 px-2 text-xs font-bold text-red-500 text-center"
+                                                            placeholder="مشطوب"
+                                                            className="w-16 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 px-1 text-xs font-bold text-red-500 text-center"
                                                         />
                                                     </td>
-                                                    <td className="py-3 px-3">
+
+                                                    {/* PS5 Cost */}
+                                                    <td className="py-3 px-1.5 text-center bg-blue-500/[0.02]">
+                                                        <input
+                                                            type="number"
+                                                            step="0.5"
+                                                            value={d.costPriceFive ?? d.costPrice ?? ""}
+                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "costPriceFive", e.target.value)}
+                                                            placeholder="0.00"
+                                                            className="w-16 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 px-1 text-xs font-bold text-amber-600 dark:text-amber-300 text-center"
+                                                        />
+                                                    </td>
+
+                                                    {/* PS5 Net Profit */}
+                                                    <td className="py-3 px-1.5 text-center bg-blue-500/[0.02] border-l border-blue-500/20">
+                                                        {netProfitFive != null ? (
+                                                            <span className={`px-2 py-1 rounded-lg font-black text-[11px] inline-block ${
+                                                                Number(netProfitFive) >= 0 ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300" : "bg-red-100 text-red-700"
+                                                            }`}>
+                                                                {Number(netProfitFive) >= 0 ? `+$${netProfitFive}` : `-$${Math.abs(Number(netProfitFive))}`}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs">—</span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* PS4 Price */}
+                                                    <td className="py-3 px-1.5 text-center bg-slate-500/[0.02]">
                                                         <input
                                                             type="number"
                                                             step="0.5"
                                                             value={d.four ?? ""}
                                                             onChange={(e) => handleCellFieldChange(sub, dIdx, "four", e.target.value)}
                                                             placeholder="فارغ"
-                                                            className="w-18 sm:w-20 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center"
+                                                            className="w-16 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center"
                                                         />
                                                     </td>
-                                                    <td className="py-3 px-3">
+
+                                                    {/* PS4 Strikethrough (Original) */}
+                                                    <td className="py-3 px-1.5 text-center bg-slate-500/[0.02]">
                                                         <input
                                                             type="number"
                                                             step="0.5"
-                                                            value={d.costPrice ?? ""}
-                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "costPrice", e.target.value)}
-                                                            placeholder="0.00"
-                                                            className="w-18 sm:w-20 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 px-2 text-xs font-bold text-amber-600 dark:text-amber-300 text-center"
+                                                            value={d.originalFour ?? ""}
+                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "originalFour", e.target.value)}
+                                                            placeholder="مشطوب"
+                                                            className="w-16 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 px-1 text-xs font-bold text-red-500 text-center"
                                                         />
                                                     </td>
-                                                    <td className="py-3 px-3">
-                                                        {netProfit != null ? (
-                                                            <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black text-xs inline-block">
-                                                                + ${netProfit} 🔥
+
+                                                    {/* PS4 Cost */}
+                                                    <td className="py-3 px-1.5 text-center bg-slate-500/[0.02]">
+                                                        <input
+                                                            type="number"
+                                                            step="0.5"
+                                                            value={d.costPriceFour ?? d.costPrice ?? ""}
+                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "costPriceFour", e.target.value)}
+                                                            placeholder="0.00"
+                                                            className="w-16 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 px-1 text-xs font-bold text-amber-600 dark:text-amber-300 text-center"
+                                                        />
+                                                    </td>
+
+                                                    {/* PS4 Net Profit */}
+                                                    <td className="py-3 px-1.5 text-center bg-slate-500/[0.02] border-l border-slate-500/20">
+                                                        {netProfitFour != null ? (
+                                                            <span className={`px-2 py-1 rounded-lg font-black text-[11px] inline-block ${
+                                                                Number(netProfitFour) >= 0 ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300" : "bg-red-100 text-red-700"
+                                                            }`}>
+                                                                {Number(netProfitFour) >= 0 ? `+$${netProfitFour}` : `-$${Math.abs(Number(netProfitFour))}`}
                                                             </span>
                                                         ) : (
                                                             <span className="text-slate-400 text-xs">—</span>
                                                         )}
                                                     </td>
-                                                    <td className="py-3 px-3">
+
+                                                    {/* Stock Status */}
+                                                    <td className="py-3 px-2 text-center">
                                                         <select
                                                             value={d.stockStatus || "available"}
                                                             onChange={(e) => handleCellFieldChange(sub, dIdx, "stockStatus", e.target.value)}
-                                                            className={`h-9 rounded-xl border px-2.5 text-xs font-bold transition cursor-pointer ${
+                                                            className={`h-9 rounded-xl border px-2 text-[11px] font-bold transition cursor-pointer ${
                                                                 d.stockStatus === "out"
                                                                     ? "bg-red-50 text-red-700 border-red-300 dark:bg-red-950/50 dark:text-red-400"
                                                                     : d.stockStatus === "fast"
@@ -795,14 +947,16 @@ export default function SubscriptionsTab({ onChanged }) {
                                                             <option value="out">🔴 نفد المخزون</option>
                                                         </select>
                                                     </td>
-                                                    <td className="py-3 px-3 text-center">
+
+                                                    {/* WhatsApp Copy Template */}
+                                                    <td className="py-3 px-2 text-center">
                                                         <button
                                                             onClick={() => handleCopyWhatsAppDeliveryText(sub, d)}
-                                                            className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 text-[11px] font-black inline-flex items-center gap-1 border border-blue-200 dark:border-blue-800 transition cursor-pointer"
+                                                            className="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 text-[11px] font-black inline-flex items-center gap-1 border border-blue-200 dark:border-blue-800 transition cursor-pointer"
                                                             title="نسخ صيغة رسالة الواتساب الجاهزة لإرسالها للعميل"
                                                         >
                                                             <Copy className="w-3 h-3" />
-                                                            <span>📋 نسخ النص</span>
+                                                            <span>نسخ</span>
                                                         </button>
                                                     </td>
                                                 </tr>
