@@ -48910,21 +48910,33 @@ async function sendTelegramOrderNotification(order) {
     if (suppliers2.length === 0) {
       suppliers2 = [{ id: 1, name: "\u0627\u0644\u0645\u0648\u0631\u062F \u0627\u0644\u0645\u0639\u062A\u0645\u062F", phone: "962775585112" }];
     }
+    let customTemplate = `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064A\u0643\u0645 \u0623\u062E\u064A {supplier_name} \u{1F44B}
+\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F3AE}:
+
+\u{1F3F7}\uFE0F \u0627\u0644\u0644\u0639\u0628\u0629 / \u0627\u0644\u0645\u0646\u062A\u062C: *{game_name}* ({platform})
+\u{1F4E6} \u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: *#{order_number}*
+
+\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`;
+    if (pool6) {
+      try {
+        const { rows: tRows } = await pool6.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+        if (tRows.length > 0 && tRows[0].value) {
+          const val = typeof tRows[0].value === "string" ? JSON.parse(tRows[0].value) : tRows[0].value;
+          if (val.template) customTemplate = val.template;
+        }
+      } catch (_) {
+      }
+    }
+    const formatSupplierMessage = (supName) => {
+      const t = customTemplate.replace(/\{supplier_name\}/g, supName).replace(/\{game_name\}/g, order.game_name || order.product_type || "\u0645\u0646\u062A\u062C").replace(/\{platform\}/g, order.platform || "PS5").replace(/\{order_number\}/g, String(orderNum).replace(/^#/, "")).replace(/\{customer_name\}/g, order.customer_name || "\u0639\u0645\u064A\u0644").replace(/\{paid\}/g, paid);
+      return encodeURIComponent(t);
+    };
     const qrRequestText = encodeURIComponent(
       `\u0645\u0631\u062D\u0628\u0627\u064B \u0623\u062E\u064A ${order.customer_name || "\u0627\u0644\u0639\u0645\u064A\u0644"} \u{1F3AE}
 \u0634\u0643\u0631\u0627\u064B \u0644\u0634\u0631\u0627\u0626\u0643 \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u26A1
 
 \u0644\u062A\u0633\u0644\u064A\u0645 \u0648\u062A\u0641\u0639\u064A\u0644 \u0637\u0644\u0628\u0643 (${order.game_name || "\u0627\u0644\u0637\u0644\u0628"}) \u0641\u0648\u0631\u0627\u064B:
 \u064A\u0631\u062C\u0649 \u0641\u062A\u062D \u0634\u0627\u0634\u0629 \u0627\u0644\u0633\u0648\u0646\u064A \u0648\u0627\u062E\u062A\u064A\u0627\u0631 (\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F QR) \u0648\u062A\u0635\u0648\u064A\u0631 \u0627\u0644\u0643\u0648\u062F \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u0644\u0646\u0627 \u0647\u0646\u0627 \u{1F4F8}`
-    );
-    const supplierMsgText = (supName) => encodeURIComponent(
-      `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064A\u0643\u0645 \u0623\u062E\u064A ${supName} \u{1F44B}
-\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F3AE}:
-
-\u0627\u0644\u0637\u0644\u0628: ${order.game_name || "\u062D\u0633\u0627\u0628"} ${order.platform || ""}
-\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: #${orderNum}
-
-\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u26A1`
     );
     const messageHtml = `\u{1F525} <b>\u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062C\u062F\u064A\u062F #${escapeHtml(orderNum)}</b>
 
@@ -48952,7 +48964,7 @@ ${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> @$
         inlineButtons.push([
           {
             text: `1\uFE0F\u20E3 \u{1F69A} \u0625\u0631\u0633\u0627\u0644 \u0644\u0644\u0645\u0648\u0631\u062F: ${sup.name} (\u0648\u0627\u062A\u0633\u0627\u0628)`,
-            url: `https://wa.me/${supClean}?text=${supplierMsgText(sup.name)}`
+            url: `https://wa.me/${supClean}?text=${formatSupplierMessage(sup.name)}`
           }
         ]);
       }
@@ -49510,6 +49522,45 @@ router7.post("/admin/telegram/test", async (req, res) => {
   } else {
     res.status(400).json({ error: result?.description || result?.error || result?.reason || "\u0641\u0634\u0644 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629. \u062A\u0623\u0643\u062F \u0645\u0646 \u0625\u062F\u062E\u0627\u0644 Bot Token \u0648 Chat ID" });
   }
+});
+var DEFAULT_SUPPLIER_TEMPLATE = `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064A\u0643\u0645 \u0623\u062E\u064A {supplier_name} \u{1F44B}
+\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F3AE}:
+
+\u{1F3F7}\uFE0F \u0627\u0644\u0644\u0639\u0628\u0629 / \u0627\u0644\u0645\u0646\u062A\u062C: *{game_name}* ({platform})
+\u{1F4E6} \u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: *#{order_number}*
+
+\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`;
+router7.get("/admin/supplier-template", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (pool6) {
+    try {
+      const { rows } = await pool6.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+      if (rows.length > 0 && rows[0].value) {
+        const val = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
+        res.json({ template: val.template || DEFAULT_SUPPLIER_TEMPLATE });
+        return;
+      }
+    } catch (_) {
+    }
+  }
+  res.json({ template: DEFAULT_SUPPLIER_TEMPLATE });
+});
+router7.put("/admin/supplier-template", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const template = req.body?.template || DEFAULT_SUPPLIER_TEMPLATE;
+  if (pool6) {
+    try {
+      await pool6.query(
+        `INSERT INTO store_config (key, value, updated_at)
+         VALUES ('supplier_message_template', $1, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+        [JSON.stringify({ template })]
+      );
+    } catch (e) {
+      console.error("Failed to save supplier template:", e);
+    }
+  }
+  res.json({ ok: true, template });
 });
 router7.post("/admin/run-migration", async (req, res) => {
   if (!requireAdmin(req, res)) return;

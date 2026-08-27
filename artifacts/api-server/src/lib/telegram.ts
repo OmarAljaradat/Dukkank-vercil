@@ -161,12 +161,37 @@ export async function sendTelegramOrderNotification(order: any) {
       suppliers = [{ id: 1, name: "المورد المعتمد", phone: "962775585112" }];
     }
 
+    let customTemplate = `السلام عليكم أخي {supplier_name} 👋
+طلب حساب جديد من متجر دُكانك 🎮:
+
+🏷️ اللعبة / المنتج: *{game_name}* ({platform})
+📦 رقم الطلب: *#{order_number}*
+
+يرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`;
+
+    if (pool) {
+      try {
+        const { rows: tRows } = await pool.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+        if (tRows.length > 0 && tRows[0].value) {
+          const val = typeof tRows[0].value === "string" ? JSON.parse(tRows[0].value) : tRows[0].value;
+          if (val.template) customTemplate = val.template;
+        }
+      } catch (_) {}
+    }
+
+    const formatSupplierMessage = (supName: string) => {
+      const t = customTemplate
+        .replace(/\{supplier_name\}/g, supName)
+        .replace(/\{game_name\}/g, order.game_name || order.product_type || "منتج")
+        .replace(/\{platform\}/g, order.platform || "PS5")
+        .replace(/\{order_number\}/g, String(orderNum).replace(/^#/, ""))
+        .replace(/\{customer_name\}/g, order.customer_name || "عميل")
+        .replace(/\{paid\}/g, paid);
+      return encodeURIComponent(t);
+    };
+
     const qrRequestText = encodeURIComponent(
       `مرحباً أخي ${order.customer_name || "العميل"} 🎮\nشكراً لشرائك من متجر دُكانك ⚡\n\nلتسليم وتفعيل طلبك (${order.game_name || "الطلب"}) فوراً:\nيرجى فتح شاشة السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸`
-    );
-
-    const supplierMsgText = (supName: string) => encodeURIComponent(
-      `السلام عليكم أخي ${supName} 👋\nطلب حساب جديد من متجر دُكانك 🎮:\n\nالطلب: ${order.game_name || "حساب"} ${order.platform || ""}\nرقم الطلب: #${orderNum}\n\nيرجى تجهيز الحساب والتكلفة وإرساله ⚡`
     );
 
     const messageHtml = `🔥 <b>طلب شراء جديد #${escapeHtml(orderNum)}</b>
@@ -197,7 +222,7 @@ ${igRaw ? `📸 <b>إنستغرام:</b> @${escapeHtml(igRaw)}\n` : ""}💰 <b>�
         inlineButtons.push([
           {
             text: `1️⃣ 🚚 إرسال للمورد: ${sup.name} (واتساب)`,
-            url: `https://wa.me/${supClean}?text=${supplierMsgText(sup.name)}`,
+            url: `https://wa.me/${supClean}?text=${formatSupplierMessage(sup.name)}`,
           },
         ]);
       }

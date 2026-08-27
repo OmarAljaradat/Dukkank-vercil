@@ -576,6 +576,49 @@ router.post("/admin/telegram/test", async (req, res) => {
   }
 });
 
+// ── Supplier WhatsApp Message Template ───────────────────────────────────────
+
+const DEFAULT_SUPPLIER_TEMPLATE = `السلام عليكم أخي {supplier_name} 👋
+طلب حساب جديد من متجر دُكانك 🎮:
+
+🏷️ اللعبة / المنتج: *{game_name}* ({platform})
+📦 رقم الطلب: *#{order_number}*
+
+يرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`;
+
+router.get("/admin/supplier-template", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (pool) {
+    try {
+      const { rows } = await pool.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+      if (rows.length > 0 && rows[0].value) {
+        const val = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
+        res.json({ template: val.template || DEFAULT_SUPPLIER_TEMPLATE });
+        return;
+      }
+    } catch (_) {}
+  }
+  res.json({ template: DEFAULT_SUPPLIER_TEMPLATE });
+});
+
+router.put("/admin/supplier-template", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const template = req.body?.template || DEFAULT_SUPPLIER_TEMPLATE;
+  if (pool) {
+    try {
+      await pool.query(
+        `INSERT INTO store_config (key, value, updated_at)
+         VALUES ('supplier_message_template', $1, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+        [JSON.stringify({ template })]
+      );
+    } catch (e: any) {
+      console.error("Failed to save supplier template:", e);
+    }
+  }
+  res.json({ ok: true, template });
+});
+
 router.post("/admin/run-migration", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   if (!pool) { res.status(500).json({ error: "No DB connection pool" }); return; }

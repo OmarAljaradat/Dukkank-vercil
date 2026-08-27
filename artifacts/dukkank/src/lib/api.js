@@ -200,6 +200,10 @@ export const apiGetTelegramConfig = () => client.get("/admin/telegram/config").t
 export const apiUpdateTelegramConfig = (data) => client.put("/admin/telegram/config", data).then((r) => r.data);
 export const apiTestTelegramNotification = () => client.post("/admin/telegram/test").then((r) => r.data);
 
+// ── OrderDukkank: Supplier Message Template APIs ─────────────────────────────
+export const apiGetSupplierTemplate = () => client.get("/admin/supplier-template").then((r) => r.data);
+export const apiUpdateSupplierTemplate = (template) => client.put("/admin/supplier-template", { template }).then((r) => r.data);
+
 // ── AI Launch & Resend Email APIs ─────────────────────────────────────────────
 export const apiGenerateAiLaunchTheme = (gamePrompt) =>
     client.post("/admin/ai-launch-generator", { gamePrompt }).then((r) => r.data);
