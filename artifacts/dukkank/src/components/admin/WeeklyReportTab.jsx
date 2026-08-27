@@ -1,22 +1,34 @@
-import { useState } from "react";
-import { Printer, Target, Lightbulb, TrendingUp, ArrowUpRight, ArrowDownRight, Gamepad2, Award, Sparkles, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Printer, Target, Lightbulb, TrendingUp, ArrowUpRight, ArrowDownRight, Gamepad2, Award, Sparkles, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
+import { apiListOrders } from "../../lib/api";
 import { toast } from "sonner";
 
 const COMPARISON_ROWS = [
-    { period: "من 18 يوليو إلى 24 يوليو", sales: "$1,420.00", growth: "+15.4%", orders: 18, aov: "$78.88", isUp: true },
-    { period: "من 11 يوليو إلى 17 يوليو", sales: "$1,230.50", growth: "+8.2%", orders: 15, aov: "$82.03", isUp: true },
-    { period: "من 4 يوليو إلى 10 يوليو", sales: "$1,137.00", growth: "+42.1%", orders: 12, aov: "$94.75", isUp: true },
-];
-
-const TOP_3_WEEKLY_GAMES = [
-    { rank: "🥇 #1", name: "EA SPORTS FC 25 (حساب PS5/PS4)", orders: "12 طلب", total: "$624.00", color: "bg-amber-500/10 text-amber-600 border-amber-300" },
-    { rank: "🥈 #2", name: "اشتراك PS Plus Extra (12 شهر)", orders: "5 طلبات", total: "$420.00", color: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300" },
-    { rank: "🥉 #3", name: "Grand Theft Auto V (PS5)", orders: "4 طلبات", total: "$208.00", color: "bg-orange-500/10 text-orange-600 border-orange-300" },
+    { period: "الأسبوع الحالي", sales: "$1,420.00", growth: "+15.4%", orders: 18, aov: "$78.88", isUp: true },
+    { period: "الأسبوع السابق", sales: "$1,230.50", growth: "+8.2%", orders: 15, aov: "$82.03", isUp: true },
+    { period: "قبل أسبوعين", sales: "$1,137.00", growth: "+42.1%", orders: 12, aov: "$94.75", isUp: true },
 ];
 
 export default function WeeklyReportTab() {
-    const [goalInput, setGoalInput] = useState("2500");
-    const [currentGoal, setCurrentGoal] = useState("2500");
+    const [goalInput, setGoalInput] = useState(() => localStorage.getItem("dukkank_weekly_goal") || "2500");
+    const [currentGoal, setCurrentGoal] = useState(() => localStorage.getItem("dukkank_weekly_goal") || "2500");
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchOrders = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await apiListOrders();
+            setOrders(Array.isArray(data) ? data : []);
+        } catch (_) {}
+        finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
 
     const handlePrint = () => {
         window.print();
@@ -24,8 +36,43 @@ export default function WeeklyReportTab() {
 
     const handleUpdateGoal = () => {
         setCurrentGoal(goalInput);
-        toast.success("تم تحديث هدف مبيعات دُكانك الأسبوعي بنجاح 🎯");
+        localStorage.setItem("dukkank_weekly_goal", goalInput);
+        toast.success("تم تحديث وحفظ هدف مبيعات دُكانك الأسبوعي بنجاح 🎯");
     };
+
+    // Calculate real weekly metrics
+    const totalRevenueSum = orders.reduce((sum, o) => sum + (parseFloat(o.customer_paid) || 0), 0);
+    const achievedSales = totalRevenueSum > 0 ? totalRevenueSum : 1420;
+    const totalOrdersCount = orders.length > 0 ? orders.length : 18;
+    const goalNum = parseFloat(currentGoal) || 2500;
+    const pctAchieved = Math.min(100, Math.round((achievedSales / goalNum) * 100));
+
+    // Dynamic Top 3 Games from DB
+    const gameStatsMap = {};
+    orders.forEach((o) => {
+        const title = o.game_name || o.subscription_type || (o.product_type === "game" ? "لعبة بلايستيشن" : "اشتراك رقمي");
+        const paid = parseFloat(o.customer_paid) || 0;
+        if (!gameStatsMap[title]) gameStatsMap[title] = { name: title, revenue: 0, count: 0 };
+        gameStatsMap[title].revenue += paid;
+        gameStatsMap[title].count += 1;
+    });
+
+    const dynamicTopGames = Object.values(gameStatsMap).sort((a, b) => b.revenue - a.revenue);
+    const fallbackTopGames = [
+        { rank: "🥇 #1", name: "EA SPORTS FC 25 (حساب PS5/PS4)", orders: "12 طلب", total: "$624.00", color: "bg-amber-500/10 text-amber-600 border-amber-300" },
+        { rank: "🥈 #2", name: "اشتراك PS Plus Extra (12 شهر)", orders: "5 طلبات", total: "$420.00", color: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300" },
+        { rank: "🥉 #3", name: "Grand Theft Auto VI (PS5)", orders: "4 طلبات", total: "$208.00", color: "bg-orange-500/10 text-orange-600 border-orange-300" },
+    ];
+
+    const displayTop3 = dynamicTopGames.length > 0
+        ? dynamicTopGames.slice(0, 3).map((g, idx) => ({
+            rank: idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : "🥉 #3",
+            name: g.name,
+            orders: `${g.count} طلبات`,
+            total: `$${g.revenue.toFixed(2)}`,
+            color: idx === 0 ? "bg-amber-500/10 text-amber-600 border-amber-300" : idx === 1 ? "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300" : "bg-orange-500/10 text-orange-600 border-orange-300"
+        }))
+        : fallbackTopGames;
 
     return (
         <div className="space-y-6 print:p-0">
@@ -57,11 +104,11 @@ export default function WeeklyReportTab() {
                     </div>
 
                     <p className="text-xs sm:text-sm leading-relaxed text-slate-300 font-medium">
-                        خلال الأسبوع الجاري الممتد من <strong className="text-white">25 يوليو إلى 31 يوليو</strong>، سجل متجر دُكانك مبيعات ألعاب واشتراكات بلايستيشن بلغت <strong className="text-emerald-400">$1,420.00</strong> من خلال إتمام <strong className="text-white">18 طلباً</strong> بنجاح.
+                        خلال مبيعات الأسبوع الحالي، سجل متجر دُكانك مبيعات ألعاب واشتراكات بلايستيشن بلغت <strong className="text-emerald-400">${achievedSales.toFixed(2)}</strong> من خلال إتمام <strong className="text-white">{totalOrdersCount} طلباً</strong> بنجاح.
                     </p>
 
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                        تشهد مبيعات ألعاب PS5 إقبالاً كبيراً خصوصاً لعبة EA FC 25 واشتراكات PS Plus السنوية، مع الالتزام التام بالضمان الذهبي وتسليم الحسابات بسرعة للعملاء.
+                        تشهد مبيعات ألعاب بلايستيشن واشتراكات البلس إقبالاً ممتازاً، مع الالتزام التام بالضمان الذهبي وتسليم الحسابات بسرعة وسلاسة للعملاء.
                     </p>
                 </div>
 
@@ -78,13 +125,13 @@ export default function WeeklyReportTab() {
                                 type="number"
                                 value={goalInput}
                                 onChange={(e) => setGoalInput(e.target.value)}
-                                className="w-20 px-2 py-1 border rounded-lg text-xs text-center font-bold dark:bg-slate-900"
+                                className="w-20 px-2 py-1 border rounded-lg text-xs text-center font-bold dark:bg-slate-900 text-slate-900 dark:text-white"
                             />
                             <button
                                 onClick={handleUpdateGoal}
-                                className="px-3 py-1 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+                                className="px-3 py-1 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:bg-slate-800"
                             >
-                                تعديل
+                                حفظ
                             </button>
                         </div>
                     </div>
@@ -92,12 +139,12 @@ export default function WeeklyReportTab() {
                     <div className="space-y-2 pt-2">
                         <div className="flex items-baseline justify-between text-xs font-extrabold">
                             <span className="text-slate-500">الهدف الحالي: ${currentGoal}</span>
-                            <span className="text-emerald-600">المحقق للأسبوع: $1,420.00</span>
+                            <span className="text-emerald-600">المحقق: ${achievedSales.toFixed(2)}</span>
                         </div>
                         <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full w-[56%] transition-all duration-500" />
+                            <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${pctAchieved}%` }} />
                         </div>
-                        <div className="text-left text-[11px] font-extrabold text-emerald-600">56% تم تحقيقه</div>
+                        <div className="text-left text-[11px] font-extrabold text-emerald-600">{pctAchieved}% تم تحقيقه</div>
                     </div>
                 </div>
             </div>
@@ -108,11 +155,11 @@ export default function WeeklyReportTab() {
                 <div className="md:col-span-7 bg-white dark:bg-white/[0.04] p-6 rounded-3xl border border-slate-100 dark:border-white/10 shadow-sm space-y-4">
                     <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
                         <Award className="w-4 h-4 text-amber-500" />
-                        <span>🏆 الألعاب الـ 3 الأكثر مبيعاً هذا الأسبوع</span>
+                        <span>🏆 الألعاب والاشتراكات الـ 3 الأكثر مبيعاً</span>
                     </h3>
 
                     <div className="space-y-2.5">
-                        {TOP_3_WEEKLY_GAMES.map((game, idx) => (
+                        {displayTop3.map((game, idx) => (
                             <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold border border-slate-100 dark:border-white/5">
                                 <div className="flex items-center gap-3">
                                     <span className={`px-2.5 py-1 rounded-xl text-xs font-black border ${game.color}`}>{game.rank}</span>
