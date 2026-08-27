@@ -535,6 +535,130 @@ export default function OrdersDashboardTab() {
         )}
       </div>
 
+      {/* ── Card: Inline Supplier Message Template Editor ───────────────────── */}
+      <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 border border-emerald-500/30 rounded-3xl p-5 text-white shadow-xl">
+        <div className="flex items-center justify-between cursor-pointer select-none" onClick={() => setShowSupplierTemplateCard(!showSupplierTemplateCard)}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30 shadow-inner">
+              📝
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-sm text-white">قالب رسالة طلب الحساب للمورد (WhatsApp)</h3>
+                <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                  جاهز ومفعّل
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                عدّل نص الرسالة التي تُرسل للمورد على الواتساب عند تحويل أي طلب (بالموقع والتيليجرام).
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 transition-colors"
+          >
+            {showSupplierTemplateCard ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {showSupplierTemplateCard && (
+          <div className="mt-5 space-y-4 pt-4 border-t border-white/10 animate-in fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left Column: Text Editor & Tags */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-emerald-200">
+                  صيغة الرسالة (انقر على الكلمات الذكية بالأسفل لإضافتها تلقائياً):
+                </label>
+                <textarea
+                  rows={6}
+                  value={supplierTemplate}
+                  onChange={(e) => setSupplierTemplate(e.target.value)}
+                  dir="rtl"
+                  placeholder="اكتب صيغة الرسالة هنا..."
+                  className="w-full rounded-2xl border border-emerald-500/30 bg-black/40 p-3.5 text-xs font-mono text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 leading-relaxed shadow-inner"
+                />
+
+                {/* Variable Badges */}
+                <div>
+                  <span className="text-[11px] font-bold text-slate-400 block mb-1.5">اضغط لإدراج المتغير التلقائي:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { tag: "{supplier_name}", label: "اسم المورد" },
+                      { tag: "{game_name}", label: "اسم اللعبة" },
+                      { tag: "{platform}", label: "المنصة (PS5/PS4)" },
+                      { tag: "{order_number}", label: "رقم الطلب" },
+                      { tag: "{customer_name}", label: "اسم العميل" },
+                      { tag: "{paid}", label: "المبلغ" },
+                    ].map((t) => (
+                      <button
+                        key={t.tag}
+                        type="button"
+                        onClick={() => setSupplierTemplate((prev) => prev + " " + t.tag)}
+                        className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white/10 hover:bg-emerald-500/30 text-slate-200 hover:text-emerald-200 border border-white/10 transition-colors"
+                      >
+                        + {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Live WhatsApp Preview */}
+              <div className="flex flex-col">
+                <label className="block text-xs font-bold text-emerald-200 mb-1.5 flex items-center gap-1.5">
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-400" /> معاينة الرسالة الحية كما ستصل للمورد:
+                </label>
+                <div className="flex-1 bg-black/60 border border-emerald-500/20 rounded-2xl p-3.5 text-xs font-mono text-emerald-100 whitespace-pre-wrap leading-relaxed shadow-inner overflow-y-auto max-h-48">
+                  {supplierTemplate
+                    .replace(/\{supplier_name\}/g, "أبو خالد")
+                    .replace(/\{game_name\}/g, "Grand Theft Auto VI (GTA 6)")
+                    .replace(/\{platform\}/g, "PS5")
+                    .replace(/\{order_number\}/g, "ORD-9021")
+                    .replace(/\{customer_name\}/g, "عمر الجرادات")
+                    .replace(/\{paid\}/g, "$69.99")}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex items-center justify-between pt-3 border-t border-white/10 flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSupplierTemplate(
+                    `السلام عليكم أخي {supplier_name} 👋\nطلب حساب جديد من متجر دُكانك 🎮:\n\n🏷️ اللعبة / المنتج: *{game_name}* ({platform})\n📦 رقم الطلب: *#{order_number}*\n\nيرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`
+                  )
+                }
+                className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
+              >
+                استعادة الصيغة الافتراضية 🔄
+              </button>
+
+              <button
+                type="button"
+                disabled={savingTemplate}
+                onClick={async () => {
+                  setSavingTemplate(true);
+                  try {
+                    await apiUpdateSupplierTemplate(supplierTemplate);
+                    toast.success("تم حفظ وتحديث قالب رسالة المورد بنجاح 💾✅");
+                  } catch (e) {
+                    toast.error("فشل حفظ القالب: " + formatApiError(e));
+                  } finally {
+                    setSavingTemplate(false);
+                  }
+                }}
+                className="flex items-center gap-2 px-6 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
+              >
+                {savingTemplate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>حفظ قالب رسالة المورد 💾</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ── Modern SaaS Glassmorphic Stat Cards ──────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
