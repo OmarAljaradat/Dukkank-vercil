@@ -119,9 +119,12 @@ export const DEFAULT_SUBSCRIPTIONS = [
 ];
 
 export const DEFAULT_GAMES = [
-  { id: "blackops7",       name: "Call of Duty: Black Ops 7",              sub: "FPS • Multiplayer & Zombies Mode",       image: "/games/blackops7.jpg",       gradientFrom: "#1f2310", gradientTo: "#080a04", four: 17.09, five: 38.68, available: true, bestSeller: true,  order: 0 },
-  { id: "eafc26",          name: "EA Sports FC 26",                         sub: "كرة القدم • Career & Ultimate Team",    image: "/games/eafc26.jpg",          gradientFrom: "#1c5e3a", gradientTo: "#0f2e1c", four: 15.13, five: 22.98, available: true, bestSeller: true,  order: 1 },
-  { id: "gta5",            name: "Grand Theft Auto V",                      sub: "عالم مفتوح • أكشن ومغامرة",             image: "/games/gta5.jpg",            gradientFrom: "#13343f", gradientTo: "#04141a", four: 14.15, five: 18.07, available: true, bestSeller: true,  order: 2 }
+  { id: "spiderman2", name: "Marvel's Spider-Man 2 (عربي)", sub: "أكشن ومغامرات • بالدبلجة والترجمة العربية الكاملة", image: "/games/spiderman2.jpg", gradientFrom: "#5a0a0a", gradientTo: "#1d0306", four: null, five: 26.0, secondary: 21.0, available: true, bestSeller: true, order: 0 },
+  { id: "forza5", name: "Forza Horizon 5", sub: "سباقات وعالم مفتوح • أضخم مهرجان سيارات", image: "/games/forza5.jpg", gradientFrom: "#0d3a4a", gradientTo: "#031018", four: null, five: 26.0, secondary: 23.0, available: true, bestSeller: true, order: 1 },
+  { id: "mk11", name: "Mortal Kombat 11", sub: "قتال وحماس • النسخة المحسنة مع كامل الشخصيات", image: "/games/mk11.jpg", gradientFrom: "#3a1a08", gradientTo: "#120602", four: 8.0, five: 9.0, secondary: 7.5, available: true, bestSeller: true, order: 2 },
+  { id: "gta5", name: "Grand Theft Auto V", sub: "عالم مفتوح وأكشن • النسخة المحسنة + GTA Online", image: "/games/gta5.jpg", gradientFrom: "#13343f", gradientTo: "#04141a", four: 13.0, five: 14.0, secondary: 12.0, available: true, bestSeller: true, order: 3 },
+  { id: "blackops7", name: "Call of Duty: Black Ops 7", sub: "تصويب وحرب • طور القصة واللعب الجماعي والزومبي", image: "/games/blackops7.jpg", gradientFrom: "#2a2f1a", gradientTo: "#0d0f08", four: 13.0, five: 28.0, available: true, bestSeller: true, order: 4 },
+  { id: "eafc26", name: "EA Sports FC 26", sub: "كرة القدم • Career & Ultimate Team", image: "/games/eafc26.jpg", gradientFrom: "#1c5e3a", gradientTo: "#0f2e1c", four: 16.0, five: 26.0, available: true, bestSeller: true, order: 5 }
 ];
 
 export const DEFAULT_BUNDLES = [
