@@ -12,9 +12,163 @@ import {
     Zap, Clock, Palette, CheckCircle2, Layout, Share2, ShieldCheck, Flame, Gift, Star, Video, FlameKindling, Instagram, Copy, Bot, Wand2, Search
 } from "lucide-react";
 
+const DEFAULT_THEME_PROFILES = {
+    vice: {
+        enabled: true,
+        theme: "vice",
+        gameId: null,
+        gameName: "Grand Theft Auto VI",
+        badge: "🔥 الإصدار الأضخم في تاريخ الألعاب",
+        subtitle: "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
+        description: "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
+        price5: 45.0,
+        price4: 28.0,
+        ctaLabel: "احجز نسختك الآن 🔥",
+        ctaHref: "#games",
+        image: "",
+        imageUrl: "",
+        bonusGift: "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
+        rating: "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
+        stockLeft: 12,
+        trailerUrl: "https://www.youtube.com/embed/QdBZY2fkU-0",
+        countdownTarget: "2025-10-28",
+        launchDate: "2025-10-28",
+        note: "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
+        currency: "$",
+        platform5: "PS5",
+        platform4: "PS4",
+    },
+    eafc: {
+        enabled: true,
+        theme: "eafc",
+        gameId: null,
+        gameName: "EA SPORTS FC 27",
+        badge: "⚽ انطلاقة الموسم الكروي الجديد",
+        subtitle: "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
+        description: "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
+        price5: 42.0,
+        price4: 24.0,
+        ctaLabel: "احصل على نسختك الآن ⚡",
+        ctaHref: "#games",
+        image: "",
+        imageUrl: "",
+        bonusGift: "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
+        rating: "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
+        stockLeft: 15,
+        trailerUrl: "",
+        countdownTarget: "2026-09-10",
+        launchDate: "2026-09-10",
+        note: "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
+        currency: "$",
+        platform5: "PS5",
+        platform4: "PS4",
+    },
+    gold: {
+        enabled: true,
+        theme: "gold",
+        gameId: null,
+        gameName: "Call of Duty: Black Ops 7",
+        badge: "🔥 متوفر الآن للطلب المباشر والتسليم الفوري",
+        subtitle: "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق",
+        description: "احصل على اللعبة بأفضل سعر مع ضمان ذهبي شامل وتفعيل فوري على أجهزة PS4 و PS5.",
+        price5: 38.5,
+        price4: 18.5,
+        ctaLabel: "احصل عليها الآن ⚡",
+        ctaHref: "#games",
+        image: "",
+        imageUrl: "",
+        bonusGift: "🎁 شامل ضمان ذهبي طوال فترة اللعب",
+        rating: "⭐ 9.8/10 IGN • 🏆 لعبة السنة",
+        stockLeft: 7,
+        trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        countdownTarget: "2026-10-25",
+        launchDate: "2026-10-25",
+        note: "⚠️ تسليم فوري",
+        currency: "$",
+        platform5: "PS5",
+        platform4: "PS4",
+    },
+    red: {
+        enabled: true,
+        theme: "red",
+        gameId: null,
+        gameName: "Marvel's Spider-Man 2",
+        badge: "🔴 عرض حصري وخاص",
+        subtitle: "عِش مغامرة الأبطال الخارقين مع بيتر باركر ومايلز موراليس",
+        description: "احصل على الحساب الأصلي بأفضل سعر مع ضمان ذهبي كامل.",
+        price5: 35.0,
+        price4: 20.0,
+        ctaLabel: "اطلب نسختك الآن 🕷️",
+        ctaHref: "#games",
+        currency: "$",
+        platform5: "PS5",
+        platform4: "PS4",
+    },
+    blue: {
+        enabled: true,
+        theme: "blue",
+        gameId: null,
+        gameName: "God of War Ragnarök",
+        badge: "🟦 إصدار البلايستيشن الرسمي",
+        subtitle: "رحلة كريتوس وأتريوس الملحمية في العوالم التسعة",
+        description: "استمتع بأقوى تجربة حصرية على أجهزة بلايستيشن.",
+        price5: 36.0,
+        price4: 22.0,
+        ctaLabel: "احصل على اللعبة الآن 🪓",
+        ctaHref: "#games",
+        currency: "$",
+        platform5: "PS5",
+        platform4: "PS4",
+    },
+    cyber: {
+        enabled: true,
+        theme: "cyber",
+        gameId: null,
+        gameName: "Cyberpunk 2077: Phantom Liberty",
+        badge: "⚡ توسعة نايت سيتي الجديدة",
+        subtitle: "عالم المستقبل المفتوح مع أحدث الرسومات والتقنيات",
+        description: "تفعيل فوري مع أسلوب لعب فريد وقصة سينمائية عميقة.",
+        price5: 34.0,
+        price4: 19.0,
+        ctaLabel: "انضم للرحلة الآن 🌃",
+        ctaHref: "#games",
+        currency: "$",
+        platform5: "PS5",
+        platform4: "PS4",
+    },
+};
+
+const loadAllThemeProfiles = () => {
+    try {
+        const raw = localStorage.getItem("dukkank_theme_profiles_v2");
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            return { ...DEFAULT_THEME_PROFILES, ...parsed };
+        }
+    } catch {}
+    return { ...DEFAULT_THEME_PROFILES };
+};
+
+const saveCurrentThemeProfile = (themeKey, currentData) => {
+    try {
+        if (!themeKey) return;
+        const currentProfiles = loadAllThemeProfiles();
+        const updated = {
+            ...currentProfiles,
+            [themeKey]: {
+                ...(currentProfiles[themeKey] || DEFAULT_THEME_PROFILES[themeKey] || {}),
+                ...currentData,
+                theme: themeKey,
+            }
+        };
+        localStorage.setItem("dukkank_theme_profiles_v2", JSON.stringify(updated));
+        return updated;
+    } catch {}
+};
+
 export default function LaunchTab({ onChanged }) {
     const { launchAnnouncement, setLaunchAnnouncement, games, sections, setSections } = useStoreData();
-    const [form, setForm] = useState(launchAnnouncement || {});
+    const [form, setForm] = useState(launchAnnouncement || DEFAULT_THEME_PROFILES.vice);
     const [saving, setSaving] = useState(false);
     const [aiPrompt, setAiPrompt] = useState("");
     const [aiGenerating, setAiGenerating] = useState(false);
@@ -24,10 +178,21 @@ export default function LaunchTab({ onChanged }) {
     useEffect(() => {
         if (launchAnnouncement) {
             setForm(launchAnnouncement);
+            if (launchAnnouncement.theme) {
+                saveCurrentThemeProfile(launchAnnouncement.theme, launchAnnouncement);
+            }
         }
     }, [launchAnnouncement]);
 
-    const set = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+    const set = (key, val) => {
+        setForm((prev) => {
+            const updated = { ...prev, [key]: val };
+            if (updated.theme) {
+                saveCurrentThemeProfile(updated.theme, updated);
+            }
+            return updated;
+        });
+    };
 
     const ensureSectionVisible = async () => {
         if (sections && setSections) {
@@ -54,230 +219,150 @@ export default function LaunchTab({ onChanged }) {
         const game = (games || []).find((g) => g.id === gameId);
         if (!game) return;
 
-        setForm((prev) => ({
-            ...prev,
-            gameId: game.id,
-            gameName: game.name,
-            badge: "🔥 متوفر الآن للطلب المباشر والتسليم الفوري",
-            subtitle: game.sub || "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق",
-            description: `احصل على أحدث إصدارات ${game.name} بخيارات أجهزة PS4 و PS5 مع ضمان ذهبي شامل وتفعيل فوري.`,
-            price5: game.five || 38.5,
-            price4: game.four || 18.5,
-            ctaLabel: "احصل عليها الآن ⚡",
-            image: game.image || "",
-            theme: prev.theme || "gold",
-            bonusGift: "🎁 شامل ضمان ذهبي طوال فترة اللعب",
-            rating: "⭐ 9.8/10 IGN • 🏆 لعبة السنة",
-            stockLeft: 7,
-            trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        }));
+        setForm((prev) => {
+            const updated = {
+                ...prev,
+                gameId: game.id,
+                gameName: game.name,
+                badge: "🔥 متوفر الآن للطلب المباشر والتسليم الفوري",
+                subtitle: game.sub || "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق",
+                description: `احصل على أحدث إصدارات ${game.name} بخيارات أجهزة PS4 و PS5 مع ضمان ذهبي شامل وتفعيل فوري.`,
+                price5: game.five || 38.5,
+                price4: game.four || 18.5,
+                ctaLabel: "احصل عليها الآن ⚡",
+                image: game.image || "",
+                imageUrl: "",
+                theme: prev.theme || "gold",
+                bonusGift: "🎁 شامل ضمان ذهبي طوال فترة اللعب",
+                rating: "⭐ 9.8/10 IGN • 🏆 لعبة السنة",
+                stockLeft: 7,
+                trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+            };
+            if (updated.theme) {
+                saveCurrentThemeProfile(updated.theme, updated);
+            }
+            return updated;
+        });
 
         toast.success(`تم استيراد وتحديد (${game.name}) للبنر بنجاح 🎮!`);
     };
 
     // Clear Selected Store Game Handler
     const handleClearGameSelection = () => {
-        setForm((prev) => ({
-            ...prev,
-            gameId: null,
-            gameName: prev.theme === "vice" ? "Grand Theft Auto VI" : prev.theme === "eafc" ? "EA SPORTS FC 27" : "Call of Duty: Black Ops 7",
-            image: "",
-            imageUrl: "",
-        }));
-        toast.info("تم إلغاء تحديد اللعبة من المخزون بنجاح 🔄");
-    };
-
-    const getSavedTheme = (theme) => {
-        try {
-            const item = localStorage.getItem(`dukkank_saved_theme_${theme}`);
-            return item ? JSON.parse(item) : null;
-        } catch {
-            return null;
-        }
-    };
-
-    const saveThemeData = (theme, data) => {
-        try {
-            if (theme && data) {
-                localStorage.setItem(`dukkank_saved_theme_${theme}`, JSON.stringify(data));
+        setForm((prev) => {
+            const profiles = loadAllThemeProfiles();
+            const defProfile = profiles[prev.theme] || DEFAULT_THEME_PROFILES[prev.theme] || {};
+            const updated = {
+                ...prev,
+                gameId: null,
+                gameName: defProfile.gameName || "Grand Theft Auto VI",
+                image: "",
+                imageUrl: "",
+            };
+            if (updated.theme) {
+                saveCurrentThemeProfile(updated.theme, updated);
             }
-        } catch {}
+            return updated;
+        });
+        toast.info("تم إلغاء تحديد اللعبة من المخزون والعودة لبيانات الثيم 🔄");
+    };
+
+    // 🚀 Switch Theme Function with Persistent Profile Memory
+    const switchToTheme = async (targetThemeKey, explicitEnabled) => {
+        if (!targetThemeKey) return;
+
+        // 1. Save whatever is currently typed into the CURRENT theme profile
+        if (form.theme) {
+            saveCurrentThemeProfile(form.theme, form);
+        }
+
+        // 2. Load all profiles and get the target theme profile
+        const profiles = loadAllThemeProfiles();
+        const targetSaved = profiles[targetThemeKey] || DEFAULT_THEME_PROFILES[targetThemeKey] || {
+            ...form,
+            theme: targetThemeKey,
+        };
+
+        const isNextEnabled = explicitEnabled !== undefined ? explicitEnabled : (form.enabled ?? true);
+
+        const nextForm = {
+            ...targetSaved,
+            theme: targetThemeKey,
+            enabled: isNextEnabled,
+        };
+
+        setForm(nextForm);
+        saveCurrentThemeProfile(targetThemeKey, nextForm);
+
+        try {
+            setLaunchAnnouncement(nextForm);
+            await apiUpdateLaunchAnnouncement(nextForm);
+            if (isNextEnabled) await ensureSectionVisible();
+            onChanged?.();
+            const themeLabel = targetThemeKey === "vice" ? "GTA VI 🌴" : targetThemeKey === "eafc" ? "EA SPORTS FC ⚽" : targetThemeKey === "gold" ? "الثيم الذهبي 🏆" : targetThemeKey;
+            toast.success(`تم تفعيل (${themeLabel}) واسترجاع كافة تعديلاتك المحفوظة له بنجاح ✨`);
+        } catch (err) {
+            toast.error(formatApiError(err));
+        }
     };
 
     // 🎮 GTA VI VICE CITY - Clean Explicit Theme Preset (Toggleable)
     const handleGTAVIPreset = async () => {
-        if (form.enabled && form.theme === "vice" && form.gameName === "Grand Theft Auto VI") {
-            const newData = { ...form, enabled: false };
-            setForm(newData);
-            saveThemeData("vice", newData);
-            try {
-                setLaunchAnnouncement(newData);
-                await apiUpdateLaunchAnnouncement(newData);
-                toast.success("🙈 تم إيقاف وإخفاء ثيم GTA VI من المتجر!");
-                onChanged?.();
-            } catch (err) {
-                toast.error(formatApiError(err));
-            }
+        if (form.enabled && form.theme === "vice") {
+            await handleToggleGlobal();
             return;
         }
-
-        const defaultLaunchIso = "2025-10-28";
-
-        const newData = {
-            ...form,
-            enabled: true,
-            theme: "vice",
-            gameId: null,
-            gameName: "Grand Theft Auto VI",
-            badge: "🔥 الإصدار الأضخم في تاريخ الألعاب",
-            subtitle: "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
-            description: "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
-            price5: 45.0,
-            price4: 28.0,
-            ctaLabel: "احجز نسختك الآن 🔥",
-            ctaHref: "#games",
-            image: "",
-            imageUrl: "",
-            bonusGift: "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
-            rating: "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
-            stockLeft: 12,
-            trailerUrl: "https://www.youtube.com/embed/QdBZY2fkU-0",
-            countdownTarget: defaultLaunchIso,
-            launchDate: defaultLaunchIso,
-            note: "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
-            currency: "$",
-            platform5: "PS5",
-            platform4: "PS4",
-        };
-
-        setForm(newData);
-        saveThemeData("vice", newData);
-        try {
-            setLaunchAnnouncement(newData);
-            await apiUpdateLaunchAnnouncement(newData);
-            await ensureSectionVisible();
-            toast.success("🌴 تم تفعيل ثيم GTA VI الأصلي وإلغاء اختيار اللعبة السابقة بنجاح! 🎮🔥");
-            onChanged?.();
-        } catch (err) {
-            toast.error(formatApiError(err));
-        }
+        await switchToTheme("vice", true);
     };
 
     // ⚽ EA SPORTS FC - Clean Explicit Theme Preset (Toggleable)
     const handleEAFCPreset = async () => {
-        if (form.enabled && form.theme === "eafc" && form.gameName === "EA SPORTS FC 27") {
-            const newData = { ...form, enabled: false };
-            setForm(newData);
-            saveThemeData("eafc", newData);
-            try {
-                setLaunchAnnouncement(newData);
-                await apiUpdateLaunchAnnouncement(newData);
-                toast.success("🙈 تم إيقاف وإخفاء ثيم EA SPORTS FC من المتجر!");
-                onChanged?.();
-            } catch (err) {
-                toast.error(formatApiError(err));
-            }
+        if (form.enabled && form.theme === "eafc") {
+            await handleToggleGlobal();
             return;
         }
-
-        const launchDate = new Date();
-        launchDate.setDate(launchDate.getDate() + 14);
-        const defaultLaunchIso = launchDate.toISOString().split("T")[0];
-
-        const newData = {
-            ...form,
-            enabled: true,
-            theme: "eafc",
-            gameId: null,
-            gameName: "EA SPORTS FC 27",
-            badge: "⚽ انطلاقة الموسم الكروي الجديد",
-            subtitle: "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
-            description: "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
-            price5: 42.0,
-            price4: 24.0,
-            ctaLabel: "احصل على نسختك الآن ⚡",
-            ctaHref: "#games",
-            image: "",
-            imageUrl: "",
-            bonusGift: "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
-            rating: "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
-            stockLeft: 15,
-            trailerUrl: "",
-            countdownTarget: defaultLaunchIso,
-            launchDate: defaultLaunchIso,
-            note: "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
-            currency: "$",
-            platform5: "PS5",
-            platform4: "PS4",
-        };
-
-        setForm(newData);
-        saveThemeData("eafc", newData);
-        try {
-            setLaunchAnnouncement(newData);
-            await apiUpdateLaunchAnnouncement(newData);
-            await ensureSectionVisible();
-            toast.success("⚽ تم تفعيل ثيم EA SPORTS FC الأصلي وإلغاء اختيار اللعبة السابقة بنجاح! 🏆");
-            onChanged?.();
-        } catch (err) {
-            toast.error(formatApiError(err));
-        }
+        await switchToTheme("eafc", true);
     };
 
     // 🏆 Gold Theme Preset
     const handleGoldPreset = async () => {
         if (form.enabled && form.theme === "gold") {
-            const newData = { ...form, enabled: false };
-            setForm(newData);
-            saveThemeData("gold", newData);
-            try {
-                setLaunchAnnouncement(newData);
-                await apiUpdateLaunchAnnouncement(newData);
-                toast.success("🙈 تم إيقاف وإخفاء ثيم الإطلاق من المتجر!");
-                onChanged?.();
-            } catch (err) {
-                toast.error(formatApiError(err));
-            }
+            await handleToggleGlobal();
             return;
         }
+        await switchToTheme("gold", true);
+    };
 
-        const saved = getSavedTheme("gold");
-        const newData = {
-            ...(saved || form),
-            enabled: true,
-            theme: "gold",
-            gameName: (saved?.gameName || form.gameName) || "Call of Duty: Black Ops 7",
-            badge: (saved?.badge || form.badge) || "🔥 متوفر الآن للطلب المباشر والتسليم الفوري",
-            subtitle: (saved?.subtitle || form.subtitle) || "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق",
-            description: (saved?.description || form.description) || "احصل على اللعبة بأفضل سعر مع ضمان ذهبي شامل وتفعيل فوري على أجهزة PS4 و PS5.",
-            price5: (saved?.price5 ?? form.price5) ?? 38.5,
-            price4: (saved?.price4 ?? form.price4) ?? 18.5,
-            currency: "$",
-        };
+    // Global Master Toggle (Enable / Disable without losing any text)
+    const handleToggleGlobal = async () => {
+        const nextEnabled = !form.enabled;
+        const newData = { ...form, enabled: nextEnabled };
         setForm(newData);
-        saveThemeData("gold", newData);
+        if (form.theme) {
+            saveCurrentThemeProfile(form.theme, newData);
+        }
         try {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
-            await ensureSectionVisible();
-            toast.success("🏆 تم تفعيل ونشر الثيم الذهبي الملكي بنجاح! ✨");
+            if (nextEnabled) await ensureSectionVisible();
+            toast.success(nextEnabled ? "🟢 تم تفعيل وعرض بنر الإطلاق في المتجر بنجاح!" : "🙈 تم إيقاف وإخفاء بنر الإطلاق من المتجر بنجاح!");
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
         }
     };
 
-    // Global Master Toggle
-    const handleToggleGlobal = async () => {
-        const nextEnabled = !form.enabled;
-        const newData = { ...form, enabled: nextEnabled };
-        setForm(newData);
-        saveThemeData(form.theme || "vice", newData);
+    // Reset current theme to original default template
+    const handleResetThemeToDefault = async () => {
+        const currentTheme = form.theme || "vice";
+        const defaultData = DEFAULT_THEME_PROFILES[currentTheme] || DEFAULT_THEME_PROFILES.gold;
+        const nextForm = { ...defaultData, enabled: form.enabled ?? true };
+        setForm(nextForm);
+        saveCurrentThemeProfile(currentTheme, nextForm);
         try {
-            setLaunchAnnouncement(newData);
-            await apiUpdateLaunchAnnouncement(newData);
-            if (nextEnabled) await ensureSectionVisible();
-            toast.success(nextEnabled ? "🟢 تم تفعيل وعرض بنر الإطلاق في المتجر بنجاح!" : "🙈 تم إيقاف وإخفاء بنر الإطلاق من المتجر بنجاح!");
+            setLaunchAnnouncement(nextForm);
+            await apiUpdateLaunchAnnouncement(nextForm);
+            toast.success(`تمت إعادة ضبط ثيم (${currentTheme}) إلى قالبه الافتراضي 🔄`);
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
@@ -312,11 +397,11 @@ export default function LaunchTab({ onChanged }) {
         e?.preventDefault?.();
         setSaving(true);
         try {
-            saveThemeData(form.theme || "vice", form);
+            saveCurrentThemeProfile(form.theme || "vice", form);
             setLaunchAnnouncement(form);
             await apiUpdateLaunchAnnouncement(form);
             await ensureSectionVisible();
-            toast.success("تم نشر وحفظ إعلان الإطلاق بنجاح في الموقع 📢");
+            toast.success("تم حفظ ونشر إعلان الإطلاق وتثبيت تعديلات هذا الثيم بنجاح 📢");
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
@@ -970,18 +1055,28 @@ https://dukkank.com`;
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ثيم ولون البنر بالموقع</label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">ثيم ولون البنر بالموقع</label>
+                                    <button
+                                        type="button"
+                                        onClick={handleResetThemeToDefault}
+                                        className="text-[10px] text-amber-500 hover:text-amber-400 font-bold underline cursor-pointer"
+                                        title="استعادة النصوص والأسعار الافتراضية الأصلية لهذا الثيم"
+                                    >
+                                        🔄 استعادة قالب الثيم الأصلي
+                                    </button>
+                                </div>
                                 <select
                                     value={form.theme || "gold"}
-                                    onChange={(e) => set("theme", e.target.value)}
+                                    onChange={(e) => switchToTheme(e.target.value)}
                                     className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white"
                                 >
+                                    <option value="vice">🌴 فايس سيتي نيون (Vice City — GTA VI)</option>
+                                    <option value="eafc">⚽ الملعب الكروي (EA SPORTS FC — Green)</option>
                                     <option value="gold">🏆 الذهبي الملكي (Royal Gold)</option>
                                     <option value="red">🔴 الأحمـر الحماسي (Crimson Red)</option>
                                     <option value="blue">🟦 الأزرق البلايستيشن (PS Blue)</option>
                                     <option value="cyber">⚡ البنفسجي النيون (Cyber Purple)</option>
-                                    <option value="vice">🌴 فايس سيتي نيون (Vice City — GTA VI)</option>
-                                    <option value="eafc">⚽ الملعب الكروي (EA SPORTS FC — Green)</option>
                                 </select>
                             </div>
                         </div>
