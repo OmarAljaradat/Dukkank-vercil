@@ -78,6 +78,11 @@ async function initAuthDb() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(
+      `INSERT INTO customers (id, name, email, phone, password, email_verified)
+       VALUES ('cust-demo-1', 'مجرّب النظام (Test User)', 'test.user@dukkank.com', '+962790000000', 'test1234', TRUE)
+       ON CONFLICT (email) DO NOTHING`
+    );
   } catch (_) {}
 }
 initAuthDb();
