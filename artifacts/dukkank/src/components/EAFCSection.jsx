@@ -233,17 +233,25 @@ export function EAFCSection() {
                                 )}
                             </div>
 
-                            {/* ── Logo ── */}
+                            {/* ── Logo & Title ── */}
                             <div className="mb-6">
-                                <img
-                                    src="/eafc-logo-clean.png"
-                                    alt="EA SPORTS FC 27"
-                                    className="h-24 sm:h-32 md:h-40 object-contain mb-3"
-                                    style={{
-                                        filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.2))",
-                                        animation: "eafc-float 6s ease-in-out infinite",
-                                    }}
-                                />
+                                {(!la.gameName || la.gameName.toLowerCase().includes("ea sports") || la.gameName.toLowerCase().includes("fc")) ? (
+                                    <img
+                                        src="/eafc-logo-clean.png"
+                                        alt="EA SPORTS FC 27"
+                                        className="h-24 sm:h-32 md:h-40 object-contain mb-3"
+                                        style={{
+                                            filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.2))",
+                                            animation: "eafc-float 6s ease-in-out infinite",
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="mb-3">
+                                        <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight text-slate-950">
+                                            {la.gameName}
+                                        </h2>
+                                    </div>
+                                )}
                                 <h2 className="sr-only">{la.gameName || "EA SPORTS FC 27"}</h2>
 
                                 {/* Divider */}
@@ -252,7 +260,7 @@ export function EAFCSection() {
                                         style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.4), transparent)" }} />
                                     <span className="text-[10px] font-black tracking-[0.5em] uppercase flex-shrink-0"
                                         style={{ color: "rgba(0,0,0,0.45)" }}>
-                                        ULTIMATE TEAM • الموسم الجديد
+                                        {la.gameName ? `${la.gameName} • الموسم الجديد` : "ULTIMATE TEAM • الموسم الجديد"}
                                     </span>
                                     <div className="h-[2px] flex-1"
                                         style={{ background: "linear-gradient(270deg, rgba(0,0,0,0.3), transparent)" }} />

@@ -409,19 +409,25 @@ export function GTAVISection() {
                                 )}
                             </div>
 
-                            {/* ── Giant GTA VI Title & Official Logo ── */}
+                            {/* ── Giant Dynamic Game Title & Neon Presentation ── */}
                             <div className="mb-6">
-                                <div className="mb-3">
-                                    <img
-                                        src="/gtavi-logo-clean.png"
-                                        alt="Grand Theft Auto VI Logo"
-                                        className="h-28 sm:h-36 md:h-44 object-contain filter drop-shadow-[0_0_30px_rgba(255,45,120,0.65)]"
-                                        style={{ animation: "gtavi-glow-pulse 3s ease-in-out infinite" }}
-                                    />
-                                </div>
-                                <h2
-                                    className="font-black leading-[0.9] sr-only"
-                                >
+                                {(!la.gameName || la.gameName.toLowerCase().includes("grand theft auto") || la.gameName.toLowerCase().includes("gta")) ? (
+                                    <div className="mb-3">
+                                        <img
+                                            src="/gtavi-logo-clean.png"
+                                            alt="Grand Theft Auto VI Logo"
+                                            className="h-28 sm:h-36 md:h-44 object-contain filter drop-shadow-[0_0_30px_rgba(255,45,120,0.65)]"
+                                            style={{ animation: "gtavi-glow-pulse 3s ease-in-out infinite" }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="mb-3 space-y-2">
+                                        <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-amber-300 to-cyan-400 drop-shadow-[0_0_25px_rgba(255,45,120,0.5)]">
+                                            {la.gameName}
+                                        </h2>
+                                    </div>
+                                )}
+                                <h2 className="font-black leading-[0.9] sr-only">
                                     {la.gameName || "Grand Theft Auto VI"}
                                 </h2>
 
@@ -429,12 +435,12 @@ export function GTAVISection() {
                                 <div className="flex items-center gap-4 mt-4">
                                     <div className="h-[2px] flex-shrink-0 w-16"
                                         style={{ background: "linear-gradient(90deg, #ff2d78, rgba(255,45,120,0.2))" }} />
-                                    <span className="text-xs font-black tracking-[0.6em] uppercase flex-shrink-0"
+                                    <span className="text-xs font-black tracking-[0.4em] uppercase flex-shrink-0"
                                         style={{
                                             color: "#ff8c42",
                                             textShadow: "0 0 20px rgba(255,140,66,0.4)",
                                         }}>
-                                        VICE CITY
+                                        {la.gameName || "VICE CITY"}
                                     </span>
                                     <div className="h-[2px] flex-1"
                                         style={{ background: "linear-gradient(270deg, #00e5ff, rgba(0,229,255,0.1))" }} />
