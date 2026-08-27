@@ -1,6 +1,4 @@
-import pg from "pg";
-
-const pool = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL }) : null;
+import { pool } from "./db.js";
 
 export interface TelegramConfig {
   enabled: boolean;

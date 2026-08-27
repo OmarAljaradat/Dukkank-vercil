@@ -2,10 +2,9 @@ import { Router, type IRouter } from "express";
 import { verifyToken } from "./auth.js";
 import { requireAdmin, dbSave, dbLoad } from "../lib/storeDb.js";
 import { sendTelegramOrderNotification, getTelegramConfig, saveTelegramConfig, sendTelegramMessage } from "../lib/telegram.js";
-import pg from "pg";
+import { pool } from "../lib/db.js";
 
 const router: IRouter = Router();
-const pool = process.env.DATABASE_URL ? new pg.Pool({ connectionString: process.env.DATABASE_URL }) : null;
 
 export interface StoreOrder {
   id: number | string;
