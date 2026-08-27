@@ -577,6 +577,26 @@ export default function OrdersDashboardTab() {
           )}
         </div>
 
+                {/* Supplier Template Button */}
+        <button
+          onClick={() => setShowSupplierTemplateModal(true)}
+          data-testid="open-supplier-template-btn"
+          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-xs font-bold shadow-sm transition-all shrink-0"
+        >
+          <MessageCircle className="w-4 h-4 text-emerald-600" />
+          <span>قالب رسالة المورد 📝</span>
+        </button>
+
+        {/* Telegram Config Button */}
+        <button
+          onClick={() => setShowTgConfig(!showTgConfig)}
+          data-testid="toggle-tg-card-btn"
+          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold shadow-sm transition-all shrink-0"
+        >
+          <Bot className="w-4 h-4 text-blue-600" />
+          <span>إعدادات التيليجرام 🤖</span>
+        </button>
+
         {/* Reload Button */}
         <button
           onClick={loadAll}
@@ -728,6 +748,7 @@ export default function OrdersDashboardTab() {
                     onCancel={handleCancel}
                     onDelete={handleDelete}
                     openSupplierWhatsApp={openSupplierWhatsApp}
+            onOpenTemplate={() => setShowSupplierTemplateModal(true)}
                     openCustomerWhatsAppQR={openCustomerWhatsAppQR}
                     openCustomerInstagram={openCustomerInstagram}
                     onViewProfile={(phone) => setProfilePhone(phone)}
@@ -753,7 +774,8 @@ export default function OrdersDashboardTab() {
 function OrderExpandedPanel({
   order, suppliers, selectedSupplier, actionLoading,
   onForward, onReceive, onDeliver, onComplete, onCancel, onDelete,
-  openSupplierWhatsApp, openCustomerWhatsAppQR, openCustomerInstagram, onViewProfile
+  openSupplierWhatsApp,
+  onOpenTemplate, openCustomerWhatsAppQR, openCustomerInstagram, onViewProfile
 }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState(order.supplier_id || "");
   const [costPrice, setCostPrice] = useState(order.cost_price || "");
@@ -964,6 +986,14 @@ function OrderExpandedPanel({
                 >
                   <MessageCircle className="w-4 h-4" />
                   إرسال رسالة واتساب جاهزة للمورد 📲
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenTemplate}
+                  className="px-3 h-11 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold hover:bg-emerald-100"
+                  title="تخصيص صيغة نص رسالة طلب الحساب"
+                >
+                  ⚙️ تخصيص نص الرسالة
                 </button>
                 <button
                   disabled={!selectedSupplierId || isLoading}
