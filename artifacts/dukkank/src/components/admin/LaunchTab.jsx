@@ -657,7 +657,13 @@ https://dukkank.com`;
                                         <button
                                             key={g.id}
                                             type="button"
-                                            onClick={() => handleSelectGame(g.id)}
+                                            onClick={() => {
+                                                if (isSelected) {
+                                                    handleClearGameSelection();
+                                                } else {
+                                                    handleSelectGame(g.id);
+                                                }
+                                            }}
                                             className={`p-2.5 rounded-2xl border text-right flex items-center gap-3 transition cursor-pointer group ${
                                                 isSelected
                                                     ? "bg-amber-500/20 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
@@ -680,8 +686,11 @@ https://dukkank.com`;
                                                 </div>
                                             </div>
                                             {isSelected && (
-                                                <div className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 font-black text-xs">
-                                                    ✓
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    <div className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xs">
+                                                        ✓
+                                                    </div>
+                                                    <span className="text-[10px] text-red-300 bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/40">✕ إلغاء</span>
                                                 </div>
                                             )}
                                         </button>
