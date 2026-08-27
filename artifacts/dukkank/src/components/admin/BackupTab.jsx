@@ -1,15 +1,23 @@
 import { useState, useEffect, useRef } from "react";
+import { useStoreData } from "../../contexts/DataContext";
+import { 
+  apiUpdateGame, apiUpdateSubscription, apiUpdateSections, 
+  apiUpdateLaunchAnnouncement, apiUpdateSiteSettings, apiUpdateStore, 
+  apiUpdateContent, apiUpdateTheme, formatApiError 
+} from "../../lib/api";
 import { toast } from "sonner";
 import { 
   Database, Download, Upload, HardDrive, RefreshCw, 
-  Settings, Users, ShoppingBag, PieChart, Clock, FileJson, History as HistoryIcon
+  Settings, Users, ShoppingBag, PieChart, Clock, FileJson, History as HistoryIcon, Loader2
 } from "lucide-react";
 
-export default function BackupTab() {
+export default function BackupTab({ onSaved }) {
+  const storeData = useStoreData();
   const [backupHistory, setBackupHistory] = useState([]);
   const [autoBackup, setAutoBackup] = useState(false);
   const [backupInterval, setBackupInterval] = useState('weekly');
   const [storageUsage, setStorageUsage] = useState({ total: 0, products: 0, users: 0, settings: 0, marketing: 0 });
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -20,7 +28,7 @@ export default function BackupTab() {
         {
           id: Date.now() - 3600000,
           date: new Date(Date.now() - 3600000).toISOString(),
-          type: "نسخة كاملة للنظام",
+          type: "نسخة كاملة للنظام وقاعدة البيانات",
           filename: `dukkank-backup-system-${new Date().toISOString().split('T')[0]}.json`,
           status: "مكتمل بنجاح (Success)"
         }
@@ -34,7 +42,7 @@ export default function BackupTab() {
     setBackupInterval(localStorage.getItem('store_backup_interval') || 'weekly');
     
     calculateStorageUsage();
-  }, []);
+  }, [storeData]);
 
   const calculateStorageUsage = () => {
     let total = 0;
@@ -43,10 +51,11 @@ export default function BackupTab() {
     let settings = 0;
     let marketing = 0;
     
+    // Estimate localStorage
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       const val = localStorage.getItem(key) || '';
-      const size = val.length * 2; // Rough bytes estimate
+      const size = val.length * 2;
       total += size;
       
       if (key.includes('product') || key.includes('game') || key.includes('order')) products += size;
@@ -54,6 +63,16 @@ export default function BackupTab() {
       else if (key.includes('setting') || key.includes('config')) settings += size;
       else if (key.includes('campaign') || key.includes('marketing')) marketing += size;
     }
+
+    // Add Live Database object sizes
+    try {
+      const dbSize = JSON.stringify(storeData).length * 2;
+      total += dbSize;
+      products += JSON.stringify(storeData?.games || []).length * 2 + JSON.stringify(storeData?.subscriptions || []).length * 2;
+      users += JSON.stringify(storeData?.orders || []).length * 2;
+      settings += JSON.stringify(storeData?.siteSettings || {}).length * 2 + JSON.stringify(storeData?.store || {}).length * 2;
+      marketing += JSON.stringify(storeData?.coupons || []).length * 2;
+    } catch {}
     
     setStorageUsage({ total, products, users, settings, marketing });
   };
@@ -92,36 +111,95 @@ export default function BackupTab() {
   };
 
   const handleFullBackup = () => {
-    const data = {};
+    const localStore = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      data[key] = localStorage.getItem(key);
+      localStore[key] = localStorage.getItem(key);
     }
-    const filename = `dukkank-backup-full-${new Date().toISOString().split('T')[0]}.json`;
-    triggerDownload(data, filename);
-    addHistoryRecord('نسخة كاملة', filename);
-    toast.success("تم إنشاء وتحميل النسخة الاحتياطية بنجاح");
+
+    const fullPackage = {
+      _meta: {
+        source: "Dukkank Gaming Store Platform",
+        createdAt: new Date().toISOString(),
+        version: "2.5-PostgreSQL-Live",
+      },
+      database: {
+        store: storeData?.store || {},
+        games: storeData?.games || [],
+        subscriptions: storeData?.subscriptions || [],
+        sections: storeData?.sections || [],
+        launchAnnouncement: storeData?.launchAnnouncement || {},
+        siteSettings: storeData?.siteSettings || {},
+        theme: storeData?.theme || {},
+        content: storeData?.content || {},
+        coupons: storeData?.coupons || [],
+        reviews: storeData?.reviews || [],
+        orders: storeData?.orders || [],
+      },
+      localStorage: localStore,
+    };
+
+    const filename = `dukkank-database-backup-${new Date().toISOString().split('T')[0]}.json`;
+    triggerDownload(fullPackage, filename);
+    addHistoryRecord('نسخة كاملة لقاعدة البيانات', filename);
+    toast.success("تم إنشاء وتحميل نسخة قاعدة البيانات الاحتياطية بنجاح 💾✅");
   };
 
-  const handleSelectiveExport = (prefix, label) => {
-    const data = {};
+  const handleSelectiveExport = (category, label) => {
+    let exportData = {};
+    const localStore = {};
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key.includes(prefix)) {
-        data[key] = localStorage.getItem(key);
+      if (key.includes(category) || key.includes(label)) {
+        localStore[key] = localStorage.getItem(key);
       }
     }
-    const filename = `dukkank-backup-${prefix}-${new Date().toISOString().split('T')[0]}.json`;
-    triggerDownload(data, filename);
+
+    if (category === "products") {
+      exportData = {
+        games: storeData?.games || [],
+        subscriptions: storeData?.subscriptions || [],
+        sections: storeData?.sections || [],
+        launchAnnouncement: storeData?.launchAnnouncement || {},
+      };
+    } else if (category === "users") {
+      exportData = {
+        orders: storeData?.orders || [],
+        reviews: storeData?.reviews || [],
+        customers: JSON.parse(localStorage.getItem("store_registered_users") || "[]"),
+      };
+    } else if (category === "settings") {
+      exportData = {
+        store: storeData?.store || {},
+        siteSettings: storeData?.siteSettings || {},
+        theme: storeData?.theme || {},
+        content: storeData?.content || {},
+      };
+    } else if (category === "marketing") {
+      exportData = {
+        coupons: storeData?.coupons || [],
+        marketing: JSON.parse(localStorage.getItem("store_marketing_campaigns") || "[]"),
+      };
+    }
+
+    const payload = {
+      _meta: { category, label, createdAt: new Date().toISOString() },
+      data: exportData,
+      localStore,
+    };
+
+    const filename = `dukkank-${category}-${new Date().toISOString().split('T')[0]}.json`;
+    triggerDownload(payload, filename);
     addHistoryRecord(`تصدير: ${label}`, filename);
-    toast.success(`تم تصدير ${label} بنجاح`);
+    toast.success(`تم تصدير ${label} بنجاح 📤`);
   };
 
   const handleRestoreClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
@@ -131,18 +209,55 @@ export default function BackupTab() {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
-        const data = JSON.parse(event.target.result);
-        if (window.confirm("هل أنت متأكد من رغبتك في استعادة هذه النسخة؟ سيتم استبدال البيانات الحالية (المتطابقة).")) {
-          Object.keys(data).forEach(key => {
-            localStorage.setItem(key, data[key]);
-          });
-          toast.success("تمت استعادة البيانات بنجاح");
+        const parsed = JSON.parse(event.target.result);
+        if (window.confirm("هل أنت متأكد من رغبتك في استعادة هذه النسخة؟ سيتم تحديث قاعدة البيانات والبيانات الحالية.")) {
+          setIsProcessing(true);
+          
+          // 1. Restore Database entities if present
+          if (parsed.database) {
+            const db = parsed.database;
+            if (db.games && Array.isArray(db.games)) {
+              for (const g of db.games) {
+                if (g.id) await apiUpdateGame(g.id, g).catch(() => {});
+              }
+            }
+            if (db.subscriptions && Array.isArray(db.subscriptions)) {
+              for (const s of db.subscriptions) {
+                if (s.id) await apiUpdateSubscription(s.id, s).catch(() => {});
+              }
+            }
+            if (db.sections && Array.isArray(db.sections)) await apiUpdateSections(db.sections).catch(() => {});
+            if (db.launchAnnouncement) await apiUpdateLaunchAnnouncement(db.launchAnnouncement).catch(() => {});
+            if (db.siteSettings) await apiUpdateSiteSettings(db.siteSettings).catch(() => {});
+            if (db.store) await apiUpdateStore(db.store).catch(() => {});
+            if (db.content) await apiUpdateContent(db.content).catch(() => {});
+            if (db.theme) await apiUpdateTheme(db.theme).catch(() => {});
+          }
+
+          // 2. Restore LocalStorage
+          const localObj = parsed.localStorage || parsed;
+          if (typeof localObj === "object") {
+            Object.keys(localObj).forEach(key => {
+              if (key !== "database" && key !== "_meta") {
+                const val = typeof localObj[key] === "string" ? localObj[key] : JSON.stringify(localObj[key]);
+                localStorage.setItem(key, val);
+              }
+            });
+          }
+
+          toast.success("تمت استعادة بيانات المتجر وقاعدة البيانات بنجاح! 🚀");
           calculateStorageUsage();
+          onSaved?.();
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       } catch (err) {
-        toast.error("حدث خطأ أثناء قراءة الملف");
+        toast.error("حدث خطأ أثناء قراءة واستعادة الملف: " + formatApiError(err));
+      } finally {
+        setIsProcessing(false);
       }
     };
     reader.readAsText(file);
