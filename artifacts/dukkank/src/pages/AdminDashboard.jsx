@@ -195,35 +195,21 @@ export default function AdminDashboard() {
             <main className="max-w-7xl mx-auto px-3 sm:px-8 py-5 sm:py-8">
                 <Tabs value={tab} onValueChange={setTab} className="w-full">
                     {/* Sub-tab list (for current group) */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-5">
-                        <TabsList
-                            data-testid="admin-tabs"
-                            className="flex-1 flex flex-wrap gap-1 bg-white/70 dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/10 dark:border-white/10 rounded-2xl p-1.5 h-auto"
-                        >
-                            {groupTabs.map((tb) => (
-                                <TabsTrigger
-                                    key={tb.value}
-                                    value={tb.value}
-                                    data-testid={`tab-${tb.value}`}
-                                    className="data-[state=active]:bg-[hsl(var(--brand-ink))] data-[state=active]:text-[hsl(var(--brand-cream))] rounded-xl py-2 px-3 font-bold text-xs sm:text-sm whitespace-nowrap"
-                                >
-                                    {tb.label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-
-                        {activeGroup === "analytics" && (
-                            <button
-                                type="button"
-                                onClick={() => setShowResetConfirm(true)}
-                                data-testid="reset-analytics-btn"
-                                className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-black shadow-sm transition-all shrink-0 cursor-pointer"
+                    <TabsList
+                        data-testid="admin-tabs"
+                        className="w-full flex flex-wrap gap-1 bg-white/70 dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/10 dark:border-white/10 rounded-2xl p-1.5 h-auto mb-5"
+                    >
+                        {groupTabs.map((tb) => (
+                            <TabsTrigger
+                                key={tb.value}
+                                value={tb.value}
+                                data-testid={`tab-${tb.value}`}
+                                className="data-[state=active]:bg-[hsl(var(--brand-ink))] data-[state=active]:text-[hsl(var(--brand-cream))] rounded-xl py-2 px-3 font-bold text-xs sm:text-sm whitespace-nowrap"
                             >
-                                <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
-                                <span>تصفير الإحصائيات كمتجر جديد 0️⃣</span>
-                            </button>
-                        )}
-                    </div>
+                                {tb.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
 
                     {/* Tab contents (Lazy rendered per active tab) */}
                     <TabsContent value="analytics"    className="mt-0">{tab === "analytics" && <AnalyticsTab />}</TabsContent>

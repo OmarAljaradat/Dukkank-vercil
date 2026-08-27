@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { apiGetAnalytics, formatApiError } from "../../lib/api";
+import { apiGetAnalytics, apiResetStoreData, formatApiError } from "../../lib/api";
 import { GAMES, SUBSCRIPTIONS } from "../../data/products";
 import { toast } from "sonner";
 import {
     LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from "recharts";
 import {
-    BarChart3, RefreshCw, Users, ShoppingCart, Bell, Activity, Gamepad2, Download, Radio, Eye, ShieldCheck, Gift
+    BarChart3, RefreshCw, Users, ShoppingCart, Bell, Activity, Gamepad2, Download, Radio, Eye, ShieldCheck, Gift, RotateCcw, Loader2
 } from "lucide-react";
 
 const RANGES = [
@@ -16,28 +16,29 @@ const RANGES = [
     { value: 90, label: "آخر 90 يوم" },
 ];
 
-const DUKKANK_TOP_ITEMS = [
-    { name: "لعبة EA SPORTS FC 25 (حساب PS5/PS4)", count: 48, pct: 85 },
-    { name: "اشتراك PS Plus Extra (12 شهر)", count: 32, pct: 65 },
-    { name: "لعبة Grand Theft Auto V (PS5)", count: 24, pct: 50 },
-    { name: "اشتراك PS Plus Deluxe (12 شهر)", count: 18, pct: 38 },
-    { name: "لعبة Black Ops 6 (حساب PS5)", count: 14, pct: 30 },
-    { name: "بطاقات وإهداء الأصدقاء 🎁", count: 9, pct: 20 },
-];
-
-const DUKKANK_AUDIT_LOGS = [
-    { id: "1025", text: "تم شراء تسليم سريع ⚡ — لعبة FC 25 (حساب PS5)", time: "منذ 3 دقائق" },
-    { id: "1024", text: "تم تسليم بيانات الحساب تلقائياً للعميل — طلب #1024", time: "منذ 12 دقيقة" },
-    { id: "1023", text: "طلب جديد — اشتراك PS Plus Extra 12 شهر", time: "منذ 25 دقيقة" },
-    { id: "1022", text: "تم تفعيل شارة الضمان الذهبي للطلب #1019", time: "منذ 40 دقيقة" },
-    { id: "1021", text: "طلب إهداء لصديق — لعبة Spider-Man 2", time: "منذ ساعة" },
-];
-
 export default function AnalyticsTab() {
     const [days, setDays]       = useState(7);
     const [data, setData]       = useState(null);
     const [loading, setLoading] = useState(false);
     const [online, setOnline]   = useState(1);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetting, setResetting] = useState(false);
+
+    const handleResetAll = async () => {
+        setResetting(true);
+        try {
+            await apiResetStoreData();
+            localStorage.removeItem("dukkank_admin_expenses");
+            localStorage.removeItem("dukkank_weekly_goal");
+            toast.success("تم تصفير كافة الطلبات والإحصائيات بنجاح! المتجر يبدأ الآن من الصفر 🚀");
+            setShowResetConfirm(false);
+            await reload(days);
+        } catch (e) {
+            toast.error("فشل تصفير الإحصائيات: " + formatApiError(e));
+        } finally {
+            setResetting(false);
+        }
+    };
 
     const reload = useCallback(async (d = days) => {
         setLoading(true);
@@ -155,6 +156,16 @@ export default function AnalyticsTab() {
                         <Download className="w-4 h-4" />
                         <span>تصدير CSV</span>
                     </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setShowResetConfirm(true)}
+                        title="تصفير الإحصائيات كمتجر جديد"
+                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>تصفير المتجر كجديد 0️⃣</span>
+                    </button>
                 </div>
             </div>
 
@@ -164,7 +175,7 @@ export default function AnalyticsTab() {
                     <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
                         <Eye className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">{(totals.visits || 3420).toLocaleString("ar-EG")}</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{(totals.visits || 0).toLocaleString("ar-EG")}</div>
                     <div className="text-xs font-bold text-slate-500">زوار المتجر</div>
                 </div>
 
@@ -172,7 +183,7 @@ export default function AnalyticsTab() {
                     <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                         <Users className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">{(totals.users || 145).toLocaleString("ar-EG")}</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{(totals.users || 0).toLocaleString("ar-EG")}</div>
                     <div className="text-xs font-bold text-slate-500">المستخدمين المسجلين</div>
                 </div>
 
@@ -180,16 +191,16 @@ export default function AnalyticsTab() {
                     <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
                         <ShoppingCart className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">{(totals.orders || 84).toLocaleString("ar-EG")}</div>
-                    <div className="text-xs font-bold text-slate-500">طلبات الألعاب المكتملة</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{(totals.orders || 0).toLocaleString("ar-EG")}</div>
+                    <div className="text-xs font-bold text-slate-500">إجمالي الطلبات</div>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.04] border border-slate-100 dark:border-white/10 shadow-sm flex flex-col items-center justify-center text-center space-y-1.5">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
                         <Gamepad2 className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">{GAMES.length}</div>
-                    <div className="text-xs font-bold text-slate-500">الألعاب المتاحة</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{totals.activeGames || GAMES.length}</div>
+                    <div className="text-xs font-bold text-slate-500">ألعاب واشتراكات مفعّلة</div>
                 </div>
             </div>
 
@@ -233,7 +244,7 @@ export default function AnalyticsTab() {
                     </div>
 
                     <div className="space-y-3 pt-2">
-                        {(data?.topItems && data.topItems.length > 0 ? data.topItems : DUKKANK_TOP_ITEMS).map((s, idx) => (
+                        {(data?.topItems && data.topItems.length > 0 ? data.topItems : []).map((s, idx) => (
                             <div key={idx} className="space-y-1.5">
                                 <div className="flex items-center justify-between text-xs font-bold">
                                     <span className="text-slate-800 dark:text-slate-200">{s.name}</span>
@@ -260,7 +271,7 @@ export default function AnalyticsTab() {
                     </div>
 
                     <div className="space-y-3 pt-2">
-                        {(data?.auditLogs && data.auditLogs.length > 0 ? data.auditLogs : DUKKANK_AUDIT_LOGS).map((item) => (
+                        {(data?.auditLogs && data.auditLogs.length > 0 ? data.auditLogs : []).map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
@@ -276,6 +287,42 @@ export default function AnalyticsTab() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Reset Store Data Confirmation Modal ───────────────────── */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in" onClick={() => setShowResetConfirm(false)}>
+                    <div className="bg-white dark:bg-slate-900 border border-rose-500/30 rounded-3xl w-full max-w-md shadow-2xl p-6 relative text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center text-2xl mb-4 mx-auto">
+                            ⚠️
+                        </div>
+                        <h3 className="font-black text-base text-slate-900 dark:text-white text-center mb-2">
+                            تصفير وإعادة تعيين المتجر كجديد 0️⃣
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center mb-6 leading-relaxed">
+                            سيتم حذف كافة الطلبات التجريبية وتصفير الإحصائيات والأرباح لتبدأ جميع الشاشات من الصفر ($0.00 و 0 طلبات) كمتجر جديد تماماً وجاهز لاستقبال الزبائن الحقيقيين.
+                        </p>
+
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowResetConfirm(false)}
+                                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                type="button"
+                                disabled={resetting}
+                                onClick={handleResetAll}
+                                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-black hover:bg-rose-700 shadow-lg shadow-rose-600/25 transition-all disabled:opacity-50"
+                            >
+                                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                                <span>تأكيد التصفير والبدء من الصفر 🚀</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
