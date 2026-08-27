@@ -63,4 +63,51 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use("/api", globalLimiter, router);
 
+// Dynamic robots.txt for Google / Bing / Social Crawlers
+app.get("/robots.txt", (_req: Request, res: Response) => {
+  res.type("text/plain");
+  res.send(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /_next/
+
+Sitemap: https://www.dukkank.store/sitemap.xml
+`);
+});
+
+// Dynamic sitemap.xml for Google Search Console
+app.get("/sitemap.xml", (_req: Request, res: Response) => {
+  res.type("application/xml");
+  const baseUrl = "https://www.dukkank.store";
+  const now = new Date().toISOString();
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/all-games</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/reviews</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/policies</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>`);
+});
+
 export default app;

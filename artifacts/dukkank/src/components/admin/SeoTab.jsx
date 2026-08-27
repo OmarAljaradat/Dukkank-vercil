@@ -93,7 +93,8 @@ export default function SeoTab() {
 
   const handleSave = () => {
     setSeo(seoData);
-    toast.success("تم حفظ إعدادات SEO بنجاح!");
+    window.dispatchEvent(new CustomEvent("dukkank-seo-change", { detail: seoData }));
+    toast.success("تم حفظ إعدادات SEO وتطبيقها على كافة وسوم الموقع بنجاح! 🚀");
   };
 
   const getScoreColor = () => {
