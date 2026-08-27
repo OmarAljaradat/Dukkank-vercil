@@ -92,31 +92,33 @@ export default function LaunchTab({ onChanged }) {
         }
 
         const launchDate = new Date("2025-10-28");
-        const launchIso = launchDate.toISOString().split("T")[0];
+        const defaultLaunchIso = launchDate.toISOString().split("T")[0];
 
+        const isSameTheme = form.theme === "vice";
         const newData = {
+            ...form,
             enabled: true,
             theme: "vice",
-            gameName: "Grand Theft Auto VI",
-            badge: "🔥 الإصدار الأضخم في تاريخ الألعاب",
-            subtitle: "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
-            description: "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
-            price5: 45.0,
-            price4: 28.0,
-            ctaLabel: "احجز نسختك الآن 🔥",
-            ctaHref: "#games",
-            image: "",
-            imageUrl: "",
-            bonusGift: "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
-            rating: "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
-            stockLeft: 12,
-            trailerUrl: "https://www.youtube.com/embed/QdBZY2fkU-0",
-            countdownTarget: launchIso,
-            launchDate: launchIso,
-            note: "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
+            gameName: isSameTheme && form.gameName ? form.gameName : (form.gameName || "Grand Theft Auto VI"),
+            badge: isSameTheme && form.badge ? form.badge : "🔥 الإصدار الأضخم في تاريخ الألعاب",
+            subtitle: isSameTheme && form.subtitle ? form.subtitle : "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
+            description: isSameTheme && form.description ? form.description : "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
+            price5: isSameTheme && form.price5 != null ? form.price5 : (form.price5 || 45.0),
+            price4: isSameTheme && form.price4 != null ? form.price4 : (form.price4 || 28.0),
+            ctaLabel: isSameTheme && form.ctaLabel ? form.ctaLabel : (form.ctaLabel || "احجز نسختك الآن 🔥"),
+            ctaHref: form.ctaHref || "#games",
+            image: form.image || "",
+            imageUrl: form.imageUrl || "",
+            bonusGift: isSameTheme && form.bonusGift ? form.bonusGift : "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
+            rating: isSameTheme && form.rating ? form.rating : "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
+            stockLeft: isSameTheme && form.stockLeft != null ? form.stockLeft : (form.stockLeft || 12),
+            trailerUrl: isSameTheme && form.trailerUrl ? form.trailerUrl : (form.trailerUrl || "https://www.youtube.com/embed/QdBZY2fkU-0"),
+            countdownTarget: isSameTheme && form.countdownTarget ? form.countdownTarget : (form.countdownTarget || defaultLaunchIso),
+            launchDate: isSameTheme && form.launchDate ? form.launchDate : (form.launchDate || defaultLaunchIso),
+            note: isSameTheme && form.note ? form.note : "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
             currency: "$",
-            platform5: "PS5",
-            platform4: "PS4",
+            platform5: form.platform5 || "PS5",
+            platform4: form.platform4 || "PS4",
         };
 
         setForm(newData);
@@ -149,31 +151,33 @@ export default function LaunchTab({ onChanged }) {
 
         const launchDate = new Date();
         launchDate.setDate(launchDate.getDate() + 14);
-        const launchIso = launchDate.toISOString().split("T")[0];
+        const defaultLaunchIso = launchDate.toISOString().split("T")[0];
 
+        const isSameTheme = form.theme === "eafc";
         const newData = {
+            ...form,
             enabled: true,
             theme: "eafc",
-            gameName: "EA SPORTS FC 27",
-            badge: "⚽ انطلاقة الموسم الكروي الجديد",
-            subtitle: "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
-            description: "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
-            price5: 42.0,
-            price4: 24.0,
-            ctaLabel: "احصل على نسختك الآن ⚡",
-            ctaHref: "#games",
-            image: "",
-            imageUrl: "",
-            bonusGift: "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
-            rating: "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
-            stockLeft: 15,
-            trailerUrl: "",
-            countdownTarget: launchIso,
-            launchDate: launchIso,
-            note: "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
+            gameName: isSameTheme && form.gameName ? form.gameName : (form.gameName || "EA SPORTS FC 27"),
+            badge: isSameTheme && form.badge ? form.badge : "⚽ انطلاقة الموسم الكروي الجديد",
+            subtitle: isSameTheme && form.subtitle ? form.subtitle : "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
+            description: isSameTheme && form.description ? form.description : "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
+            price5: isSameTheme && form.price5 != null ? form.price5 : (form.price5 || 42.0),
+            price4: isSameTheme && form.price4 != null ? form.price4 : (form.price4 || 24.0),
+            ctaLabel: isSameTheme && form.ctaLabel ? form.ctaLabel : (form.ctaLabel || "احصل على نسختك الآن ⚡"),
+            ctaHref: form.ctaHref || "#games",
+            image: form.image || "",
+            imageUrl: form.imageUrl || "",
+            bonusGift: isSameTheme && form.bonusGift ? form.bonusGift : "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
+            rating: isSameTheme && form.rating ? form.rating : "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
+            stockLeft: isSameTheme && form.stockLeft != null ? form.stockLeft : (form.stockLeft || 15),
+            trailerUrl: form.trailerUrl || "",
+            countdownTarget: isSameTheme && form.countdownTarget ? form.countdownTarget : (form.countdownTarget || defaultLaunchIso),
+            launchDate: isSameTheme && form.launchDate ? form.launchDate : (form.launchDate || defaultLaunchIso),
+            note: isSameTheme && form.note ? form.note : "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
             currency: "$",
-            platform5: "PS5",
-            platform4: "PS4",
+            platform5: form.platform5 || "PS5",
+            platform4: form.platform4 || "PS4",
         };
 
         setForm(newData);
@@ -204,14 +208,17 @@ export default function LaunchTab({ onChanged }) {
             return;
         }
 
+        const isSameTheme = form.theme === "gold";
         const newData = {
             ...form,
             enabled: true,
             theme: "gold",
-            gameName: form.gameName || "Call of Duty: Black Ops 7",
-            badge: form.badge || "🔥 متوفر الآن للطلب المباشر والتسليم الفوري",
-            price5: form.price5 || 38.5,
-            price4: form.price4 || 18.5,
+            gameName: isSameTheme && form.gameName ? form.gameName : (form.gameName || "Call of Duty: Black Ops 7"),
+            badge: isSameTheme && form.badge ? form.badge : (form.badge || "🔥 متوفر الآن للطلب المباشر والتسليم الفوري"),
+            subtitle: isSameTheme && form.subtitle ? form.subtitle : (form.subtitle || "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق"),
+            description: isSameTheme && form.description ? form.description : (form.description || "احصل على اللعبة بأفضل سعر مع ضمان ذهبي شامل وتفعيل فوري على أجهزة PS4 و PS5."),
+            price5: isSameTheme && form.price5 != null ? form.price5 : (form.price5 || 38.5),
+            price4: isSameTheme && form.price4 != null ? form.price4 : (form.price4 || 18.5),
             currency: "$",
         };
         setForm(newData);
