@@ -9,8 +9,23 @@ import {
 
 const REMOVED_SECTION_IDS = ["bundles", "bundleBuilder", "recommender", "emailSignup", "promoBanner"];
 
+const SECTION_TITLES_AR = {
+    hero: "الواجهة الرئيسية والبانر الترحيبي (Hero)",
+    gamelaunch: "إعلان إطلاق الألعاب الكبرى (Launch Banner)",
+    essential: "اشتراكات بلايستيشن بلس الأساسي (PS Plus Essential)",
+    extra: "اشتراكات بلايستيشن بلس إكسترا (PS Plus Extra)",
+    deluxe: "اشتراكات بلايستيشن بلس ديلوكس (PS Plus Deluxe)",
+    comparison: "جدول مقارنة باقات واشتراكات بلس",
+    games: "متجر الألعاب الرقمية والمخزون الحصري",
+    howItWorks: "خطوات الشراء والتفعيل الفوري",
+    goldenGuarantee: "قسم الضمان الذهبي والأمان",
+    aboutStore: "عن متجر دُكانك ومميزاتنا",
+    reviews: "آراء وتقييمات العملاء الموثوقة",
+    faq: "الأسئلة الشائعة والدعم الفني المباشر",
+};
+
 const SECTION_CATEGORIES = {
-    hero: { label: "الواجهة الرئيسية (Hero) 🚀", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+    hero: { label: "الواجهة الرئيسية 🚀", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
     gamelaunch: { label: "افتتاحية المتجر 📢", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
     essential: { label: "اشتراكات 📦", color: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" },
     extra: { label: "اشتراكات 📦", color: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" },
@@ -274,7 +289,7 @@ export default function SectionsTab({ onChanged }) {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-extrabold text-sm text-slate-900 dark:text-white">
-                                        {s.label || s.id}
+                                        {SECTION_TITLES_AR[s.id] || s.label || s.name || s.id}
                                     </span>
                                     <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${cat.color}`}>
                                         {cat.label}
