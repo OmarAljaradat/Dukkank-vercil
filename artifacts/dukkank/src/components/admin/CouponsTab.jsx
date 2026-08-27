@@ -46,8 +46,24 @@ export default function CouponsTab({ onChanged }) {
 
     // Save Promo Banner Handler
     const handleSavePromo = (updated) => {
-        const newPromo = updated || promoForm;
-        setPromo(newPromo);
+        const newForm = updated || promoForm;
+        const fullPromo = {
+            ...(promo || {}),
+            ...newForm,
+            headerBanner: {
+                ...(promo?.headerBanner || {}),
+                enabled: newForm.enabled,
+                title: newForm.title,
+                buttonText: newForm.ctaLabel,
+            },
+            flashSale: {
+                ...(promo?.flashSale || {}),
+                enabled: newForm.enabled,
+                title: newForm.title,
+                subtitle: newForm.subtitle,
+            }
+        };
+        setPromo(fullPromo);
         toast.success("تم تحديث ونشر شريط العروض الفلاش بالمتجر بنجاح 🟢");
         onChanged?.();
     };
@@ -55,10 +71,23 @@ export default function CouponsTab({ onChanged }) {
     // Toggle Promo Banner Immediately
     const togglePromoEnabled = () => {
         const nextEnabled = !promoForm.enabled;
-        const newPromo = { ...promoForm, enabled: nextEnabled };
-        setPromoForm(newPromo);
-        setPromo(newPromo);
-        toast.success(nextEnabled ? "🟢 تم عرض شريط العروض الفلاش بالصفحة الرئيسية!" : "🙈 تم إخفاء شريط العروض الفلاش من المتجر!");
+        const newPromoForm = { ...promoForm, enabled: nextEnabled };
+        const fullPromo = {
+            ...(promo || {}),
+            ...newPromoForm,
+            enabled: nextEnabled,
+            headerBanner: {
+                ...(promo?.headerBanner || {}),
+                enabled: nextEnabled,
+            },
+            flashSale: {
+                ...(promo?.flashSale || {}),
+                enabled: nextEnabled,
+            }
+        };
+        setPromoForm(newPromoForm);
+        setPromo(fullPromo);
+        toast.success(nextEnabled ? "🟢 تم إظهار وتفعيل شريط العروض بالمتجر!" : "🙈 تم إخفاء شريط العروض بالكامل من المتجر!");
         onChanged?.();
     };
 

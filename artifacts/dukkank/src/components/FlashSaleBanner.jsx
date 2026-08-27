@@ -28,6 +28,7 @@ export function FlashSaleBanner() {
     return () => clearInterval(interval);
   }, [flash?.enabled, flash?.endTime]);
 
+  if (!promo || promo.enabled === false) return null;
   if (!flash || flash.enabled !== true) return null;
 
   const handleCopyCode = () => {

@@ -251,9 +251,9 @@ const loadLocal = (key, fallback) => {
 const loadOverrides = () => {
     try {
         const item = localStorage.getItem("dukkank_admin_overrides_v2");
-        return item ? JSON.parse(item) : { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {} };
+        return item ? JSON.parse(item) : { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {}, promo: {} };
     } catch {
-        return { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {} };
+        return { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {}, promo: {} };
     }
 };
 
@@ -331,6 +331,11 @@ export function DataProvider({ children }) {
     };
 
     const setPromo = (val) => {
+        if (val && typeof val === "object") {
+            const overrides = loadOverrides();
+            overrides.promo = { ...val, updatedAt: Date.now() };
+            saveOverrides(overrides);
+        }
         setPromoState(val);
         saveLocal("dukkank_live_promo", val);
         const token = getToken();
@@ -481,16 +486,19 @@ export function DataProvider({ children }) {
     };
 
     const mergePromo = (fetched) => {
-        if (!fetched || typeof fetched !== "object" || Array.isArray(fetched)) return promo;
-        return {
+        const overrides = loadOverrides();
+        const promoOverride = overrides.promo && typeof overrides.promo === "object" ? overrides.promo : {};
+        const base = {
             ...FALLBACK_PROMO,
-            ...fetched,
-            headerBanner: { ...FALLBACK_PROMO.headerBanner, ...(fetched.headerBanner || {}) },
-            flashSale: { ...FALLBACK_PROMO.flashSale, ...(fetched.flashSale || {}) },
-            popupModal: { ...FALLBACK_PROMO.popupModal, ...(fetched.popupModal || {}) },
-            rewardBox: { ...FALLBACK_PROMO.rewardBox, ...(fetched.rewardBox || {}) },
-            applePayNotice: { ...FALLBACK_PROMO.applePayNotice, ...(fetched.applePayNotice || {}) },
+            ...(fetched || {}),
+            ...promoOverride,
+            headerBanner: { ...FALLBACK_PROMO.headerBanner, ...(fetched?.headerBanner || {}), ...(promoOverride.headerBanner || {}) },
+            flashSale: { ...FALLBACK_PROMO.flashSale, ...(fetched?.flashSale || {}), ...(promoOverride.flashSale || {}) },
+            popupModal: { ...FALLBACK_PROMO.popupModal, ...(fetched?.popupModal || {}), ...(promoOverride.popupModal || {}) },
+            rewardBox: { ...FALLBACK_PROMO.rewardBox, ...(fetched?.rewardBox || {}), ...(promoOverride.rewardBox || {}) },
+            applePayNotice: { ...FALLBACK_PROMO.applePayNotice, ...(fetched?.applePayNotice || {}), ...(promoOverride.applePayNotice || {}) },
         };
+        return base;
     };
 
     const mergeLaunchAnnouncement = (fetched) => {
