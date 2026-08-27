@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import {
     AreaChart, Area, BarChart, Bar, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip
 } from "recharts";
-import { Plus, Trash2, Wallet, Handshake, CheckCircle2, Clock, RefreshCw, Loader2, DollarSign, TrendingUp } from "lucide-react";
-import { apiListOrders } from "../../lib/api";
+import { Plus, Trash2, Wallet, Handshake, CheckCircle2, Clock, RefreshCw, Loader2, DollarSign, TrendingUp, RotateCcw } from "lucide-react";
+import { apiListOrders, apiResetStoreData, formatApiError } from "../../lib/api";
 import { toast } from "sonner";
 
 const PROFIT_CURVE = [
@@ -35,6 +35,9 @@ const DEFAULT_SUPPLIER_COSTS = [
 export default function FinanceTab() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetting, setResetting] = useState(false);
+
     const [expenses, setExpenses] = useState(() => {
         try {
             const saved = localStorage.getItem("dukkank_admin_expenses");
@@ -88,6 +91,24 @@ export default function FinanceTab() {
         toast.success("تم حذف المصرف بنجاح");
     };
 
+    const handleResetAll = async () => {
+        setResetting(true);
+        try {
+            await apiResetStoreData();
+            localStorage.removeItem("dukkank_admin_expenses");
+            localStorage.removeItem("dukkank_weekly_goal");
+            setExpenses([]);
+            setOrders([]);
+            toast.success("تم تصفير وإعادة ضبط كافة الطلبات والإحصائيات بنجاح! المتجر جاهز من الصفر 🚀");
+            setShowResetConfirm(false);
+            await fetchOrders();
+        } catch (e) {
+            toast.error("فشل تصفير الإحصائيات: " + formatApiError(e));
+        } finally {
+            setResetting(false);
+        }
+    };
+
     // Live financial computations
     const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.customer_paid) || 0), 0);
     const totalSupplierCost = orders.reduce((sum, o) => sum + (parseFloat(o.cost_price) || 0), 0);
@@ -110,8 +131,59 @@ export default function FinanceTab() {
 
     const displaySupplierCosts = dynamicSupplierCosts;
 
+    const monthlySummaryData = orders.length > 0 ? [
+        {
+            month: "الشهر الحالي",
+            revenue: `$${totalRevenue.toFixed(2)}`,
+            supplierCost: `$${totalSupplierCost.toFixed(2)}`,
+            adminExpenses: `$${totalAdminExpenses.toFixed(2)}`,
+            netProfit: `$${netProfit.toFixed(2)}`,
+            margin: `${profitMargin}%`
+        }
+    ] : [];
+
     return (
         <div className="space-y-6">
+            {/* Top Action Bar */}
+            <div className="flex items-center justify-between flex-wrap gap-3 bg-gradient-to-r from-slate-900 via-slate-950 to-emerald-950 p-4 rounded-3xl text-white shadow-md border border-white/10">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30">
+                        💹
+                    </div>
+                    <div>
+                        <h2 className="text-sm font-black text-white flex items-center gap-2">
+                            <span>لوحة الأرباح والتقارير المالية المباشرة</span>
+                            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                متصل بقاعدة البيانات
+                            </span>
+                        </h2>
+                        <p className="text-xs text-slate-400">
+                            حسابات فورية للأرباح الصافية وتكاليف التوريد والمصروفات الإدارية
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={fetchOrders}
+                        disabled={loading}
+                        className="flex items-center gap-1.5 px-4 h-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
+                    >
+                        <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+                        <span>تحديث</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setShowResetConfirm(true)}
+                        className="flex items-center gap-1.5 px-4 h-10 rounded-2xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 text-xs font-black transition-all shadow-sm cursor-pointer"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                        <span>تصفير المتجر كجديد 0️⃣</span>
+                    </button>
+                </div>
+            </div>
             {/* Top 5 KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-white dark:bg-white/[0.04] p-5 rounded-3xl border border-slate-100 dark:border-white/10 shadow-sm space-y-1">
@@ -234,16 +306,24 @@ export default function FinanceTab() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200">
-                            {MONTHLY_SUMMARY.map((r, idx) => (
-                                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                    <td className="py-4 font-black">{r.month}</td>
-                                    <td className="py-4 text-blue-600 font-extrabold">{r.revenue}</td>
-                                    <td className="py-4 text-amber-600">{r.supplierCost}</td>
-                                    <td className="py-4 text-red-500">{r.adminExpenses}</td>
-                                    <td className="py-4 text-emerald-600 font-extrabold">{r.netProfit}</td>
-                                    <td className="py-4 font-black">{r.margin}</td>
+                            {monthlySummaryData.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="text-center py-8 text-xs font-bold text-slate-400">
+                                        بانتظار تسجيل المبيعات الأولى لتوليد تقارير الأرباح الشهرية 📊
+                                    </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                monthlySummaryData.map((r, idx) => (
+                                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                        <td className="py-4 font-black">{r.month}</td>
+                                        <td className="py-4 text-blue-600 font-extrabold">{r.revenue}</td>
+                                        <td className="py-4 text-amber-600">{r.supplierCost}</td>
+                                        <td className="py-4 text-red-500">{r.adminExpenses}</td>
+                                        <td className="py-4 text-emerald-600 font-extrabold">{r.netProfit}</td>
+                                        <td className="py-4 font-black">{r.margin}</td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -265,7 +345,7 @@ export default function FinanceTab() {
                                         <div className="text-[10px] text-slate-400">{ex.date} • {ex.category}</div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-red-600 font-extrabold">{ex.amount}</span>
+                                        <span className="text-red-600 font-extrabold">{ex.formattedAmount || `$${ex.amount}`}</span>
                                         <button onClick={() => handleDeleteExpense(ex.id)} className="p-1 text-slate-400 hover:text-red-600">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -332,6 +412,42 @@ export default function FinanceTab() {
                     </form>
                 </div>
             </div>
+
+            {/* ── Reset Store Data Confirmation Modal ───────────────────── */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in" onClick={() => setShowResetConfirm(false)}>
+                    <div className="bg-white dark:bg-slate-900 border border-rose-500/30 rounded-3xl w-full max-w-md shadow-2xl p-6 relative text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center text-2xl mb-4 mx-auto">
+                            ⚠️
+                        </div>
+                        <h3 className="font-black text-base text-slate-900 dark:text-white text-center mb-2">
+                            تصفير وإعادة تعيين المتجر كجديد 0️⃣
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center mb-6 leading-relaxed">
+                            سيتم حذف كافة الطلبات التجريبية وتصفير الإحصائيات والأرباح لتبدأ جميع الشاشات من الصفر ($0.00 و 0 طلبات) كمتجر جديد تماماً وجاهز لاستقبال الزبائن الحقيقيين.
+                        </p>
+
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowResetConfirm(false)}
+                                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                type="button"
+                                disabled={resetting}
+                                onClick={handleResetAll}
+                                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-black hover:bg-rose-700 shadow-lg shadow-rose-600/25 transition-all disabled:opacity-50"
+                            >
+                                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                                <span>تأكيد التصفير والبدء من الصفر 🚀</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
