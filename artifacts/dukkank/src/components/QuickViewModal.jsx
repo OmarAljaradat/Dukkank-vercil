@@ -133,9 +133,9 @@ export function QuickViewModal({ open, onClose, game }) {
                                 <ShieldCheck className="w-4 h-4 shrink-0" />
                                 <span>ضمان رسمي واستبدال فوري عند وجود خلل</span>
                             </div>
-                            <div className="flex items-center gap-2 text-amber-600">
+                            <div className="flex items-center gap-2 text-emerald-600">
                                 <Zap className="w-4 h-4 shrink-0" />
-                                <span>متبقي 3 قطع فقط بالسعر المعروض ⚡</span>
+                                <span>متوفر للتسليم الفوري ⚡</span>
                             </div>
                         </div>
                     </div>

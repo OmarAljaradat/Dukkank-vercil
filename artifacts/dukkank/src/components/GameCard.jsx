@@ -165,11 +165,11 @@ export const GameCard = ({ game }) => {
                         <span className="text-[10px] text-[hsl(var(--brand-ink))]/40 self-center mr-auto">{platformLabel}</span>
                     </div>
 
-                    {/* Stock Urgency Badge */}
+                    {/* Stock Badge */}
                     {isAvailable && hasPrice && (
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg w-max mt-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                            <span>متبقي 3 قطع فقط بالسعر الحالي ⚡</span>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg w-max mt-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span>متوفر للتسليم ⚡</span>
                         </div>
                     )}
 
@@ -272,11 +272,11 @@ export const GameCard = ({ game }) => {
                 </h3>
                 <p className="text-xs sm:text-sm text-[hsl(var(--brand-ink))]/60 mt-1">{game.sub}</p>
 
-                {/* Stock Urgency Badge */}
+                {/* Stock Badge */}
                 {isAvailable && hasPrice && (
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg w-max mt-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                        <span>متبقي 3 قطع فقط بالسعر الحالي ⚡</span>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg w-max mt-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>متوفر للتسليم الفوري ⚡</span>
                     </div>
                 )}
 
