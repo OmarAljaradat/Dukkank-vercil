@@ -58,6 +58,19 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+import { isBlocked } from "./routes/security.js";
+
+// IP Firewall Middleware — Blocks blacklisted IPs immediately
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const rawIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket?.remoteAddress || "";
+  const cleanIp = rawIp.replace("::ffff:", "").trim();
+  if (cleanIp && isBlocked(cleanIp) && !req.url.startsWith("/api/auth/me") && !req.url.startsWith("/api/admin")) {
+    res.status(403).json({ error: "تم حظر هذا العنوان من الوصول إلى المنصة لأسباب أمنية." });
+    return;
+  }
+  next();
+});
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
