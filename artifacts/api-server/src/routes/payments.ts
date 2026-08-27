@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { verifyToken } from "./auth.js";
+import { sendTelegramOrderNotification } from "../lib/telegram.js";
 import pg from "pg";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -58,13 +59,13 @@ async function createStoreOrderFromPayment(order: PaymentOrder) {
     const customerPaid = order.totalPrice || 0;
     const gatewayFee = +(customerPaid * 0.05).toFixed(2);
 
-    await pool.query(
+    const { rows: insertedRows } = await pool.query(
       `INSERT INTO store_orders (
         order_number, customer_name, product_type, game_name, platform,
-        contact_whatsapp, customer_phone, customer_email,
+        contact_whatsapp, customer_phone, customer_email, contact_instagram,
         status, customer_paid, payment_platform, gateway_fee,
         order_source, paytabs_tran_ref, items_json, notes
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
       [
         orderNumber,
         order.customer.name,
@@ -74,6 +75,7 @@ async function createStoreOrderFromPayment(order: PaymentOrder) {
         order.customer.phone,
         order.customer.phone,
         order.customer.email,
+        (order.customer as any).instagram || null,
         "new",
         customerPaid,
         "PayTabs",
@@ -84,6 +86,11 @@ async function createStoreOrderFromPayment(order: PaymentOrder) {
         `طلب أونلاين — ${order.currency} ${order.totalPrice}`,
       ]
     );
+
+    if (insertedRows && insertedRows[0]) {
+      sendTelegramOrderNotification(insertedRows[0]).catch(() => {});
+    }
+
     console.log(`[OrderDukkank] Auto-created store order ${orderNumber} from PayTabs payment ${order.id}`);
     return orderNumber;
   } catch (err: any) {

@@ -101,6 +101,7 @@ export default function AllCartPage() {
     const [customerName, setCustomerName] = useState(customer?.name || "");
     const [customerPhone, setCustomerPhone] = useState(customer?.phone || "");
     const [customerEmail, setCustomerEmail] = useState(customer?.email || "");
+    const [customerInstagram, setCustomerInstagram] = useState("");
     const [payLoading, setPayLoading] = useState(false);
 
     // Feature 3: Progress Bar Goal ($50 threshold)
@@ -160,6 +161,7 @@ export default function AllCartPage() {
                     name: effectiveName,
                     phone: effectivePhone,
                     email: effectiveEmail,
+                    instagram: customerInstagram.trim() || undefined,
                 },
                 items: formattedItems,
                 totalPrice: convert(finalTotal),
@@ -449,6 +451,18 @@ export default function AllCartPage() {
                                             onChange={(e) => setCustomerPhone(e.target.value)}
                                             placeholder="079... أو 00962..."
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-xs font-bold focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">حساب إنستغرام للتواصل والتسليم (اختياري)</label>
+                                        <input
+                                            type="text"
+                                            value={customerInstagram}
+                                            onChange={(e) => setCustomerInstagram(e.target.value)}
+                                            placeholder="@your_instagram"
+                                            className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-xs font-bold focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]"
+                                            dir="ltr"
                                         />
                                     </div>
 

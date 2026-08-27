@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { verifyToken } from "./auth.js";
 import { requireAdmin, dbSave, dbLoad } from "../lib/storeDb.js";
+import { sendTelegramOrderNotification, getTelegramConfig, saveTelegramConfig, sendTelegramMessage } from "../lib/telegram.js";
 import pg from "pg";
 
 const router: IRouter = Router();
@@ -175,8 +176,11 @@ router.post("/admin/store-orders", async (req, res) => {
           body.paytabs_tran_ref || null, body.items_json ? JSON.stringify(body.items_json) : null
         ]
       );
-      res.status(201).json(rows[0]);
-      return;
+      if (rows && rows[0]) {
+        sendTelegramOrderNotification(rows[0]).catch(() => {});
+        res.status(201).json(rows[0]);
+        return;
+      }
     } catch (e) {}
   }
 
@@ -448,6 +452,46 @@ router.get("/admin/customer-profile/:phone", async (req, res) => {
       completedOrders: matchingOrders.filter(o => o.status === "completed" || o.status === "delivered").length
     }
   });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Telegram Bot Configuration & Test ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+router.get("/admin/telegram/config", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const cfg = await getTelegramConfig();
+  res.json({
+    enabled: cfg.enabled,
+    botToken: cfg.botToken ? `${cfg.botToken.slice(0, 6)}...${cfg.botToken.slice(-4)}` : "",
+    hasToken: !!cfg.botToken,
+    chatId: cfg.chatId,
+  });
+});
+
+router.put("/admin/telegram/config", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const updated = await saveTelegramConfig(req.body || {});
+  res.json({
+    enabled: updated.enabled,
+    botToken: updated.botToken ? `${updated.botToken.slice(0, 6)}...${updated.botToken.slice(-4)}` : "",
+    hasToken: !!updated.botToken,
+    chatId: updated.chatId,
+  });
+});
+
+router.post("/admin/telegram/test", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const testMsg = `🎮 <b>اختبار إشعارات دُكانك عبر التيليجرام</b> 🚀\n\n✅ تم ربط البوت بنجاح مع لوحة التحكم!\n⏰ التاريخ: ${new Date().toLocaleString("ar-JO")}\n\nستصلك إشعارات الطلبات الجديدة هنا مباشرة مع أزرار التحويل الفوري ⚡`;
+  const result: any = await sendTelegramMessage(testMsg, [
+    [{ text: "🛍️ فتح المتجر", url: "https://www.dukkank.store" }],
+    [{ text: "📦 إدارة الطلبات", url: "https://www.dukkank.store/admin/orders" }]
+  ]);
+  if (result?.ok) {
+    res.json({ ok: true, message: "تم إرسال الرسالة التجريبية إلى التيليجرام بنجاح ✅" });
+  } else {
+    res.status(400).json({ error: result?.description || result?.error || result?.reason || "فشل إرسال الرسالة. تأكد من إدخال Bot Token و Chat ID" });
+  }
 });
 
 // ── Legacy Routes (Compatibility) ────────────────────────────────────────────

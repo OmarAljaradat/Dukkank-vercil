@@ -195,6 +195,11 @@ export const apiDeleteSupplier = (id) =>
 export const apiGetCustomerProfile = (phone) =>
     client.get(`/admin/customer-profile/${encodeURIComponent(phone)}`).then((r) => r.data);
 
+// ── OrderDukkank: Telegram Bot APIs ──────────────────────────────────────────
+export const apiGetTelegramConfig = () => client.get("/admin/telegram/config").then((r) => r.data);
+export const apiUpdateTelegramConfig = (data) => client.put("/admin/telegram/config", data).then((r) => r.data);
+export const apiTestTelegramNotification = () => client.post("/admin/telegram/test").then((r) => r.data);
+
 // ── AI Launch & Resend Email APIs ─────────────────────────────────────────────
 export const apiGenerateAiLaunchTheme = (gamePrompt) =>
     client.post("/admin/ai-launch-generator", { gamePrompt }).then((r) => r.data);

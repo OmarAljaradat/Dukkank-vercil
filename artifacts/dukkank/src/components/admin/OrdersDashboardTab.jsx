@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// ── OrderDukkank v1.0 — Premium Modern Orders Dashboard (Stripe/Shopify Style)
+// ── OrderDukkank v2.0 — Premium Orders Dashboard with Telegram & Automation ──
 // ══════════════════════════════════════════════════════════════════════════════
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -9,12 +9,14 @@ import {
   MessageCircle, Loader2, Eye, Trash2, Plus, RefreshCw, ShoppingCart,
   PackageCheck, PackagePlus, AlertCircle, TrendingUp, Hash, Calendar,
   ExternalLink, Copy, X, ArrowUpRight, Zap, ShieldCheck, CreditCard,
-  Sparkles, ChevronLeft, KeyRound, EyeOff
+  Sparkles, ChevronLeft, KeyRound, EyeOff, Bot, SendHorizonal, QrCode,
+  Instagram, Settings, Check
 } from "lucide-react";
 import {
   apiListOrders, apiUpdateOrder, apiDeleteOrder,
   apiForwardToSupplier, apiReceiveAccount, apiDeliverOrder, apiCompleteOrder,
-  apiListSuppliers, apiGetCustomerProfile, formatApiError
+  apiListSuppliers, apiGetCustomerProfile, formatApiError,
+  apiGetTelegramConfig, apiUpdateTelegramConfig, apiTestTelegramNotification
 } from "../../lib/api";
 import { Input, Textarea, Field } from "./_widgets";
 
@@ -71,7 +73,6 @@ const VisualStepper = ({ currentStatus }) => {
       {PIPELINE_STEPS.map((step, idx) => {
         const isPassed = currentIdx >= idx;
         const isCurrent = currentIdx === idx;
-        const StepIcon = step.icon;
 
         return (
           <div key={step.key} className="flex-1 flex items-center gap-1">
@@ -88,6 +89,165 @@ const VisualStepper = ({ currentStatus }) => {
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// ── Telegram Settings Modal ──────────────────────────────────────────────────
+const TelegramSettingsModal = ({ onClose }) => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [form, setForm] = useState({
+    enabled: true,
+    botToken: "",
+    chatId: "",
+    hasToken: false,
+  });
+
+  useEffect(() => {
+    apiGetTelegramConfig()
+      .then((cfg) => {
+        setForm({
+          enabled: cfg.enabled ?? true,
+          botToken: cfg.botToken || "",
+          chatId: cfg.chatId || "",
+          hasToken: cfg.hasToken || false,
+        });
+      })
+      .catch(() => toast.error("تعذر جلب إعدادات التيليجرام"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await apiUpdateTelegramConfig(form);
+      setForm((prev) => ({ ...prev, hasToken: res.hasToken, botToken: res.botToken }));
+      toast.success("تم حفظ إعدادات إشعارات التيليجرام بنجاح 🤖");
+    } catch (e) {
+      toast.error("فشل حفظ الإعدادات: " + formatApiError(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    try {
+      const res = await apiTestTelegramNotification();
+      toast.success(res.message || "تم إرسال إشعار تجريبي بنجاح!");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 text-white p-6 relative">
+          <button onClick={onClose} className="absolute left-4 top-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-3 mt-1">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+              <Bot className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black">إشعارات بوت التيليجرام للطلبات الفورية</h3>
+              <p className="text-sky-100 text-xs mt-0.5">استقبال تفاصيل كل طلب جديد مع أزرار التحويل المباشر لهاتفك</p>
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          </div>
+        ) : (
+          <form onSubmit={handleSave} className="p-6 space-y-4">
+            {/* Status Toggle */}
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+              <div>
+                <div className="text-xs font-bold text-slate-800 dark:text-white">تفعيل إشعارات التيليجرام</div>
+                <div className="text-[11px] text-slate-400">إرسال تنبيه فوري لحظة إتمام أي طلب جديد بالمتجر</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, enabled: !prev.enabled }))}
+                className={`px-3 py-1.5 rounded-full text-xs font-black transition-colors ${
+                  form.enabled ? "bg-emerald-600 text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                {form.enabled ? "مفعّل 🟢" : "معطل 🔴"}
+              </button>
+            </div>
+
+            {/* Bot Token Input */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                توكن البوت (Telegram Bot Token)
+              </label>
+              <input
+                type="text"
+                value={form.botToken}
+                onChange={(e) => setForm((prev) => ({ ...prev, botToken: e.target.value }))}
+                placeholder={form.hasToken ? "التوكن محفوظ (اتركه فارغاً للإبقاء عليه)" : "مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"}
+                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 dir-ltr"
+              />
+            </div>
+
+            {/* Chat ID Input */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                معرف المحادثة أو القناة (Telegram Chat ID)
+              </label>
+              <input
+                type="text"
+                value={form.chatId}
+                onChange={(e) => setForm((prev) => ({ ...prev, chatId: e.target.value }))}
+                placeholder="مثال: 123456789 أو -100123456789"
+                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-bold text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 dir-ltr"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/10">
+              <button
+                type="button"
+                disabled={testing}
+                onClick={handleTest}
+                className="flex items-center gap-1.5 px-4 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 hover:bg-sky-100 text-xs font-bold transition-colors disabled:opacity-50"
+              >
+                {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendHorizonal className="w-4 h-4" />}
+                <span>إرسال إشعار تجريبي 📲</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 h-10 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5"
+                >
+                  إغلاق
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center gap-1.5 px-5 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-md shadow-blue-500/20 disabled:opacity-50 transition-colors"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>حفظ الإعدادات</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 };
@@ -151,35 +311,28 @@ const CustomerProfileModal = ({ phone, onClose }) => {
               </div>
             </div>
 
-            {/* Order History */}
-            <div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                <Package className="w-4 h-4 text-blue-500" />
-                سجل طلبات العميل
-              </h4>
-              {data.orders?.length > 0 ? (
-                <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                  {data.orders.map((o) => (
-                    <div key={o.id} className="flex items-center justify-between bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-3.5 text-sm transition-all hover:border-blue-400">
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          <span className="text-blue-600 font-mono text-xs">{o.order_number}</span>
-                          <span>{o.game_name || o.subscription_type || o.product_type}</span>
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1">
-                          {o.created_at ? new Date(o.created_at).toLocaleDateString("ar-JO") : ""}
-                        </div>
+            {/* Orders History List */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">سجل طلبات العميل</h4>
+              <div className="space-y-2 max-h-56 overflow-y-auto">
+                {data.orders?.map((o) => (
+                  <div key={o.id} className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-white/[0.04] rounded-2xl border border-slate-100 dark:border-white/5">
+                    <div>
+                      <div className="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                        <span className="font-mono text-blue-600 text-xs">#{o.order_number}</span>
+                        <span>{o.game_name || o.subscription_type || o.product_type}</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        {o.customer_paid && <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">${o.customer_paid}</span>}
-                        <StatusBadge status={o.status} />
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {new Date(o.created_at).toLocaleDateString("ar-JO")}
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400 text-center py-8">لا توجد طلبات سابقة لهذا العميل</p>
-              )}
+                    <div className="text-left">
+                      <div className="font-black text-sm text-slate-800 dark:text-white">${parseFloat(o.customer_paid).toFixed(2)}</div>
+                      <StatusBadge status={o.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
@@ -189,16 +342,17 @@ const CustomerProfileModal = ({ phone, onClose }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ── Main: OrdersDashboardTab ─────────────────────────────────────────────────
+// ── MAIN COMPONENT: OrdersDashboardTab ────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
 export default function OrdersDashboardTab() {
   const [orders, setOrders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("new");
   const [expandedId, setExpandedId] = useState(null);
   const [profilePhone, setProfilePhone] = useState(null);
+  const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
 
   // ── Data Fetch ─────────────────────────────────────────────────────────────
@@ -232,7 +386,7 @@ export default function OrdersDashboardTab() {
     if (search) {
       const q = search.toLowerCase();
       return [o.customer_name, o.order_number, o.game_name, o.subscription_type,
-              o.contact_whatsapp, o.customer_phone, o.customer_email, o.supplier, o.account_email]
+              o.contact_whatsapp, o.customer_phone, o.customer_email, o.contact_instagram, o.supplier, o.account_email]
         .some((f) => f && String(f).toLowerCase().includes(q));
     }
     return true;
@@ -258,71 +412,123 @@ export default function OrdersDashboardTab() {
   const handleForwardToSupplier = async (order, supplierId, costPrice) => {
     setActionLoading(order.id);
     try {
-      await apiForwardToSupplier(order.id, { supplier_id: supplierId, cost_price: costPrice || null });
-      toast.success("تم تسجيل إرسال الطلب للمورد 🚀");
+      await apiForwardToSupplier(order.id, { supplier_id: supplierId, cost_price: costPrice });
+      toast.success("تم تحديث حالة الطلب إلى (بانتظار المورد) 🚀");
       await fetchOrders();
-    } catch (e) { toast.error(formatApiError(e)); }
-    setActionLoading(null);
+    } catch (e) {
+      toast.error("فشل التحديث: " + formatApiError(e));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleReceiveAccount = async (order, credentials, costPrice) => {
+  const handleReceiveAccount = async (order, fullCredentials, costPrice) => {
     setActionLoading(order.id);
     try {
-      await apiReceiveAccount(order.id, { account_credentials: credentials, cost_price: costPrice || null });
-      toast.success("تم تسجيل استلام الحساب من المورد 📦");
+      await apiReceiveAccount(order.id, { account_credentials: fullCredentials, cost_price: costPrice });
+      toast.success("تم تسجيل بيانات الحساب واعتماد الجاهزية للتسليم 📦");
       await fetchOrders();
-    } catch (e) { toast.error(formatApiError(e)); }
-    setActionLoading(null);
+    } catch (e) {
+      toast.error("فشل التحديث: " + formatApiError(e));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleDeliver = async (order) => {
     setActionLoading(order.id);
     try {
       await apiDeliverOrder(order.id);
-      toast.success("تم تسجيل تسليم الحساب للعميل 🚀");
+      toast.success("تم تسليم الحساب للعميل بنجاح 🚚");
       await fetchOrders();
-    } catch (e) { toast.error(formatApiError(e)); }
-    setActionLoading(null);
+    } catch (e) {
+      toast.error("فشل التحديث: " + formatApiError(e));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleComplete = async (order) => {
     setActionLoading(order.id);
     try {
       await apiCompleteOrder(order.id);
-      toast.success("تم إكمال الطلب بنجاح ✅");
+      toast.success("تم إكمال وأرشفة الطلب بنجاح ✅");
       await fetchOrders();
-    } catch (e) { toast.error(formatApiError(e)); }
-    setActionLoading(null);
+    } catch (e) {
+      toast.error("فشل التحديث: " + formatApiError(e));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleCancel = async (order) => {
-    if (!confirm("هل أنت متأكد من إلغاء هذا الطلب؟")) return;
+    if (!window.confirm(`هل أنت متأكد من إلغاء الطلب #${order.order_number}؟`)) return;
     setActionLoading(order.id);
     try {
       await apiUpdateOrder(order.id, { status: "cancelled" });
-      toast.success("تم إلغاء الطلب");
+      toast.info("تم إلغاء الطلب");
       await fetchOrders();
-    } catch (e) { toast.error(formatApiError(e)); }
-    setActionLoading(null);
+    } catch (e) {
+      toast.error("فشل الإلغاء: " + formatApiError(e));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleDelete = async (order) => {
-    if (!confirm(`حذف الطلب ${order.order_number}؟ لا يمكن التراجع!`)) return;
+    if (!window.confirm(`هل أنت متأكد من حذف الطلب #${order.order_number} نهائياً؟`)) return;
     try {
       await apiDeleteOrder(order.id);
-      toast.success("تم حذف الطلب");
+      toast.success("تم حذف الطلب بنجاح");
       await fetchOrders();
-    } catch (e) { toast.error(formatApiError(e)); }
+    } catch (e) {
+      toast.error("فشل الحذف: " + formatApiError(e));
+    }
   };
 
   const openSupplierWhatsApp = (order, supplier) => {
     const phone = supplier?.phone || "";
+    if (!phone) {
+      toast.error("رقم هاتف المورد غير مسجل");
+      return;
+    }
     const productName = order.game_name || order.subscription_type || order.product_type || "منتج";
-    const platform = order.platform || "";
+    const platform = order.platform || "PS5/PS4";
     const msg = encodeURIComponent(
-      `السلام عليكم 👋\nطلب جديد من متجر دُكانك:\n\n🔖 رقم الطلب: *${order.order_number}*\n🎮 المنتج: ${productName}\n📱 المنصة: ${platform}\n\nيرجى تجهيز الحساب وشكراً 🌟`
+      `السلام عليكم أخي 👋\nطلب حساب جديد من متجر *دُكانك* 🎮:\n\n🏷️ اللعبة / الاشتراك: *${productName}*\n🕹️ المنصة: *${platform}*\n📦 رقم الطلب: *#${order.order_number}*\n\nيرجى إرسال الإيميل وكلمة السر وأكواد الأمان أول ما يجهز ⚡`
     );
     window.open(`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${msg}`, "_blank");
+  };
+
+  const openCustomerWhatsAppQR = (order) => {
+    const rawPhone = order.customer_phone || order.contact_whatsapp || "";
+    const phone = rawPhone.replace(/[^0-9]/g, "");
+    if (!phone) {
+      toast.error("رقم هاتف العميل غير متوفر");
+      return;
+    }
+    const customerName = order.customer_name || "عزيزي العميل";
+    const game = order.game_name || order.subscription_type || order.product_type || "الطلب";
+    const msg = encodeURIComponent(
+      `مرحباً أخي ${customerName} 🎮\nشكراً لشرائك من متجر *دُكانك* ⚡\n\nلتسليم وتفعيل طلبك (*${game}*) فوراً:\nيرجى فتح جهازك السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸.\n\nفريقنا جاهز لإدخالك الحساب وتفعيله بجهازك بأمان تام 🚀`
+    );
+    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+  };
+
+  const openCustomerInstagram = (order) => {
+    const rawIg = (order.contact_instagram || "").replace(/^@/, "").trim();
+    const customerName = order.customer_name || "عزيزي العميل";
+    const game = order.game_name || order.subscription_type || order.product_type || "الطلب";
+    const thankYouText = `مرحباً أخي ${customerName} 🎮\nشكراً لشرائك من متجر دُكانك ⚡\n\nلتسليم وتفعيل طلبك (${game}) فوراً:\nيرجى فتح شاشة السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸`;
+
+    navigator.clipboard.writeText(thankYouText);
+    toast.success("تم نسخ رسالة الترحيب وطلب كود الـ QR! الصقها في محادثة الإنستغرام 📋");
+
+    if (rawIg) {
+      window.open(`https://instagram.com/${rawIg}`, "_blank");
+    } else {
+      toast.info("تم نسخ رسالة الترحيب (العميل لم يحدد يوزر إنستغرام)");
+    }
   };
 
   // ── Filter Tabs ────────────────────────────────────────────────────────────
@@ -364,28 +570,38 @@ export default function OrdersDashboardTab() {
         })}
       </div>
 
-      {/* ── Search & Actions Bar ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      {/* ── Search, Actions & Telegram Trigger Bar ──────────────────────────── */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Search Input */}
-        <div className="relative flex-1 max-w-xl">
-          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" />
           <input
+            type="text"
+            placeholder="ابحث برقم الطلب، اسم العميل، رقم الهاتف، إنستغرام، أو اسم اللعبة..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث برقم الطلب، اسم العميل، رقم الهاتف، اسم اللعبة..."
-            className="w-full h-11 pr-10 pl-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+            className="w-full h-11 pr-11 pl-4 rounded-2xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 shadow-sm"
           />
           {search && (
-            <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600">
+            <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
+        {/* Telegram Config Button */}
+        <button
+          onClick={() => setTelegramModalOpen(true)}
+          className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-xs font-bold transition-all shrink-0"
+        >
+          <Bot className="w-4 h-4 animate-pulse text-sky-500" />
+          <span>إعدادات التيليجرام 🤖</span>
+        </button>
+
         {/* Reload Button */}
         <button
           onClick={loadAll}
-          className="flex items-center justify-center gap-2 px-5 h-11 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-sm font-bold shadow-md transition-all shrink-0"
+          className="flex items-center justify-center gap-2 px-5 h-11 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-xs font-bold shadow-md transition-all shrink-0"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           تحديث البيانات
@@ -448,43 +664,45 @@ export default function OrdersDashboardTab() {
               >
                 {/* ── Order Header Row ───────────────────────────────────────── */}
                 <div
-                  className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none"
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                  className="p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 cursor-pointer select-none"
                 >
-                  {/* Left: Order Info & Customer */}
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                  {/* Left: Customer & Item Meta */}
+                  <div className="flex items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col items-center justify-center shrink-0">
-                      <span className="text-[10px] font-bold text-blue-500 uppercase">طلب</span>
-                      <span className="text-xs font-black text-blue-600 dark:text-blue-400 font-mono">
-                        {order.order_number ? order.order_number.replace("DK-", "") : "#"}
+                      <span className="text-[10px] font-bold text-blue-500">طلب</span>
+                      <span className="font-mono font-black text-xs text-blue-600 dark:text-blue-400">
+                        {order.order_number ? order.order_number.replace(/^ORD-|^DK-/, "") : order.id}
                       </span>
                     </div>
 
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setProfilePhone(order.customer_phone || order.contact_whatsapp); }}
-                          className="font-black text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-base truncate"
-                        >
-                          {order.customer_name || "عميل دُكانك"}
-                        </button>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                          {order.customer_name}
+                        </h4>
                         {(order.customer_phone || order.contact_whatsapp) && (
-                          <span className="text-xs text-slate-400 font-mono dir-ltr bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-lg">
+                          <span className="text-xs font-mono text-slate-400 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
                             {order.customer_phone || order.contact_whatsapp}
                           </span>
                         )}
-                        {order.order_source === "paytabs" && (
-                          <span className="text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full">
-                            💳 دفع أونلاين
+                        {order.contact_instagram && (
+                          <span className="text-[11px] font-bold text-pink-600 dark:text-pink-400 bg-pink-500/10 border border-pink-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Instagram className="w-3 h-3" />
+                            @{order.contact_instagram.replace(/^@/, "")}
                           </span>
                         )}
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                          {order.payment_platform ? `${order.payment_platform} أونلاين 💳` : "دفع أونلاين 💳"}
+                        </span>
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 truncate">
+
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-slate-700 dark:text-slate-200">
                           🎮 {order.game_name || order.subscription_type || order.product_type}
                         </span>
                         {order.platform && (
-                          <span className="text-[10px] bg-slate-200 dark:bg-white/15 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-white/10 font-bold">
                             {order.platform}
                           </span>
                         )}
@@ -492,9 +710,9 @@ export default function OrdersDashboardTab() {
                     </div>
                   </div>
 
-                  {/* Middle: Stepper Pipeline */}
-                  <div className="hidden lg:block w-72 shrink-0">
-                    <div className="text-[10px] font-bold text-slate-400 mb-1">مرحلة الطلب الحالية:</div>
+                  {/* Middle: Stepper Preview (Desktop) */}
+                  <div className="hidden lg:block">
+                    <div className="text-[10px] font-bold text-slate-400 mb-1">مرحلة الطلب الحالية</div>
                     <VisualStepper currentStatus={order.status} />
                   </div>
 
@@ -531,6 +749,8 @@ export default function OrdersDashboardTab() {
                     onCancel={handleCancel}
                     onDelete={handleDelete}
                     openSupplierWhatsApp={openSupplierWhatsApp}
+                    openCustomerWhatsAppQR={openCustomerWhatsAppQR}
+                    openCustomerInstagram={openCustomerInstagram}
                     onViewProfile={(phone) => setProfilePhone(phone)}
                   />
                 )}
@@ -544,6 +764,11 @@ export default function OrdersDashboardTab() {
       {profilePhone && (
         <CustomerProfileModal phone={profilePhone} onClose={() => setProfilePhone(null)} />
       )}
+
+      {/* ── Telegram Config Modal ───────────────────────────────────────── */}
+      {telegramModalOpen && (
+        <TelegramSettingsModal onClose={() => setTelegramModalOpen(false)} />
+      )}
     </div>
   );
 }
@@ -554,7 +779,7 @@ export default function OrdersDashboardTab() {
 function OrderExpandedPanel({
   order, suppliers, selectedSupplier, actionLoading,
   onForward, onReceive, onDeliver, onComplete, onCancel, onDelete,
-  openSupplierWhatsApp, onViewProfile
+  openSupplierWhatsApp, openCustomerWhatsAppQR, openCustomerInstagram, onViewProfile
 }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState(order.supplier_id || "");
   const [costPrice, setCostPrice] = useState(order.cost_price || "");
@@ -567,6 +792,7 @@ function OrderExpandedPanel({
   
   const isLoading = actionLoading === order.id;
   const customerPhone = order.customer_phone || order.contact_whatsapp;
+  const rawIg = (order.contact_instagram || "").replace(/^@/, "").trim();
 
   const paid = parseFloat(order.customer_paid) || 0;
   const fee = parseFloat(order.gateway_fee) || paid * 0.05;
@@ -608,6 +834,53 @@ function OrderExpandedPanel({
   return (
     <div className="border-t border-slate-200 dark:border-white/10 p-6 space-y-6 bg-slate-50/50 dark:bg-white/[0.02] rounded-b-3xl">
 
+      {/* ── Quick Communication Hub Card ─────────────────────────────── */}
+      <div className="rounded-2xl p-4 bg-gradient-to-r from-blue-900/10 via-indigo-900/10 to-purple-900/10 border border-blue-500/20 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-blue-700 dark:text-blue-300 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span>مركز التواصل السريع والتنفيذ المباشر (Quick Fulfillment Hub)</span>
+          </span>
+          <span className="text-[10px] font-bold text-slate-400">تفعيل فوري بكود QR</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* Instagram Action Button */}
+          <button
+            type="button"
+            onClick={() => openCustomerInstagram(order)}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-xs font-black shadow-sm transition-all"
+          >
+            <Instagram className="w-4 h-4" />
+            <span>{rawIg ? `إنستغرام العميل (@${rawIg})` : "رسالة إنستغرام لطلب QR 📸"}</span>
+          </button>
+
+          {/* Customer WhatsApp QR Request Button */}
+          <button
+            type="button"
+            onClick={() => openCustomerWhatsAppQR(order)}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition-all"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>طلب كود السوني بالواتساب 📲</span>
+          </button>
+
+          {/* Supplier Forwarding WhatsApp Button */}
+          <button
+            type="button"
+            onClick={() => {
+              const sup = suppliers.find(s => String(s.id) === String(selectedSupplierId)) || suppliers[0];
+              if (sup) openSupplierWhatsApp(order, sup);
+              else toast.error("يرجى اختيار المورد أولاً من الخطوة 1");
+            }}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-black shadow-sm transition-all"
+          >
+            <Send className="w-4 h-4 text-amber-400" />
+            <span>تحويل الطلب للمورد بالواتساب 📦</span>
+          </button>
+        </div>
+      </div>
+
       {/* ── Stepper Pipeline (Mobile View) ───────────────────────────── */}
       <div className="lg:hidden bg-white dark:bg-white/[0.04] p-4 rounded-2xl border border-slate-200 dark:border-white/10">
         <div className="text-xs font-bold text-slate-500 mb-2">مرحلة الطلب الحالية:</div>
@@ -631,6 +904,11 @@ function OrderExpandedPanel({
               </button>
             )}
           </div>
+          {rawIg && (
+            <div className="mt-1 text-xs text-pink-600 font-bold flex items-center gap-1">
+              <Instagram className="w-3 h-3" /> @{rawIg}
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-white/[0.04] rounded-2xl p-4 border border-slate-200 dark:border-white/10">
@@ -701,7 +979,7 @@ function OrderExpandedPanel({
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <button
                   disabled={!selectedSupplierId || isLoading}
                   onClick={() => {
@@ -948,55 +1226,57 @@ function OrderExpandedPanel({
       {/* ── Dark Financial Summary Card ───────────────────────────────── */}
       {paid > 0 && (
         <div className="bg-gradient-to-r from-slate-900 via-slate-950 to-blue-950 rounded-2xl p-5 text-white shadow-xl border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs font-black text-slate-400 flex items-center gap-2 uppercase tracking-wider">
-              <DollarSign className="w-4 h-4 text-emerald-400" /> الملخص المالي والأرباح
-            </h4>
-            <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-slate-300 font-mono">
-              النسب المعتمدة: 5% رسوم بوابة
+          <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+            <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+              <DollarSign className="w-4 h-4 text-emerald-400" /> تفاصيل العملية المالية والأرباح
+            </span>
+            <span className="text-xs font-mono font-bold text-emerald-400">
+              هامش الربح: {paid > 0 ? ((profit / paid) * 100).toFixed(1) : 0}%
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-              <div className="text-xl font-black text-white">${paid.toFixed(2)}</div>
-              <div className="text-[10px] font-bold text-slate-400 mt-1">مدفوعات العميل</div>
+            <div className="bg-white/5 rounded-xl p-3">
+              <div className="text-[11px] text-slate-400 mb-1">المدفوع من العميل</div>
+              <div className="text-lg font-black text-white">${paid.toFixed(2)}</div>
             </div>
-            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-              <div className="text-xl font-black text-red-400">-${fee.toFixed(2)}</div>
-              <div className="text-[10px] font-bold text-slate-400 mt-1">رسوم بوابة الدفع (5%)</div>
+            <div className="bg-white/5 rounded-xl p-3">
+              <div className="text-[11px] text-slate-400 mb-1">رسوم بوابة الدفع (5%)</div>
+              <div className="text-lg font-black text-rose-400">-${fee.toFixed(2)}</div>
             </div>
-            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-              <div className="text-xl font-black text-amber-400">-${cost.toFixed(2)}</div>
-              <div className="text-[10px] font-bold text-slate-400 mt-1">تكلفة المورد</div>
+            <div className="bg-white/5 rounded-xl p-3">
+              <div className="text-[11px] text-slate-400 mb-1">تكلفة المورد</div>
+              <div className="text-lg font-black text-amber-400">-${cost.toFixed(2)}</div>
             </div>
-            <div className="bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/20">
-              <div className={`text-xl font-black ${profit >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                ${profit.toFixed(2)}
-              </div>
-              <div className="text-[10px] font-bold text-emerald-400/80 mt-1">صافي الأرباح 📈</div>
+            <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-3">
+              <div className="text-[11px] text-emerald-300 font-bold mb-1">صافي ربح دُكانك 💰</div>
+              <div className="text-lg font-black text-emerald-400">${profit.toFixed(2)}</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Notes Section ───────────────────────────────────────────── */}
-      {order.notes && (
-        <div className="bg-white dark:bg-white/[0.04] rounded-2xl p-4 border border-slate-200 dark:border-white/10">
-          <span className="text-xs font-bold text-slate-400 block mb-1">📝 ملاحظات الطلب</span>
-          <p className="text-sm text-slate-700 dark:text-slate-300">{order.notes}</p>
+      {/* ── Footer Actions Bar ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-white/10">
+        <div className="flex items-center gap-2">
+          {order.status !== "cancelled" && (
+            <button
+              onClick={() => onCancel(order)}
+              disabled={isLoading}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              إلغاء الطلب
+            </button>
+          )}
         </div>
-      )}
 
-      {/* ── Footer Actions ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-white/10">
-        {order.status !== "cancelled" && order.status !== "completed" && (
-          <button onClick={() => onCancel(order)} className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1.5 transition-colors">
-            <XCircle className="w-4 h-4" /> إلغاء هذا الطلب
-          </button>
-        )}
-        <button onClick={() => onDelete(order)} className="text-xs font-bold text-slate-400 hover:text-red-600 flex items-center gap-1.5 transition-colors mr-auto">
-          <Trash2 className="w-4 h-4" /> حذف سجل الطلب نهائياً
+        <button
+          onClick={() => onDelete(order)}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          حذف
         </button>
       </div>
     </div>

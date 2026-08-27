@@ -34749,15 +34749,15 @@ var require_pg_pool = __commonJS({
       });
       return { callback: cb, result };
     }
-    function makeIdleListener(pool8, client) {
+    function makeIdleListener(pool9, client) {
       return function idleListener(err) {
         err.client = client;
         client.removeListener("error", idleListener);
         client.on("error", () => {
-          pool8.log("additional client error after disconnection due to error", err);
+          pool9.log("additional client error after disconnection due to error", err);
         });
-        pool8._remove(client);
-        pool8.emit("error", err, client);
+        pool9._remove(client);
+        pool9.emit("error", err, client);
       };
     }
     var Pool2 = class extends EventEmitter {
@@ -48760,8 +48760,145 @@ var analytics_default = router6;
 
 // src/routes/orders.ts
 var import_express7 = __toESM(require_express2(), 1);
+
+// src/lib/telegram.ts
+var pool6 = new esm_default.Pool({
+  connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_wCMA8WdBSc5s@ep-restless-tree-b20it24h-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+});
+var DEFAULT_CONFIG = {
+  enabled: true,
+  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+  chatId: process.env.TELEGRAM_CHAT_ID || ""
+};
+async function getTelegramConfig() {
+  try {
+    const { rows } = await pool6.query(
+      `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
+    );
+    if (rows.length > 0 && rows[0].value) {
+      const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
+      return {
+        enabled: cfg.enabled ?? true,
+        botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
+        chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || ""
+      };
+    }
+  } catch (e) {
+    console.warn("Could not load telegram_config from DB:", e);
+  }
+  return DEFAULT_CONFIG;
+}
+async function saveTelegramConfig(cfg) {
+  const current = await getTelegramConfig();
+  const updated = {
+    enabled: cfg.enabled !== void 0 ? !!cfg.enabled : current.enabled,
+    botToken: (cfg.botToken !== void 0 ? cfg.botToken : current.botToken).trim(),
+    chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim()
+  };
+  try {
+    await pool6.query(
+      `INSERT INTO store_config (key, value, updated_at)
+       VALUES ('telegram_config', $1, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [JSON.stringify(updated)]
+    );
+  } catch (e) {
+    console.error("Failed to save telegram config:", e);
+  }
+  return updated;
+}
+async function sendTelegramMessage(text, inlineKeyboard) {
+  const config = await getTelegramConfig();
+  if (!config.enabled || !config.botToken || !config.chatId) {
+    return { ok: false, reason: "Telegram bot not configured or disabled" };
+  }
+  try {
+    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    const payload = {
+      chat_id: config.chatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: false
+    };
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      payload.reply_markup = {
+        inline_keyboard: inlineKeyboard
+      };
+    }
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Telegram notification error:", err);
+    return { ok: false, error: err.message };
+  }
+}
+async function sendTelegramOrderNotification(order) {
+  try {
+    const orderNum = order.order_number || `#${order.id}`;
+    const customerName = order.customer_name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643";
+    const phone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
+    const rawPhone = order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F";
+    const igRaw = (order.contact_instagram || "").replace(/^@/, "").trim();
+    const game = order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A";
+    const platform = order.platform ? `(${order.platform})` : "";
+    const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "\u2014";
+    const payment = order.payment_platform || "\u062F\u0641\u0639 \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A";
+    const qrRequestMsg = encodeURIComponent(
+      `\u0645\u0631\u062D\u0628\u0627\u064B \u0623\u062E\u064A ${customerName} \u{1F3AE}
+\u0634\u0643\u0631\u0627\u064B \u0644\u0634\u0631\u0627\u0626\u0643 \u0645\u0646 \u0645\u062A\u062C\u0631 *\u062F\u064F\u0643\u0627\u0646\u0643* \u26A1
+
+\u0644\u062A\u0633\u0644\u064A\u0645 \u0648\u062A\u0641\u0639\u064A\u0644 \u0637\u0644\u0628\u0643 (${game}) \u0641\u0648\u0631\u0627\u064B:
+\u064A\u0631\u062C\u0649 \u0641\u062A\u062D \u062C\u0647\u0627\u0632\u0643 \u0627\u0644\u0633\u0648\u0646\u064A \u0648\u0627\u062E\u062A\u064A\u0627\u0631 (\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F QR) \u0648\u062A\u0635\u0648\u064A\u0631 \u0627\u0644\u0643\u0648\u062F \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u0644\u0646\u0627 \u0647\u0646\u0627 \u{1F4F8}.
+
+\u0641\u0631\u064A\u0642\u0646\u0627 \u062C\u0627\u0647\u0632 \u0644\u0625\u062F\u062E\u0627\u0644\u0643 \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u062A\u0641\u0639\u064A\u0644\u0647 \u0628\u0623\u0645\u0627\u0646 \u062A\u0627\u0645 \u{1F680}`
+    );
+    const messageHtml = `\u{1F525} <b>\u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062C\u062F\u064A\u062F \u0641\u064A \u062F\u064F\u0643\u0627\u0646\u0643!</b>
+
+\u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${orderNum}</code>
+\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> ${customerName}
+\u{1F4F1} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${rawPhone}</code>
+${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> @${igRaw}
+` : ""}\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> <b>${game}</b> ${platform}
+\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A:</b> <b>${paid}</b>
+\u{1F4B3} <b>\u0637\u0631\u064A\u0642\u0629 \u0627\u0644\u062F\u0641\u0639:</b> ${payment}
+\u23F1\uFE0F <b>\u0627\u0644\u062D\u0627\u0644\u0629:</b> \u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0648\u0628\u0627\u0646\u062A\u0638\u0627\u0631 \u0627\u0644\u062A\u0646\u0641\u064A\u0630 \u26A1`;
+    const inlineButtons = [];
+    const row1 = [];
+    if (igRaw) {
+      row1.push({
+        text: `\u{1F4AC} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644 (@${igRaw})`,
+        url: `https://instagram.com/${igRaw}`
+      });
+    }
+    if (phone) {
+      row1.push({
+        text: `\u{1F4F2} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644 (\u0637\u0644\u0628 QR)`,
+        url: `https://wa.me/${phone}?text=${qrRequestMsg}`
+      });
+    }
+    if (row1.length > 0) inlineButtons.push(row1);
+    const row2 = [
+      {
+        text: `\u{1F680} \u0641\u062A\u062D \u0627\u0644\u0637\u0644\u0628 \u0641\u064A \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645`,
+        url: `https://www.dukkank.store/admin/orders`
+      }
+    ];
+    inlineButtons.push(row2);
+    return await sendTelegramMessage(messageHtml, inlineButtons);
+  } catch (e) {
+    console.error("Failed to format/send Telegram order notification:", e);
+    return { ok: false, error: e.message };
+  }
+}
+
+// src/routes/orders.ts
 var router7 = (0, import_express7.Router)();
-var pool6 = process.env.DATABASE_URL ? new esm_default.Pool({ connectionString: process.env.DATABASE_URL }) : null;
+var pool7 = process.env.DATABASE_URL ? new esm_default.Pool({ connectionString: process.env.DATABASE_URL }) : null;
 var storeOrders = [
   {
     id: "ord-sample-1",
@@ -48792,9 +48929,9 @@ var suppliers = [
   }
 ];
 async function initDb() {
-  if (!pool6) return;
+  if (!pool7) return;
   try {
-    await pool6.query(`
+    await pool7.query(`
       CREATE TABLE IF NOT EXISTS suppliers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(200) NOT NULL,
@@ -48844,9 +48981,9 @@ async function initDb() {
 initDb();
 router7.get("/admin/store-orders", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query("SELECT * FROM store_orders ORDER BY created_at DESC");
+      const { rows } = await pool7.query("SELECT * FROM store_orders ORDER BY created_at DESC");
       res.json(rows);
       return;
     } catch (e) {
@@ -48858,9 +48995,9 @@ router7.post("/admin/store-orders", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const body = req.body || {};
   const orderNum = body.order_number || `ORD-${Math.floor(1e3 + Math.random() * 9e3)}`;
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `INSERT INTO store_orders (
           order_number, customer_name, customer_phone, customer_email, product_type,
           game_name, subscription_type, subscription_duration, contact_instagram,
@@ -48895,8 +49032,12 @@ router7.post("/admin/store-orders", async (req, res) => {
           body.items_json ? JSON.stringify(body.items_json) : null
         ]
       );
-      res.status(201).json(rows[0]);
-      return;
+      if (rows && rows[0]) {
+        sendTelegramOrderNotification(rows[0]).catch(() => {
+        });
+        res.status(201).json(rows[0]);
+        return;
+      }
     } catch (e) {
     }
   }
@@ -48936,9 +49077,9 @@ router7.put("/admin/store-orders/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const body = req.body || {};
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET
           customer_name=COALESCE($1,customer_name),
           status=COALESCE($2,status),
@@ -48967,9 +49108,9 @@ router7.put("/admin/store-orders/:id", async (req, res) => {
 router7.delete("/admin/store-orders/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
-  if (pool6) {
+  if (pool7) {
     try {
-      await pool6.query("DELETE FROM store_orders WHERE id=$1 OR order_number=$1", [id]);
+      await pool7.query("DELETE FROM store_orders WHERE id=$1 OR order_number=$1", [id]);
     } catch (e) {
     }
   }
@@ -48982,9 +49123,9 @@ router7.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
   const id = req.params.id;
   const { supplier_id, cost_price } = req.body || {};
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET status='supplier_sent', supplier_id=$1, cost_price=COALESCE($2,cost_price),
          supplier_forwarded_at=NOW(), updated_at=NOW() WHERE id=$3 OR order_number=$3 RETURNING *`,
         [supplier_id || null, cost_price || null, id]
@@ -49013,9 +49154,9 @@ router7.put("/admin/store-orders/:id/receive-account", async (req, res) => {
   const id = req.params.id;
   const { account_credentials, cost_price } = req.body || {};
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET status='account_received', account_credentials=$1, cost_price=COALESCE($2,cost_price),
          account_received_at=NOW(), updated_at=NOW() WHERE id=$3 OR order_number=$3 RETURNING *`,
         [account_credentials || null, cost_price || null, id]
@@ -49043,9 +49184,9 @@ router7.put("/admin/store-orders/:id/deliver", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET status='delivered', delivered_at=NOW(), updated_at=NOW() WHERE id=$1 OR order_number=$1 RETURNING *`,
         [id]
       );
@@ -49070,9 +49211,9 @@ router7.put("/admin/store-orders/:id/complete", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET status='completed', completed_at=NOW(), updated_at=NOW() WHERE id=$1 OR order_number=$1 RETURNING *`,
         [id]
       );
@@ -49169,6 +49310,44 @@ router7.get("/admin/customer-profile/:phone", async (req, res) => {
       completedOrders: matchingOrders.filter((o) => o.status === "completed" || o.status === "delivered").length
     }
   });
+});
+router7.get("/admin/telegram/config", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const cfg = await getTelegramConfig();
+  res.json({
+    enabled: cfg.enabled,
+    botToken: cfg.botToken ? `${cfg.botToken.slice(0, 6)}...${cfg.botToken.slice(-4)}` : "",
+    hasToken: !!cfg.botToken,
+    chatId: cfg.chatId
+  });
+});
+router7.put("/admin/telegram/config", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const updated = await saveTelegramConfig(req.body || {});
+  res.json({
+    enabled: updated.enabled,
+    botToken: updated.botToken ? `${updated.botToken.slice(0, 6)}...${updated.botToken.slice(-4)}` : "",
+    hasToken: !!updated.botToken,
+    chatId: updated.chatId
+  });
+});
+router7.post("/admin/telegram/test", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const testMsg = `\u{1F3AE} <b>\u0627\u062E\u062A\u0628\u0627\u0631 \u0625\u0634\u0639\u0627\u0631\u0627\u062A \u062F\u064F\u0643\u0627\u0646\u0643 \u0639\u0628\u0631 \u0627\u0644\u062A\u064A\u0644\u064A\u062C\u0631\u0627\u0645</b> \u{1F680}
+
+\u2705 \u062A\u0645 \u0631\u0628\u0637 \u0627\u0644\u0628\u0648\u062A \u0628\u0646\u062C\u0627\u062D \u0645\u0639 \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645!
+\u23F0 \u0627\u0644\u062A\u0627\u0631\u064A\u062E: ${(/* @__PURE__ */ new Date()).toLocaleString("ar-JO")}
+
+\u0633\u062A\u0635\u0644\u0643 \u0625\u0634\u0639\u0627\u0631\u0627\u062A \u0627\u0644\u0637\u0644\u0628\u0627\u062A \u0627\u0644\u062C\u062F\u064A\u062F\u0629 \u0647\u0646\u0627 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0639 \u0623\u0632\u0631\u0627\u0631 \u0627\u0644\u062A\u062D\u0648\u064A\u0644 \u0627\u0644\u0641\u0648\u0631\u064A \u26A1`;
+  const result = await sendTelegramMessage(testMsg, [
+    [{ text: "\u{1F6CD}\uFE0F \u0641\u062A\u062D \u0627\u0644\u0645\u062A\u062C\u0631", url: "https://www.dukkank.store" }],
+    [{ text: "\u{1F4E6} \u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0637\u0644\u0628\u0627\u062A", url: "https://www.dukkank.store/admin/orders" }]
+  ]);
+  if (result?.ok) {
+    res.json({ ok: true, message: "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u062A\u062C\u0631\u064A\u0628\u064A\u0629 \u0625\u0644\u0649 \u0627\u0644\u062A\u064A\u0644\u064A\u062C\u0631\u0627\u0645 \u0628\u0646\u062C\u0627\u062D \u2705" });
+  } else {
+    res.status(400).json({ error: result?.description || result?.error || result?.reason || "\u0641\u0634\u0644 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629. \u062A\u0623\u0643\u062F \u0645\u0646 \u0625\u062F\u062E\u0627\u0644 Bot Token \u0648 Chat ID" });
+  }
 });
 router7.post("/orders", (req, res) => {
   const o = req.body || {};
@@ -49796,7 +49975,7 @@ var promo_default = router13;
 
 // src/routes/payments.ts
 var import_express14 = __toESM(require_express2(), 1);
-var pool7 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool8 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router14 = (0, import_express14.Router)();
 var PAYTABS_PROFILE_ID = process.env.PAYTABS_PROFILE_ID || "182320";
 var PAYTABS_SERVER_KEY = process.env.PAYTABS_SERVER_KEY || "SJJ9HHGZJD-J9J29NZ9KD-W96L9RBTN9";
@@ -49805,7 +49984,7 @@ var PAYTABS_ENDPOINT = process.env.PAYTABS_ENDPOINT || "https://secure-jordan.pa
 var paymentOrdersStore = /* @__PURE__ */ new Map();
 async function createStoreOrderFromPayment(order) {
   try {
-    const { rows: seqRows } = await pool7.query(
+    const { rows: seqRows } = await pool8.query(
       "UPDATE order_number_seq SET last_number = last_number + 1 RETURNING last_number"
     );
     const num = seqRows[0]?.last_number ?? 1;
@@ -49817,13 +49996,13 @@ async function createStoreOrderFromPayment(order) {
     const platform = firstItem?.platform || null;
     const customerPaid = order.totalPrice || 0;
     const gatewayFee = +(customerPaid * 0.05).toFixed(2);
-    await pool7.query(
+    const { rows: insertedRows } = await pool8.query(
       `INSERT INTO store_orders (
         order_number, customer_name, product_type, game_name, platform,
-        contact_whatsapp, customer_phone, customer_email,
+        contact_whatsapp, customer_phone, customer_email, contact_instagram,
         status, customer_paid, payment_platform, gateway_fee,
         order_source, paytabs_tran_ref, items_json, notes
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
       [
         orderNumber,
         order.customer.name,
@@ -49833,6 +50012,7 @@ async function createStoreOrderFromPayment(order) {
         order.customer.phone,
         order.customer.phone,
         order.customer.email,
+        order.customer.instagram || null,
         "new",
         customerPaid,
         "PayTabs",
@@ -49843,6 +50023,10 @@ async function createStoreOrderFromPayment(order) {
         `\u0637\u0644\u0628 \u0623\u0648\u0646\u0644\u0627\u064A\u0646 \u2014 ${order.currency} ${order.totalPrice}`
       ]
     );
+    if (insertedRows && insertedRows[0]) {
+      sendTelegramOrderNotification(insertedRows[0]).catch(() => {
+      });
+    }
     console.log(`[OrderDukkank] Auto-created store order ${orderNumber} from PayTabs payment ${order.id}`);
     return orderNumber;
   } catch (err) {
