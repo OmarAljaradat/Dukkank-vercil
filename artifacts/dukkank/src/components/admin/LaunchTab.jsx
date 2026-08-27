@@ -75,11 +75,29 @@ export default function LaunchTab({ onChanged }) {
         toast.success(`تم استيراد كافة بيانات وتفاصيل (${game.name}) بنجاح 🎮!`);
     };
 
+    const getSavedTheme = (theme) => {
+        try {
+            const item = localStorage.getItem(`dukkank_saved_theme_${theme}`);
+            return item ? JSON.parse(item) : null;
+        } catch {
+            return null;
+        }
+    };
+
+    const saveThemeData = (theme, data) => {
+        try {
+            if (theme && data) {
+                localStorage.setItem(`dukkank_saved_theme_${theme}`, JSON.stringify(data));
+            }
+        } catch {}
+    };
+
     // 🎮 GTA VI VICE CITY - Clean Explicit Theme Preset (Toggleable)
     const handleGTAVIPreset = async () => {
         if (form.enabled && form.theme === "vice") {
             const newData = { ...form, enabled: false };
             setForm(newData);
+            saveThemeData("vice", newData);
             try {
                 setLaunchAnnouncement(newData);
                 await apiUpdateLaunchAnnouncement(newData);
@@ -91,37 +109,37 @@ export default function LaunchTab({ onChanged }) {
             return;
         }
 
-        const launchDate = new Date("2025-10-28");
-        const defaultLaunchIso = launchDate.toISOString().split("T")[0];
+        const saved = getSavedTheme("vice");
+        const defaultLaunchIso = "2025-10-28";
 
-        const isSameTheme = form.theme === "vice";
         const newData = {
-            ...form,
+            ...(saved || form),
             enabled: true,
             theme: "vice",
-            gameName: isSameTheme && form.gameName ? form.gameName : (form.gameName || "Grand Theft Auto VI"),
-            badge: isSameTheme && form.badge ? form.badge : "🔥 الإصدار الأضخم في تاريخ الألعاب",
-            subtitle: isSameTheme && form.subtitle ? form.subtitle : "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
-            description: isSameTheme && form.description ? form.description : "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
-            price5: isSameTheme && form.price5 != null ? form.price5 : (form.price5 || 45.0),
-            price4: isSameTheme && form.price4 != null ? form.price4 : (form.price4 || 28.0),
-            ctaLabel: isSameTheme && form.ctaLabel ? form.ctaLabel : (form.ctaLabel || "احجز نسختك الآن 🔥"),
-            ctaHref: form.ctaHref || "#games",
-            image: form.image || "",
-            imageUrl: form.imageUrl || "",
-            bonusGift: isSameTheme && form.bonusGift ? form.bonusGift : "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
-            rating: isSameTheme && form.rating ? form.rating : "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
-            stockLeft: isSameTheme && form.stockLeft != null ? form.stockLeft : (form.stockLeft || 12),
-            trailerUrl: isSameTheme && form.trailerUrl ? form.trailerUrl : (form.trailerUrl || "https://www.youtube.com/embed/QdBZY2fkU-0"),
-            countdownTarget: isSameTheme && form.countdownTarget ? form.countdownTarget : (form.countdownTarget || defaultLaunchIso),
-            launchDate: isSameTheme && form.launchDate ? form.launchDate : (form.launchDate || defaultLaunchIso),
-            note: isSameTheme && form.note ? form.note : "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
+            gameName: (saved?.gameName || form.gameName) || "Grand Theft Auto VI",
+            badge: (saved?.badge || form.badge) || "🔥 الإصدار الأضخم في تاريخ الألعاب",
+            subtitle: (saved?.subtitle || form.subtitle) || "عيش تجربة فايس سيتي بالكامل — عالم مفتوح بلا حدود مع Rockstar Games",
+            description: (saved?.description || form.description) || "احصل على حسابك الأصلي المضمون لأضخم لعبة في تاريخ صناعة الألعاب. Grand Theft Auto VI يأخذك في رحلة ملحمية داخل مدينة فايس سيتي المعاد بناؤها بالكامل مع رسومات الجيل القادم وعالم حي يتنفس. تسليم فوري مع ضمان ذهبي شامل.",
+            price5: (saved?.price5 ?? form.price5) ?? 45.0,
+            price4: (saved?.price4 ?? form.price4) ?? 28.0,
+            ctaLabel: (saved?.ctaLabel || form.ctaLabel) || "احجز نسختك الآن 🔥",
+            ctaHref: saved?.ctaHref || form.ctaHref || "#games",
+            image: saved?.image ?? form.image ?? "",
+            imageUrl: saved?.imageUrl ?? form.imageUrl ?? "",
+            bonusGift: (saved?.bonusGift || form.bonusGift) || "🎁 ضمان ذهبي مدى الحياة + GTA Online مجاناً + شحن $500,000 داخل اللعبة",
+            rating: (saved?.rating || form.rating) || "⭐ الأكثر انتظاراً في تاريخ الألعاب • 🏆 Rockstar Games",
+            stockLeft: (saved?.stockLeft ?? form.stockLeft) ?? 12,
+            trailerUrl: (saved?.trailerUrl || form.trailerUrl) || "https://www.youtube.com/embed/QdBZY2fkU-0",
+            countdownTarget: (saved?.countdownTarget || form.countdownTarget) || defaultLaunchIso,
+            launchDate: (saved?.launchDate || form.launchDate) || defaultLaunchIso,
+            note: (saved?.note || form.note) || "⚠️ الطلب المسبق يضمن لك أولوية التسليم فور الإطلاق الرسمي",
             currency: "$",
-            platform5: form.platform5 || "PS5",
-            platform4: form.platform4 || "PS4",
+            platform5: saved?.platform5 || form.platform5 || "PS5",
+            platform4: saved?.platform4 || form.platform4 || "PS4",
         };
 
         setForm(newData);
+        saveThemeData("vice", newData);
         try {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
@@ -138,6 +156,7 @@ export default function LaunchTab({ onChanged }) {
         if (form.enabled && form.theme === "eafc") {
             const newData = { ...form, enabled: false };
             setForm(newData);
+            saveThemeData("eafc", newData);
             try {
                 setLaunchAnnouncement(newData);
                 await apiUpdateLaunchAnnouncement(newData);
@@ -149,38 +168,39 @@ export default function LaunchTab({ onChanged }) {
             return;
         }
 
+        const saved = getSavedTheme("eafc");
         const launchDate = new Date();
         launchDate.setDate(launchDate.getDate() + 14);
         const defaultLaunchIso = launchDate.toISOString().split("T")[0];
 
-        const isSameTheme = form.theme === "eafc";
         const newData = {
-            ...form,
+            ...(saved || form),
             enabled: true,
             theme: "eafc",
-            gameName: isSameTheme && form.gameName ? form.gameName : (form.gameName || "EA SPORTS FC 27"),
-            badge: isSameTheme && form.badge ? form.badge : "⚽ انطلاقة الموسم الكروي الجديد",
-            subtitle: isSameTheme && form.subtitle ? form.subtitle : "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
-            description: isSameTheme && form.description ? form.description : "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
-            price5: isSameTheme && form.price5 != null ? form.price5 : (form.price5 || 42.0),
-            price4: isSameTheme && form.price4 != null ? form.price4 : (form.price4 || 24.0),
-            ctaLabel: isSameTheme && form.ctaLabel ? form.ctaLabel : (form.ctaLabel || "احصل على نسختك الآن ⚡"),
-            ctaHref: form.ctaHref || "#games",
-            image: form.image || "",
-            imageUrl: form.imageUrl || "",
-            bonusGift: isSameTheme && form.bonusGift ? form.bonusGift : "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
-            rating: isSameTheme && form.rating ? form.rating : "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
-            stockLeft: isSameTheme && form.stockLeft != null ? form.stockLeft : (form.stockLeft || 15),
-            trailerUrl: form.trailerUrl || "",
-            countdownTarget: isSameTheme && form.countdownTarget ? form.countdownTarget : (form.countdownTarget || defaultLaunchIso),
-            launchDate: isSameTheme && form.launchDate ? form.launchDate : (form.launchDate || defaultLaunchIso),
-            note: isSameTheme && form.note ? form.note : "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
+            gameName: (saved?.gameName || form.gameName) || "EA SPORTS FC 27",
+            badge: (saved?.badge || form.badge) || "⚽ انطلاقة الموسم الكروي الجديد",
+            subtitle: (saved?.subtitle || form.subtitle) || "عِش متعة كرة القدم الحقيقية في Ultimate Team وأنماط المهنة الرقمية",
+            description: (saved?.description || form.description) || "احصل على حسابك الأصلي المضمون لنسخة EA SPORTS FC الرسمية مع كافة التحديثات التنافسية وأولوية التسليم الفوري طوال الموسم الكروي.",
+            price5: (saved?.price5 ?? form.price5) ?? 42.0,
+            price4: (saved?.price4 ?? form.price4) ?? 24.0,
+            ctaLabel: (saved?.ctaLabel || form.ctaLabel) || "احصل على نسختك الآن ⚡",
+            ctaHref: saved?.ctaHref || form.ctaHref || "#games",
+            image: saved?.image ?? form.image ?? "",
+            imageUrl: saved?.imageUrl ?? form.imageUrl ?? "",
+            bonusGift: (saved?.bonusGift || form.bonusGift) || "🎁 شامل 4600 FC Points + ضمان ذهبي طوال الموسم الكروي",
+            rating: (saved?.rating || form.rating) || "⭐ اللعبة الكروية الأولى عالمياً • 🏆 EA SPORTS",
+            stockLeft: (saved?.stockLeft ?? form.stockLeft) ?? 15,
+            trailerUrl: saved?.trailerUrl || form.trailerUrl || "",
+            countdownTarget: (saved?.countdownTarget || form.countdownTarget) || defaultLaunchIso,
+            launchDate: (saved?.launchDate || form.launchDate) || defaultLaunchIso,
+            note: (saved?.note || form.note) || "⚡ تسليم أوتوماتيكي مباشر كحساب أصلي Primary",
             currency: "$",
-            platform5: form.platform5 || "PS5",
-            platform4: form.platform4 || "PS4",
+            platform5: saved?.platform5 || form.platform5 || "PS5",
+            platform4: saved?.platform4 || form.platform4 || "PS4",
         };
 
         setForm(newData);
+        saveThemeData("eafc", newData);
         try {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
@@ -197,6 +217,7 @@ export default function LaunchTab({ onChanged }) {
         if (form.enabled && form.theme === "gold") {
             const newData = { ...form, enabled: false };
             setForm(newData);
+            saveThemeData("gold", newData);
             try {
                 setLaunchAnnouncement(newData);
                 await apiUpdateLaunchAnnouncement(newData);
@@ -208,25 +229,43 @@ export default function LaunchTab({ onChanged }) {
             return;
         }
 
-        const isSameTheme = form.theme === "gold";
+        const saved = getSavedTheme("gold");
         const newData = {
-            ...form,
+            ...(saved || form),
             enabled: true,
             theme: "gold",
-            gameName: isSameTheme && form.gameName ? form.gameName : (form.gameName || "Call of Duty: Black Ops 7"),
-            badge: isSameTheme && form.badge ? form.badge : (form.badge || "🔥 متوفر الآن للطلب المباشر والتسليم الفوري"),
-            subtitle: isSameTheme && form.subtitle ? form.subtitle : (form.subtitle || "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق"),
-            description: isSameTheme && form.description ? form.description : (form.description || "احصل على اللعبة بأفضل سعر مع ضمان ذهبي شامل وتفعيل فوري على أجهزة PS4 و PS5."),
-            price5: isSameTheme && form.price5 != null ? form.price5 : (form.price5 || 38.5),
-            price4: isSameTheme && form.price4 != null ? form.price4 : (form.price4 || 18.5),
+            gameName: (saved?.gameName || form.gameName) || "Call of Duty: Black Ops 7",
+            badge: (saved?.badge || form.badge) || "🔥 متوفر الآن للطلب المباشر والتسليم الفوري",
+            subtitle: (saved?.subtitle || form.subtitle) || "احصل على حسابك الفوري الأصلي المضمون بأفضل سعر في السوق",
+            description: (saved?.description || form.description) || "احصل على اللعبة بأفضل سعر مع ضمان ذهبي شامل وتفعيل فوري على أجهزة PS4 و PS5.",
+            price5: (saved?.price5 ?? form.price5) ?? 38.5,
+            price4: (saved?.price4 ?? form.price4) ?? 18.5,
             currency: "$",
         };
         setForm(newData);
+        saveThemeData("gold", newData);
         try {
             setLaunchAnnouncement(newData);
             await apiUpdateLaunchAnnouncement(newData);
             await ensureSectionVisible();
             toast.success("🏆 تم تفعيل ونشر الثيم الذهبي الملكي بنجاح! ✨");
+            onChanged?.();
+        } catch (err) {
+            toast.error(formatApiError(err));
+        }
+    };
+
+    // Global Master Toggle
+    const handleToggleGlobal = async () => {
+        const nextEnabled = !form.enabled;
+        const newData = { ...form, enabled: nextEnabled };
+        setForm(newData);
+        saveThemeData(form.theme || "vice", newData);
+        try {
+            setLaunchAnnouncement(newData);
+            await apiUpdateLaunchAnnouncement(newData);
+            if (nextEnabled) await ensureSectionVisible();
+            toast.success(nextEnabled ? "🟢 تم تفعيل وعرض بنر الإطلاق في المتجر بنجاح!" : "🙈 تم إيقاف وإخفاء بنر الإطلاق من المتجر بنجاح!");
             onChanged?.();
         } catch (err) {
             toast.error(formatApiError(err));
@@ -258,9 +297,10 @@ export default function LaunchTab({ onChanged }) {
 
     // Save Announcement Handler
     const handleSave = async (e) => {
-        e.preventDefault();
+        e?.preventDefault?.();
         setSaving(true);
         try {
+            saveThemeData(form.theme || "vice", form);
             setLaunchAnnouncement(form);
             await apiUpdateLaunchAnnouncement(form);
             await ensureSectionVisible();
@@ -657,31 +697,27 @@ https://dukkank.com`;
                     </div>
                 </div>
 
-                {form.enabled ? (
-                    <button
-                        type="button"
-                        onClick={async () => {
-                            const newData = { ...form, enabled: false };
-                            setForm(newData);
-                            try {
-                                setLaunchAnnouncement(newData);
-                                await apiUpdateLaunchAnnouncement(newData);
-                                toast.success("🙈 تم إيقاف وإخفاء بنر الإطلاق من المتجر بالكامل!");
-                                onChanged?.();
-                            } catch (err) {
-                                toast.error(formatApiError(err));
-                            }
-                        }}
-                        className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
-                    >
-                        <EyeOff className="w-4 h-4" />
-                        <span>إيقاف البنر وإخفاؤه من المتجر الآن 🚫</span>
-                    </button>
-                ) : (
-                    <span className="text-[11px] text-slate-400 font-medium">
-                        اختر أي ثيم أدناه لتفعيله فوراً بالمتجر
-                    </span>
-                )}
+                <div className="flex items-center gap-2">
+                    {form.enabled ? (
+                        <button
+                            type="button"
+                            onClick={handleToggleGlobal}
+                            className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95"
+                        >
+                            <EyeOff className="w-4 h-4" />
+                            <span>إيقاف البنر وإخفاؤه من المتجر الآن 🚫</span>
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleToggleGlobal}
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                        >
+                            <Eye className="w-4 h-4" />
+                            <span>تفعيل البنر بنصوصك الحالية بالمتجر 🟢</span>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* 🎮 Major Game Launch Presets Bar */}
