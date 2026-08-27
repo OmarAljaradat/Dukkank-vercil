@@ -42,10 +42,10 @@ export default function WeeklyReportTab() {
 
     // Calculate real weekly metrics
     const totalRevenueSum = orders.reduce((sum, o) => sum + (parseFloat(o.customer_paid) || 0), 0);
-    const achievedSales = totalRevenueSum > 0 ? totalRevenueSum : 1420;
-    const totalOrdersCount = orders.length > 0 ? orders.length : 18;
+    const achievedSales = totalRevenueSum;
+    const totalOrdersCount = orders.length;
     const goalNum = parseFloat(currentGoal) || 2500;
-    const pctAchieved = Math.min(100, Math.round((achievedSales / goalNum) * 100));
+    const pctAchieved = totalRevenueSum > 0 ? Math.min(100, Math.round((achievedSales / goalNum) * 100)) : 0;
 
     // Dynamic Top 3 Games from DB
     const gameStatsMap = {};
@@ -58,21 +58,14 @@ export default function WeeklyReportTab() {
     });
 
     const dynamicTopGames = Object.values(gameStatsMap).sort((a, b) => b.revenue - a.revenue);
-    const fallbackTopGames = [
-        { rank: "🥇 #1", name: "EA SPORTS FC 25 (حساب PS5/PS4)", orders: "12 طلب", total: "$624.00", color: "bg-amber-500/10 text-amber-600 border-amber-300" },
-        { rank: "🥈 #2", name: "اشتراك PS Plus Extra (12 شهر)", orders: "5 طلبات", total: "$420.00", color: "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300" },
-        { rank: "🥉 #3", name: "Grand Theft Auto VI (PS5)", orders: "4 طلبات", total: "$208.00", color: "bg-orange-500/10 text-orange-600 border-orange-300" },
-    ];
 
-    const displayTop3 = dynamicTopGames.length > 0
-        ? dynamicTopGames.slice(0, 3).map((g, idx) => ({
-            rank: idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : "🥉 #3",
-            name: g.name,
-            orders: `${g.count} طلبات`,
-            total: `$${g.revenue.toFixed(2)}`,
-            color: idx === 0 ? "bg-amber-500/10 text-amber-600 border-amber-300" : idx === 1 ? "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300" : "bg-orange-500/10 text-orange-600 border-orange-300"
-        }))
-        : fallbackTopGames;
+    const displayTop3 = dynamicTopGames.slice(0, 3).map((g, idx) => ({
+        rank: idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : "🥉 #3",
+        name: g.name,
+        orders: `${g.count} طلبات`,
+        total: `$${g.revenue.toFixed(2)}`,
+        color: idx === 0 ? "bg-amber-500/10 text-amber-600 border-amber-300" : idx === 1 ? "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-300" : "bg-orange-500/10 text-orange-600 border-orange-300"
+    }));
 
     return (
         <div className="space-y-6 print:p-0">
@@ -159,18 +152,24 @@ export default function WeeklyReportTab() {
                     </h3>
 
                     <div className="space-y-2.5">
-                        {displayTop3.map((game, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold border border-slate-100 dark:border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <span className={`px-2.5 py-1 rounded-xl text-xs font-black border ${game.color}`}>{game.rank}</span>
-                                    <span className="text-slate-900 dark:text-white">{game.name}</span>
-                                </div>
-                                <div className="text-left">
-                                    <span className="text-emerald-600 font-black">{game.total}</span>
-                                    <span className="text-[11px] text-slate-400 block font-medium">{game.orders}</span>
-                                </div>
+                        {displayTop3.length === 0 ? (
+                            <div className="text-center py-8 text-xs font-bold text-slate-400">
+                                بانتظار تسجيل المبيعات الأولى لترتيب الألعاب 🎮
                             </div>
-                        ))}
+                        ) : (
+                            displayTop3.map((game, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <span className={`px-2.5 py-1 rounded-xl text-xs font-black border ${game.color}`}>{game.rank}</span>
+                                        <span className="text-slate-900 dark:text-white">{game.name}</span>
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="text-emerald-600 font-black">{game.total}</span>
+                                        <span className="text-[11px] text-slate-400 block font-medium">{game.orders}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 

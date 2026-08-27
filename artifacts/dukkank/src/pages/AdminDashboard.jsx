@@ -4,8 +4,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useStoreData } from "../contexts/DataContext";
 import { useLang } from "../contexts/LanguageContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
-import { LogOut, ExternalLink, Loader2 } from "lucide-react";
+import { LogOut, ExternalLink, Loader2, RotateCcw } from "lucide-react";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { apiResetStoreData, formatApiError } from "../lib/api";
+import { toast } from "sonner";
 import StoreSettingsTab   from "../components/admin/StoreSettingsTab";
 import SubscriptionsTab   from "../components/admin/SubscriptionsTab";
 import GamesTab           from "../components/admin/GamesTab";
@@ -94,6 +96,27 @@ export default function AdminDashboard() {
     const navigate = useNavigate();
     const [tab, setTab] = useState("analytics");
     const [activeGroup, setActiveGroup] = useState("analytics");
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetting, setResetting] = useState(false);
+
+    const handleResetStoreData = async () => {
+        setResetting(true);
+        try {
+            await apiResetStoreData();
+            localStorage.removeItem("dukkank_admin_expenses");
+            localStorage.removeItem("dukkank_weekly_goal");
+            toast.success("تم تصفير وإعادة ضبط كافة الطلبات والإحصائيات بنجاح! المتجر يبدأ الآن من الصفر 🚀");
+            setShowResetConfirm(false);
+            await reload();
+            const curr = tab;
+            setTab("store");
+            setTimeout(() => setTab(curr), 50);
+        } catch (e) {
+            toast.error("فشل تصفير الإحصائيات: " + formatApiError(e));
+        } finally {
+            setResetting(false);
+        }
+    };
 
     useEffect(() => {
         if (!loading && !user) navigate("/admin/login", { replace: true });
@@ -172,21 +195,35 @@ export default function AdminDashboard() {
             <main className="max-w-7xl mx-auto px-3 sm:px-8 py-5 sm:py-8">
                 <Tabs value={tab} onValueChange={setTab} className="w-full">
                     {/* Sub-tab list (for current group) */}
-                    <TabsList
-                        data-testid="admin-tabs"
-                        className="w-full flex flex-wrap gap-1 bg-white/70 dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/10 dark:border-white/10 rounded-2xl p-1.5 h-auto mb-5"
-                    >
-                        {groupTabs.map((tb) => (
-                            <TabsTrigger
-                                key={tb.value}
-                                value={tb.value}
-                                data-testid={`tab-${tb.value}`}
-                                className="data-[state=active]:bg-[hsl(var(--brand-ink))] data-[state=active]:text-[hsl(var(--brand-cream))] rounded-xl py-2 px-3 font-bold text-xs sm:text-sm whitespace-nowrap"
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-5">
+                        <TabsList
+                            data-testid="admin-tabs"
+                            className="flex-1 flex flex-wrap gap-1 bg-white/70 dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/10 dark:border-white/10 rounded-2xl p-1.5 h-auto"
+                        >
+                            {groupTabs.map((tb) => (
+                                <TabsTrigger
+                                    key={tb.value}
+                                    value={tb.value}
+                                    data-testid={`tab-${tb.value}`}
+                                    className="data-[state=active]:bg-[hsl(var(--brand-ink))] data-[state=active]:text-[hsl(var(--brand-cream))] rounded-xl py-2 px-3 font-bold text-xs sm:text-sm whitespace-nowrap"
+                                >
+                                    {tb.label}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+
+                        {activeGroup === "analytics" && (
+                            <button
+                                type="button"
+                                onClick={() => setShowResetConfirm(true)}
+                                data-testid="reset-analytics-btn"
+                                className="flex items-center justify-center gap-2 px-4 h-11 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-black shadow-sm transition-all shrink-0 cursor-pointer"
                             >
-                                {tb.label}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+                                <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+                                <span>تصفير الإحصائيات كمتجر جديد 0️⃣</span>
+                            </button>
+                        )}
+                    </div>
 
                     {/* Tab contents (Lazy rendered per active tab) */}
                     <TabsContent value="analytics"    className="mt-0">{tab === "analytics" && <AnalyticsTab />}</TabsContent>
@@ -223,6 +260,42 @@ export default function AdminDashboard() {
                     <TabsContent value="performance"  className="mt-0">{tab === "performance" && <PerformanceTab />}</TabsContent>
                 </Tabs>
             </main>
+
+            {/* ── Reset Store Data Confirmation Modal ───────────────────── */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in" onClick={() => setShowResetConfirm(false)}>
+                    <div className="bg-white dark:bg-slate-900 border border-rose-500/30 rounded-3xl w-full max-w-md shadow-2xl p-6 relative text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center text-2xl mb-4 mx-auto">
+                            ⚠️
+                        </div>
+                        <h3 className="font-black text-base text-slate-900 dark:text-white text-center mb-2">
+                            تصفير وإعادة تعيين المتجر كجديد 0️⃣
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center mb-6 leading-relaxed">
+                            سيتم حذف كافة الطلبات التجريبية وتصفير الإحصائيات والأرباح لتبدأ جميع الشاشات من الصفر ($0.00 و 0 طلبات) كمتجر جديد تماماً وجاهز لاستقبال الزبائن الحقيقيين.
+                        </p>
+
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowResetConfirm(false)}
+                                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                type="button"
+                                disabled={resetting}
+                                onClick={handleResetStoreData}
+                                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-black hover:bg-rose-700 shadow-lg shadow-rose-600/25 transition-all disabled:opacity-50"
+                            >
+                                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                                <span>تأكيد التصفير والبدء من الصفر 🚀</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

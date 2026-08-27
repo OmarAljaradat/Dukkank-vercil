@@ -49606,9 +49606,25 @@ router7.post("/orders", (req, res) => {
   const o = req.body || {};
   res.status(201).json({ ok: true, id: `ord-${Date.now()}` });
 });
-router7.get("/admin/orders", (req, res) => {
+router7.post("/admin/reset-store-data", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  res.json({ orders: storeOrders, total: storeOrders.length });
+  try {
+    if (pool6) {
+      await pool6.query("DELETE FROM store_orders");
+      await pool6.query(
+        `INSERT INTO store_config (key, value) VALUES ('order_counter', '1000')
+         ON CONFLICT (key) DO UPDATE SET value = '1000', updated_at = NOW()`
+      );
+      await pool6.query(
+        `INSERT INTO store_config (key, value) VALUES ('analytics_timeline', '[]')
+         ON CONFLICT (key) DO UPDATE SET value = '[]', updated_at = NOW()`
+      );
+    }
+    storeOrders = [];
+    res.json({ ok: true, message: "\u062A\u0645 \u062A\u0635\u0641\u064A\u0631 \u0643\u0627\u0641\u0629 \u0627\u0644\u0637\u0644\u0628\u0627\u062A \u0648\u0627\u0644\u0625\u062D\u0635\u0627\u0626\u064A\u0627\u062A \u0628\u0646\u062C\u0627\u062D! \u0627\u0644\u0645\u062A\u062C\u0631 \u064A\u0628\u062F\u0623 \u0627\u0644\u0622\u0646 \u0645\u0646 \u0627\u0644\u0635\u0641\u0631 \u0643\u0645\u062A\u062C\u0631 \u062C\u062F\u064A\u062F \u{1F680}" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 var orders_default = router7;
 

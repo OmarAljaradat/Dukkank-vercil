@@ -89,20 +89,13 @@ export default function FinanceTab() {
     };
 
     // Live financial computations
-    const totalRevenue = orders.length > 0
-        ? orders.reduce((sum, o) => sum + (parseFloat(o.customer_paid) || 0), 0)
-        : 2527.55;
-
-    const totalSupplierCost = orders.length > 0
-        ? orders.reduce((sum, o) => sum + (parseFloat(o.cost_price) || 0), 0)
-        : 110.33;
-
+    const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.customer_paid) || 0), 0);
+    const totalSupplierCost = orders.reduce((sum, o) => sum + (parseFloat(o.cost_price) || 0), 0);
     const totalGatewayFees = orders.reduce((sum, o) => sum + (parseFloat(o.gateway_fee) || 0), 0);
-
     const totalAdminExpenses = expenses.reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
 
     const netProfit = totalRevenue - totalSupplierCost - totalGatewayFees - totalAdminExpenses;
-    const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : "95.6";
+    const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : "0.0";
 
     // Dynamic supplier orders
     const dynamicSupplierCosts = orders
@@ -115,7 +108,7 @@ export default function FinanceTab() {
             isPaid: o.status === "delivered" || o.status === "completed" || o.status === "account_received"
         }));
 
-    const displaySupplierCosts = dynamicSupplierCosts.length > 0 ? dynamicSupplierCosts : DEFAULT_SUPPLIER_COSTS;
+    const displaySupplierCosts = dynamicSupplierCosts;
 
     return (
         <div className="space-y-6">
@@ -200,21 +193,27 @@ export default function FinanceTab() {
                         <span>🤝 مستحقات الموردين وتكلفة شراء الحسابات</span>
                     </h3>
                     <div className="space-y-2.5 pt-1">
-                        {displaySupplierCosts.map((sup, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold border border-slate-100 dark:border-white/5">
-                                <div className="space-y-0.5">
-                                    <div className="text-slate-900 dark:text-white font-extrabold">{sup.supplier}</div>
-                                    <div className="text-[10px] text-slate-400 font-medium">{sup.item} • {sup.date}</div>
-                                </div>
-                                <div className="text-left">
-                                    <div className="text-red-600 font-black">{sup.cost}</div>
-                                    <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold mt-0.5 px-2 py-0.2 rounded-full ${sup.isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                                        {sup.isPaid ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                                        {sup.isPaid ? "مدفوع 🟢" : "مستحق 🟡"}
-                                    </span>
-                                </div>
+                        {displaySupplierCosts.length === 0 ? (
+                            <div className="text-center py-8 text-xs font-bold text-slate-400">
+                                لا توجد مستحقات موردين مسجلة حتى الآن 🤝
                             </div>
-                        ))}
+                        ) : (
+                            displaySupplierCosts.map((sup, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold border border-slate-100 dark:border-white/5">
+                                    <div className="space-y-0.5">
+                                        <div className="text-slate-900 dark:text-white font-extrabold">{sup.supplier}</div>
+                                        <div className="text-[10px] text-slate-400 font-medium">{sup.item} • {sup.date}</div>
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="text-red-600 font-black">{sup.cost}</div>
+                                        <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold mt-0.5 px-2 py-0.2 rounded-full ${sup.isPaid ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                            {sup.isPaid ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                                            {sup.isPaid ? "مدفوع 🟢" : "مستحق 🟡"}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

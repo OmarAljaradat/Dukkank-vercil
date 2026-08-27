@@ -83,21 +83,10 @@ export default function InsightsTab() {
     });
 
     const dynamicTopGames = Object.values(gameStatsMap).sort((a, b) => b.revenue - a.revenue);
-
-    const fallbackTop = [
-        { name: "EA SPORTS FC 25 (حساب PS5/PS4)", revenue: 1440, profit: 580, count: 48 },
-        { name: "اشتراك PS Plus Extra (12 شهر)", revenue: 960, profit: 340, count: 32 },
-        { name: "Grand Theft Auto VI (PS5)", revenue: 620, profit: 210, count: 24 },
-        { name: "اشتراك PS Plus Deluxe (12 شهر)", revenue: 540, profit: 190, count: 18 },
-        { name: "Black Ops 6 (حساب PS5)", revenue: 480, profit: 160, count: 14 },
-    ];
-
-    const displayTopItems = dynamicTopGames.length > 0
-        ? dynamicTopGames.slice(0, 5)
-        : fallbackTop;
+    const displayTopItems = dynamicTopGames.slice(0, 5);
 
     const badges = ["🏆 الأكثر ربحاً", "🔥 الأكثر طلباً", "⭐ مبيعات عالية", "💎 أرباح ممتازة", "🎮 ألعاب جديدة"];
-    const completedCount = orders.filter((o) => o.status === "completed" || o.status === "delivered").length || 3;
+    const completedCount = orders.filter((o) => o.status === "completed" || o.status === "delivered").length;
 
     return (
         <div className="space-y-6">
@@ -226,24 +215,30 @@ export default function InsightsTab() {
                         </h3>
                     </div>
                     <div className="space-y-2.5">
-                        {displayTopItems.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold transition hover:bg-slate-100 dark:hover:bg-slate-800">
-                                <div>
-                                    <div className="text-slate-900 dark:text-white">{item.name}</div>
-                                    <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
-                                        {badges[idx % badges.length]} ({item.count} مبيعات)
-                                    </div>
-                                </div>
-                                <div className="text-left">
-                                    <div className="text-emerald-600 font-black text-sm">
-                                        ${typeof item.revenue === "number" ? item.revenue.toFixed(2) : item.revenue}
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 font-medium">
-                                        ربح: ${typeof item.profit === "number" ? item.profit.toFixed(2) : item.profit}
-                                    </div>
-                                </div>
+                        {displayTopItems.length === 0 ? (
+                            <div className="text-center py-8 text-xs font-bold text-slate-400">
+                                بانتظار تسجيل المبيعات الأولى لترتيب الألعاب 🎮
                             </div>
-                        ))}
+                        ) : (
+                            displayTopItems.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold transition hover:bg-slate-100 dark:hover:bg-slate-800">
+                                    <div>
+                                        <div className="text-slate-900 dark:text-white">{item.name}</div>
+                                        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
+                                            {badges[idx % badges.length]} ({item.count} مبيعات)
+                                        </div>
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="text-emerald-600 font-black text-sm">
+                                            ${typeof item.revenue === "number" ? item.revenue.toFixed(2) : item.revenue}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-medium">
+                                            ربح: ${typeof item.profit === "number" ? item.profit.toFixed(2) : item.profit}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 

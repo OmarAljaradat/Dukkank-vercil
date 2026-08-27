@@ -209,6 +209,8 @@ export const apiGenerateAiLaunchTheme = (gamePrompt) =>
     client.post("/admin/ai-launch-generator", { gamePrompt }).then((r) => r.data);
 export const apiGetTheme = () => client.get("/theme").then((r) => r.data);
 export const apiUpdateTheme = (theme) => client.put("/admin/theme", theme).then((r) => r.data);
+// ── Reset Store Data & Analytics to Fresh Zero State ──────────────────────────
+export const apiResetStoreData = () => client.post("/admin/reset-store-data").then((r) => r.data);
 
 export function formatApiError(err) {
     const errObj = err?.response?.data;
