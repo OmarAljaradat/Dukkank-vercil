@@ -13,15 +13,26 @@ const ACTION_META = {
 
 const TARGET_LABELS = {
     store: "إعدادات المتجر",
-    subscription: "اشتراك",
-    game: "لعبة",
-    bundle: "باقة",
+    subscription: "اشتراك بلس",
+    game: "لعبة رقمية",
+    bundle: "باقة ألعاب",
     sections: "ترتيب الأقسام",
     promo: "بانر العرض",
     social_proof: "الإثبات الاجتماعي",
     wa_templates: "قوالب الواتساب",
     subscriber: "مشترك",
     upload: "رفع صورة",
+    security: "الأمان والحماية",
+    seo: "محركات البحث (SEO)",
+    customer: "بيانات عميل",
+    order: "طلب جديد",
+    coupon: "كوبون خصم",
+    review: "تقييم عميل",
+    theme: "الألوان والثيم",
+    content: "محتوى الموقع",
+    maintenance: "وضع الصيانة",
+    policy: "سياسة المتجر",
+    backup: "نسخ احتياطي",
 };
 
 const formatTimeAgo = (dateStr) => {
