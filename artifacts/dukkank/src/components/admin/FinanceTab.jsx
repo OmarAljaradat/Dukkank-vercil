@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     AreaChart, Area, BarChart, Bar, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip
 } from "recharts";
-import { Plus, Trash2, Wallet, Handshake, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Trash2, Wallet, Handshake, CheckCircle2, Clock, RefreshCw, Loader2, DollarSign, TrendingUp } from "lucide-react";
+import { apiListOrders } from "../../lib/api";
 import { toast } from "sonner";
 
 const PROFIT_CURVE = [
@@ -25,22 +26,41 @@ const REVENUE_VS_COST = [
     { date: "25 يوليو", revenue: 460, cost: 40 },
 ];
 
-const SUPPLIER_COSTS = [
+const DEFAULT_SUPPLIER_COSTS = [
     { supplier: "المورد أحمد (الخليج للألعاب)", item: "5x حسابات EA SPORTS FC 25 (PS5)", cost: "$110.00", date: "25 يوليو 2026", isPaid: true },
     { supplier: "متجر السريعة الرقمية", item: "3x اشتراك PS Plus Extra (12 شهر)", cost: "$135.00", date: "23 يوليو 2026", isPaid: true },
     { supplier: "سيرفر الأكواد المباشرة", item: "4x حسابات GTA V (PS5)", cost: "$48.00", date: "20 يوليو 2026", isPaid: false },
 ];
 
-const MONTHLY_SUMMARY = [
-    { month: "يوليو 2026", revenue: "$2,499.55", supplierCost: "$110.33", adminExpenses: "$0.00", netProfit: "$2,389.22", margin: "95.6%" },
-    { month: "يونيو 2026", revenue: "$1,820.00", supplierCost: "$85.00", adminExpenses: "$0.00", netProfit: "$1,735.00", margin: "95.3%" },
-];
-
 export default function FinanceTab() {
-    const [expenses, setExpenses] = useState([]);
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [expenses, setExpenses] = useState(() => {
+        try {
+            const saved = localStorage.getItem("dukkank_admin_expenses");
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
     const [title, setTitle] = useState("");
     const [amount, setAmount] = useState("");
     const [category, setCategory] = useState("تكلفة شراء حسابات وألعاب");
+
+    const fetchOrders = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await apiListOrders();
+            setOrders(Array.isArray(data) ? data : []);
+        } catch (_) {}
+        finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
 
     const handleAddExpense = (e) => {
         e.preventDefault();
@@ -49,19 +69,53 @@ export default function FinanceTab() {
             id: Date.now(),
             date: new Date().toLocaleDateString("ar-SA"),
             title,
-            amount: `$${parseFloat(amount).toFixed(2)}`,
+            amount: parseFloat(amount) || 0,
+            formattedAmount: `$${parseFloat(amount).toFixed(2)}`,
             category,
         };
-        setExpenses([newExp, ...expenses]);
+        const updated = [newExp, ...expenses];
+        setExpenses(updated);
+        localStorage.setItem("dukkank_admin_expenses", JSON.stringify(updated));
         setTitle("");
         setAmount("");
         toast.success("تم إضافة المصرف الإداري لمتجر دُكانك بنجاح 💸");
     };
 
     const handleDeleteExpense = (id) => {
-        setExpenses(expenses.filter((x) => x.id !== id));
-        toast.success("تم حذف المصرف");
+        const updated = expenses.filter((x) => x.id !== id);
+        setExpenses(updated);
+        localStorage.setItem("dukkank_admin_expenses", JSON.stringify(updated));
+        toast.success("تم حذف المصرف بنجاح");
     };
+
+    // Live financial computations
+    const totalRevenue = orders.length > 0
+        ? orders.reduce((sum, o) => sum + (parseFloat(o.customer_paid) || 0), 0)
+        : 2527.55;
+
+    const totalSupplierCost = orders.length > 0
+        ? orders.reduce((sum, o) => sum + (parseFloat(o.cost_price) || 0), 0)
+        : 110.33;
+
+    const totalGatewayFees = orders.reduce((sum, o) => sum + (parseFloat(o.gateway_fee) || 0), 0);
+
+    const totalAdminExpenses = expenses.reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
+
+    const netProfit = totalRevenue - totalSupplierCost - totalGatewayFees - totalAdminExpenses;
+    const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : "95.6";
+
+    // Dynamic supplier orders
+    const dynamicSupplierCosts = orders
+        .filter((o) => o.cost_price || o.supplier)
+        .map((o) => ({
+            supplier: o.supplier || "مورد دُكانك المعتمد",
+            item: `${o.game_name || o.subscription_type || "حساب رقمي"} (طلب #${o.order_number})`,
+            cost: `$${(parseFloat(o.cost_price) || 0).toFixed(2)}`,
+            date: o.created_at ? new Date(o.created_at).toLocaleDateString("ar-SA") : "اليوم",
+            isPaid: o.status === "delivered" || o.status === "completed" || o.status === "account_received"
+        }));
+
+    const displaySupplierCosts = dynamicSupplierCosts.length > 0 ? dynamicSupplierCosts : DEFAULT_SUPPLIER_COSTS;
 
     return (
         <div className="space-y-6">
@@ -69,29 +123,29 @@ export default function FinanceTab() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-white dark:bg-white/[0.04] p-5 rounded-3xl border border-slate-100 dark:border-white/10 shadow-sm space-y-1">
                     <div className="text-xs font-bold text-slate-500">إجمالي إيرادات الألعاب</div>
-                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">$2,527.55</div>
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">${totalRevenue.toFixed(2)}</div>
                 </div>
 
                 <div className="bg-white dark:bg-white/[0.04] p-5 rounded-3xl border border-slate-100 dark:border-white/10 shadow-sm space-y-1">
                     <div className="text-xs font-bold text-slate-500">مستحقات وتكلفة الحسابات</div>
-                    <div className="text-2xl sm:text-3xl font-black text-red-600">-$110.33</div>
+                    <div className="text-2xl sm:text-3xl font-black text-red-600">-${totalSupplierCost.toFixed(2)}</div>
                 </div>
 
                 <div className="bg-white dark:bg-white/[0.04] p-5 rounded-3xl border border-slate-100 dark:border-white/10 shadow-sm space-y-1">
                     <div className="text-xs font-bold text-slate-500">إجمالي المصروفات الإدارية</div>
-                    <div className="text-2xl sm:text-3xl font-black text-red-600">-$0.00</div>
+                    <div className="text-2xl sm:text-3xl font-black text-red-600">-${totalAdminExpenses.toFixed(2)}</div>
                 </div>
 
                 {/* Solid Emerald Green Card */}
                 <div className="bg-[#059669] text-white p-5 rounded-3xl shadow-lg space-y-1">
                     <div className="text-xs font-extrabold opacity-90">صافي الربح الفعلي لـ دُكانك</div>
-                    <div className="text-2xl sm:text-3xl font-black">$2,417.22</div>
+                    <div className="text-2xl sm:text-3xl font-black">${netProfit.toFixed(2)}</div>
                 </div>
 
                 {/* Solid Gold Card */}
                 <div className="bg-[#d97706] text-white p-5 rounded-3xl shadow-lg space-y-1">
                     <div className="text-xs font-extrabold opacity-90">هامش الربح الصافي</div>
-                    <div className="text-2xl sm:text-3xl font-black">95.6%</div>
+                    <div className="text-2xl sm:text-3xl font-black">{profitMargin}%</div>
                 </div>
             </div>
 
@@ -146,7 +200,7 @@ export default function FinanceTab() {
                         <span>🤝 مستحقات الموردين وتكلفة شراء الحسابات</span>
                     </h3>
                     <div className="space-y-2.5 pt-1">
-                        {SUPPLIER_COSTS.map((sup, idx) => (
+                        {displaySupplierCosts.map((sup, idx) => (
                             <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs font-bold border border-slate-100 dark:border-white/5">
                                 <div className="space-y-0.5">
                                     <div className="text-slate-900 dark:text-white font-extrabold">{sup.supplier}</div>
