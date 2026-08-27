@@ -55,7 +55,7 @@ const TABS = [
     { value: "games",        label: "🎮 الألعاب والمخزون",   group: "store" },
     { value: "subscriptions",label: "📦 الاشتراكات",       group: "store" },
     { value: "suppliers",    label: "🚚 إدارة الموردين",       group: "store" },
-    { value: "gifts",        label: "🎁 طلبات الهدايا الرقمية",group: "store" },
+    { value: "gifts",        label: "🎁 طلبات الهدايا الرقمية (قريباً)",group: "store" },
     { value: "coupons",      label: "🎟️ الكوبونات والعروض", group: "store" },
     { value: "launch",       label: "📢 إعلان الألعاب الضخمة",group: "store" },
     { value: "productsCSV",  label: "📄 تصدير واستيراد CSV",group: "store" },

@@ -477,49 +477,7 @@ export default function AllCartPage() {
                                         />
                                     </div>
 
-                                    {/* FEATURE 5: GIFT ORDER TOGGLE */}
-                                    <div className="pt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsGift(!isGift)}
-                                            className={`w-full p-3 rounded-2xl border transition-all flex items-center justify-between text-xs font-bold ${
-                                                isGift
-                                                    ? "bg-purple-50 dark:bg-purple-950/30 border-purple-300 text-purple-700 dark:text-purple-300"
-                                                    : "bg-black/5 border-[hsl(var(--brand-ink))]/10 text-[hsl(var(--brand-ink))]/70"
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <Gift className="w-4 h-4 text-purple-600" />
-                                                <span>🎁 إهداء هذا الطلب لصديق؟</span>
-                                            </div>
-                                            <span className="text-[10px] font-black underline">{isGift ? "مفعّل 🟢" : "تفعيل ⚪"}</span>
-                                        </button>
-
-                                        {isGift && (
-                                            <div className="mt-3 p-4 bg-purple-50/50 dark:bg-purple-950/20 rounded-2xl border border-purple-200/50 space-y-3">
-                                                <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-purple-800 dark:text-purple-200">اسم الصديق المهدى إليه</label>
-                                                    <input
-                                                        type="text"
-                                                        value={giftName}
-                                                        onChange={(e) => setGiftName(e.target.value)}
-                                                        placeholder="مثال: صديقي أحمد"
-                                                        className="w-full h-9 px-3 rounded-xl border border-purple-200 bg-white text-xs font-bold"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-purple-800 dark:text-purple-200">رسالة معايدة تهنئة</label>
-                                                    <input
-                                                        type="text"
-                                                        value={giftMsg}
-                                                        onChange={(e) => setGiftMsg(e.target.value)}
-                                                        placeholder="مبروك اللعبة يا غالي! 🎮🎉"
-                                                        className="w-full h-9 px-3 rounded-xl border border-purple-200 bg-white text-xs font-bold"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {/* GIFT ORDER TOGGLE (Temporarily Paused / Coming Soon) */}
 
                                 </div>
 
