@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner";
 import {
     Save, Loader2, Megaphone, Sparkles, Gamepad2, Eye, EyeOff,
-    Zap, Clock, Palette, CheckCircle2, Layout, Share2, ShieldCheck, Flame, Gift, Star, Video, FlameKindling, Instagram, Copy, Bot, Wand2
+    Zap, Clock, Palette, CheckCircle2, Layout, Share2, ShieldCheck, Flame, Gift, Star, Video, FlameKindling, Instagram, Copy, Bot, Wand2, Search
 } from "lucide-react";
 
 export default function LaunchTab({ onChanged }) {
@@ -18,6 +18,8 @@ export default function LaunchTab({ onChanged }) {
     const [saving, setSaving] = useState(false);
     const [aiPrompt, setAiPrompt] = useState("");
     const [aiGenerating, setAiGenerating] = useState(false);
+    const [gameSearch, setGameSearch] = useState("");
+    const [showAllGames, setShowAllGames] = useState(false);
 
     useEffect(() => {
         if (launchAnnouncement) {
@@ -498,38 +500,134 @@ https://dukkank.com`;
                 </div>
             </div>
 
-            {/* Quick Auto-Fill Selector from Existing Store Games */}
-            <div className="bg-slate-900/80 p-5 rounded-3xl border border-slate-800 space-y-3 text-white">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-black text-amber-400">
-                        <Zap className="w-4 h-4" />
-                        <span>أداة التعبئة الفورية بنقرة واحدة من مخزون ألعاب المتجر:</span>
+            {/* Quick Auto-Fill Selector from Existing Store Games (Full Store Picker) */}
+            <div className="bg-slate-900/80 p-5 rounded-3xl border border-slate-800 space-y-4 text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h3 className="text-xs font-black text-white">اختيار لعبة من مخزون المتجر لتعبئة البنر بنقرة واحدة</h3>
+                            <p className="text-[11px] text-slate-400 font-medium">
+                                اختر أي لعبة مسجلة في المتجر ({games?.length || 0} لعبة متوفرة) لتعبئة الصورة والأسعار والاسم فوراً.
+                            </p>
+                        </div>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-bold">اختر أي لعبة لتعبئة بيانات البنر تلقائياً ⚡</span>
+
+                    {form.gameName && (
+                        <div className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold self-start sm:self-auto flex items-center gap-1.5">
+                            <span>اللعبة المختارة للبنر:</span>
+                            <span className="text-white font-black">{form.gameName}</span>
+                        </div>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {(games || []).slice(0, 6).map((g) => (
-                        <button
-                            key={g.id}
-                            type="button"
-                            onClick={() => handleSelectGame(g.id)}
-                            className="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-right flex items-center gap-3 transition cursor-pointer group"
+                {/* Quick Search and Dropdown Filter Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={gameSearch}
+                            onChange={(e) => setGameSearch(e.target.value)}
+                            placeholder="ابحث باسم أي لعبة بالمتجر... (مثلاً: GTA, FIFA, Call of Duty)"
+                            className="w-full h-10 pr-10 pl-8 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
+                        />
+                        {gameSearch && (
+                            <button
+                                type="button"
+                                onClick={() => setGameSearch("")}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs font-bold"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
+                    <div>
+                        <select
+                            value={form.gameId || ""}
+                            onChange={(e) => handleSelectGame(e.target.value)}
+                            className="w-full h-10 px-3 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white focus:border-amber-400 focus:outline-none cursor-pointer"
                         >
-                            {g.image ? (
-                                <img src={g.image} alt={g.name} className="w-11 h-11 rounded-xl object-cover shrink-0 border border-slate-600" />
-                            ) : (
-                                <div className="w-11 h-11 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">
-                                    <Gamepad2 className="w-6 h-6 text-slate-400" />
+                            <option value="">-- أو اختر لعبة مباشرة من القائمة الكاملة ({games?.length || 0}) --</option>
+                            {(games || []).map((g) => (
+                                <option key={g.id} value={g.id}>
+                                    {g.name} (PS5: ${g.five || 0} | PS4: ${g.four || 0})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Interactive Cards Grid */}
+                {(() => {
+                    const filtered = (games || []).filter((g) => {
+                        if (!gameSearch.trim()) return true;
+                        const q = gameSearch.toLowerCase().trim();
+                        return (
+                            (g.name || "").toLowerCase().includes(q) ||
+                            (g.id || "").toLowerCase().includes(q) ||
+                            (g.sub || "").toLowerCase().includes(q)
+                        );
+                    });
+
+                    return (
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[340px] overflow-y-auto pr-1">
+                                {(showAllGames || gameSearch ? filtered : filtered.slice(0, 9)).map((g) => {
+                                    const isSelected = form.gameId === g.id || form.gameName === g.name;
+                                    return (
+                                        <button
+                                            key={g.id}
+                                            type="button"
+                                            onClick={() => handleSelectGame(g.id)}
+                                            className={`p-2.5 rounded-2xl border text-right flex items-center gap-3 transition cursor-pointer group ${
+                                                isSelected
+                                                    ? "bg-amber-500/20 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                                                    : "bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 hover:border-slate-600"
+                                            }`}
+                                        >
+                                            {g.image ? (
+                                                <img src={g.image} alt={g.name} className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-600" />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center shrink-0">
+                                                    <Gamepad2 className="w-5 h-5 text-slate-400" />
+                                                </div>
+                                            )}
+                                            <div className="space-y-0.5 overflow-hidden flex-1 min-w-0">
+                                                <div className="text-xs font-black text-white group-hover:text-amber-400 transition truncate">{g.name}</div>
+                                                <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-2">
+                                                    <span>PS5: ${g.five || 0}</span>
+                                                    <span className="text-slate-500">•</span>
+                                                    <span>PS4: ${g.four || 0}</span>
+                                                </div>
+                                            </div>
+                                            {isSelected && (
+                                                <div className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 font-black text-xs">
+                                                    ✓
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {!gameSearch && (games || []).length > 9 && (
+                                <div className="text-center pt-2 border-t border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllGames(!showAllGames)}
+                                        className="text-xs font-bold text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                                    >
+                                        {showAllGames ? "▲ إظهار عدد أقل" : `▼ عرض كل ألعاب المتجر المتاحة (${games.length} لعبة)`}
+                                    </button>
                                 </div>
                             )}
-                            <div className="space-y-0.5 overflow-hidden">
-                                <div className="text-xs font-black text-white group-hover:text-amber-400 transition truncate">{g.name}</div>
-                                <div className="text-[11px] text-emerald-400 font-bold">PS5: ${g.five || 0} | PS4: ${g.four || 0}</div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* 🚦 Live Store Banner Global Status Bar */}
