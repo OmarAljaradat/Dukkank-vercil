@@ -49035,6 +49035,35 @@ async function initDb() {
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+    const migrations = [
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(200)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS subscription_duration VARCHAR(50)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS contact_instagram VARCHAR(100)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS contact_whatsapp VARCHAR(100)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_email VARCHAR(200)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_credentials TEXT",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS platform VARCHAR(50)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS notes TEXT",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS payment_platform VARCHAR(50)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS gateway_fee NUMERIC(10,2) DEFAULT 0",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier VARCHAR(200)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier_id INTEGER",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS supplier_forwarded_at TIMESTAMPTZ",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS account_received_at TIMESTAMPTZ",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS order_source VARCHAR(30) DEFAULT 'manual'",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS paytabs_tran_ref VARCHAR(100)",
+      "ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS items_json JSONB"
+    ];
+    for (const m of migrations) {
+      try {
+        await pool7.query(m);
+      } catch (_) {
+      }
+    }
   } catch (e) {
     console.warn("DB init warning:", e?.message);
   }
@@ -49094,12 +49123,12 @@ router7.post("/admin/store-orders", async (req, res) => {
         ]
       );
       if (rows && rows[0]) {
-        sendTelegramOrderNotification(rows[0]).catch(() => {
-        });
+        await sendTelegramOrderNotification(rows[0]).catch((err) => console.error("Telegram error:", err));
         res.status(201).json(rows[0]);
         return;
       }
     } catch (e) {
+      console.error("DB insert error in store-orders:", e?.message);
     }
   }
   const newOrder = {
