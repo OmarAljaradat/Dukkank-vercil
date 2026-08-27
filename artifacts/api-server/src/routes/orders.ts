@@ -310,13 +310,22 @@ router.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='supplier_sent', supplier_id=COALESCE($1,supplier_id), cost_price=COALESCE($2,cost_price),
-         supplier_forwarded_at=NOW(), updated_at=NOW() WHERE id::text=$3 OR order_number=$3 RETURNING *`,
-        [supId, costNum, id]
+        `UPDATE store_orders SET
+          status = 'supplier_sent',
+          supplier_id = $1,
+          cost_price = COALESCE($2, cost_price),
+          supplier_forwarded_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $3 OR order_number = $3 RETURNING *`,
+        [supId, costNum, String(id)]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
+      res.status(404).json({ error: "الطلب غير موجود" });
+      return;
     } catch (e: any) {
       console.error("DB forward-supplier error:", e?.message);
+      res.status(500).json({ error: "خطأ في التحديث: " + e?.message });
+      return;
     }
   }
 
@@ -340,13 +349,22 @@ router.put("/admin/store-orders/:id/receive-account", async (req, res) => {
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='account_received', account_credentials=$1, cost_price=COALESCE($2,cost_price),
-         account_received_at=NOW(), updated_at=NOW() WHERE id::text=$3 OR order_number=$3 RETURNING *`,
-        [account_credentials || null, costNum, id]
+        `UPDATE store_orders SET
+          status = 'account_received',
+          account_credentials = $1,
+          cost_price = COALESCE($2, cost_price),
+          account_received_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $3 OR order_number = $3 RETURNING *`,
+        [account_credentials || null, costNum, String(id)]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
+      res.status(404).json({ error: "الطلب غير موجود" });
+      return;
     } catch (e: any) {
       console.error("DB receive-account error:", e?.message);
+      res.status(500).json({ error: "خطأ في التحديث: " + e?.message });
+      return;
     }
   }
 
@@ -368,12 +386,20 @@ router.put("/admin/store-orders/:id/deliver", async (req, res) => {
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='delivered', delivered_at=NOW(), updated_at=NOW() WHERE id::text=$1 OR order_number=$1 RETURNING *`,
-        [id]
+        `UPDATE store_orders SET
+          status = 'delivered',
+          delivered_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $1 OR order_number = $1 RETURNING *`,
+        [String(id)]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
+      res.status(404).json({ error: "الطلب غير موجود" });
+      return;
     } catch (e: any) {
       console.error("DB deliver error:", e?.message);
+      res.status(500).json({ error: "خطأ في التحديث: " + e?.message });
+      return;
     }
   }
 
@@ -393,12 +419,20 @@ router.put("/admin/store-orders/:id/complete", async (req, res) => {
   if (pool) {
     try {
       const { rows } = await pool.query(
-        `UPDATE store_orders SET status='completed', completed_at=NOW(), updated_at=NOW() WHERE id::text=$1 OR order_number=$1 RETURNING *`,
-        [id]
+        `UPDATE store_orders SET
+          status = 'completed',
+          completed_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $1 OR order_number = $1 RETURNING *`,
+        [String(id)]
       );
       if (rows.length > 0) { res.json(rows[0]); return; }
+      res.status(404).json({ error: "الطلب غير موجود" });
+      return;
     } catch (e: any) {
       console.error("DB complete error:", e?.message);
+      res.status(500).json({ error: "خطأ في التحديث: " + e?.message });
+      return;
     }
   }
 

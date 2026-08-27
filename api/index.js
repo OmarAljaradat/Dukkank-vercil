@@ -49249,16 +49249,25 @@ router7.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
   if (pool6) {
     try {
       const { rows } = await pool6.query(
-        `UPDATE store_orders SET status='supplier_sent', supplier_id=COALESCE($1,supplier_id), cost_price=COALESCE($2,cost_price),
-         supplier_forwarded_at=NOW(), updated_at=NOW() WHERE id::text=$3 OR order_number=$3 RETURNING *`,
-        [supId, costNum, id]
+        `UPDATE store_orders SET
+          status = 'supplier_sent',
+          supplier_id = $1,
+          cost_price = COALESCE($2, cost_price),
+          supplier_forwarded_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $3 OR order_number = $3 RETURNING *`,
+        [supId, costNum, String(id)]
       );
       if (rows.length > 0) {
         res.json(rows[0]);
         return;
       }
+      res.status(404).json({ error: "\u0627\u0644\u0637\u0644\u0628 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F" });
+      return;
     } catch (e) {
       console.error("DB forward-supplier error:", e?.message);
+      res.status(500).json({ error: "\u062E\u0637\u0623 \u0641\u064A \u0627\u0644\u062A\u062D\u062F\u064A\u062B: " + e?.message });
+      return;
     }
   }
   const idx = storeOrders.findIndex((o) => String(o.id) === String(id) || o.order_number === String(id));
@@ -49282,16 +49291,25 @@ router7.put("/admin/store-orders/:id/receive-account", async (req, res) => {
   if (pool6) {
     try {
       const { rows } = await pool6.query(
-        `UPDATE store_orders SET status='account_received', account_credentials=$1, cost_price=COALESCE($2,cost_price),
-         account_received_at=NOW(), updated_at=NOW() WHERE id::text=$3 OR order_number=$3 RETURNING *`,
-        [account_credentials || null, costNum, id]
+        `UPDATE store_orders SET
+          status = 'account_received',
+          account_credentials = $1,
+          cost_price = COALESCE($2, cost_price),
+          account_received_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $3 OR order_number = $3 RETURNING *`,
+        [account_credentials || null, costNum, String(id)]
       );
       if (rows.length > 0) {
         res.json(rows[0]);
         return;
       }
+      res.status(404).json({ error: "\u0627\u0644\u0637\u0644\u0628 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F" });
+      return;
     } catch (e) {
       console.error("DB receive-account error:", e?.message);
+      res.status(500).json({ error: "\u062E\u0637\u0623 \u0641\u064A \u0627\u0644\u062A\u062D\u062F\u064A\u062B: " + e?.message });
+      return;
     }
   }
   const idx = storeOrders.findIndex((o) => String(o.id) === String(id) || o.order_number === String(id));
@@ -49313,15 +49331,23 @@ router7.put("/admin/store-orders/:id/deliver", async (req, res) => {
   if (pool6) {
     try {
       const { rows } = await pool6.query(
-        `UPDATE store_orders SET status='delivered', delivered_at=NOW(), updated_at=NOW() WHERE id::text=$1 OR order_number=$1 RETURNING *`,
-        [id]
+        `UPDATE store_orders SET
+          status = 'delivered',
+          delivered_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $1 OR order_number = $1 RETURNING *`,
+        [String(id)]
       );
       if (rows.length > 0) {
         res.json(rows[0]);
         return;
       }
+      res.status(404).json({ error: "\u0627\u0644\u0637\u0644\u0628 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F" });
+      return;
     } catch (e) {
       console.error("DB deliver error:", e?.message);
+      res.status(500).json({ error: "\u062E\u0637\u0623 \u0641\u064A \u0627\u0644\u062A\u062D\u062F\u064A\u062B: " + e?.message });
+      return;
     }
   }
   const idx = storeOrders.findIndex((o) => String(o.id) === String(id) || o.order_number === String(id));
@@ -49341,15 +49367,23 @@ router7.put("/admin/store-orders/:id/complete", async (req, res) => {
   if (pool6) {
     try {
       const { rows } = await pool6.query(
-        `UPDATE store_orders SET status='completed', completed_at=NOW(), updated_at=NOW() WHERE id::text=$1 OR order_number=$1 RETURNING *`,
-        [id]
+        `UPDATE store_orders SET
+          status = 'completed',
+          completed_at = NOW(),
+          updated_at = NOW()
+        WHERE id::text = $1 OR order_number = $1 RETURNING *`,
+        [String(id)]
       );
       if (rows.length > 0) {
         res.json(rows[0]);
         return;
       }
+      res.status(404).json({ error: "\u0627\u0644\u0637\u0644\u0628 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F" });
+      return;
     } catch (e) {
       console.error("DB complete error:", e?.message);
+      res.status(500).json({ error: "\u062E\u0637\u0623 \u0641\u064A \u0627\u0644\u062A\u062D\u062F\u064A\u062B: " + e?.message });
+      return;
     }
   }
   const idx = storeOrders.findIndex((o) => String(o.id) === String(id) || o.order_number === String(id));
