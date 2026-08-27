@@ -48771,6 +48771,11 @@ var DEFAULT_CONFIG = {
 function escapeHtml(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+var memoryConfig = {
+  enabled: true,
+  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+  chatId: process.env.TELEGRAM_CHAT_ID || ""
+};
 async function getTelegramConfig() {
   if (pool6) {
     try {
@@ -48779,17 +48784,18 @@ async function getTelegramConfig() {
       );
       if (rows.length > 0 && rows[0].value) {
         const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
-        return {
+        memoryConfig = {
           enabled: cfg.enabled ?? true,
-          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
-          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || ""
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || ""
         };
+        return memoryConfig;
       }
     } catch (e) {
       console.warn("Could not load telegram_config from DB:", e);
     }
   }
-  return DEFAULT_CONFIG;
+  return memoryConfig;
 }
 async function saveTelegramConfig(cfg) {
   const current = await getTelegramConfig();
@@ -48798,6 +48804,7 @@ async function saveTelegramConfig(cfg) {
     botToken: (cfg.botToken !== void 0 ? cfg.botToken : current.botToken).trim(),
     chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim()
   };
+  memoryConfig = { ...updated };
   if (pool6) {
     try {
       await pool6.query(
@@ -49163,6 +49170,7 @@ router7.post("/admin/store-orders", async (req, res) => {
     updated_at: (/* @__PURE__ */ new Date()).toISOString()
   };
   storeOrders.unshift(newOrder);
+  await sendTelegramOrderNotification(newOrder).catch((err) => console.error("Telegram notification err:", err));
   res.status(201).json(newOrder);
 });
 router7.put("/admin/store-orders/:id", async (req, res) => {

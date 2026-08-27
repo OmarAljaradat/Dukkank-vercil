@@ -248,6 +248,7 @@ router.post("/admin/store-orders", async (req, res) => {
     updated_at: new Date().toISOString()
   };
   storeOrders.unshift(newOrder);
+  await sendTelegramOrderNotification(newOrder).catch((err) => console.error("Telegram notification err:", err));
   res.status(201).json(newOrder);
 });
 

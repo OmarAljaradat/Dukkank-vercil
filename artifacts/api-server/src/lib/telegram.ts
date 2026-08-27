@@ -21,6 +21,12 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
+let memoryConfig: TelegramConfig = {
+  enabled: true,
+  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+  chatId: process.env.TELEGRAM_CHAT_ID || "",
+};
+
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   if (pool) {
     try {
@@ -29,17 +35,18 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
       );
       if (rows.length > 0 && rows[0].value) {
         const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
-        return {
+        memoryConfig = {
           enabled: cfg.enabled ?? true,
-          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || "",
-          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || "",
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || "",
         };
+        return memoryConfig;
       }
     } catch (e) {
       console.warn("Could not load telegram_config from DB:", e);
     }
   }
-  return DEFAULT_CONFIG;
+  return memoryConfig;
 }
 
 export async function saveTelegramConfig(cfg: Partial<TelegramConfig>): Promise<TelegramConfig> {
@@ -49,6 +56,8 @@ export async function saveTelegramConfig(cfg: Partial<TelegramConfig>): Promise<
     botToken: (cfg.botToken !== undefined ? cfg.botToken : current.botToken).trim(),
     chatId: (cfg.chatId !== undefined ? cfg.chatId : current.chatId).trim(),
   };
+
+  memoryConfig = { ...updated };
 
   if (pool) {
     try {
