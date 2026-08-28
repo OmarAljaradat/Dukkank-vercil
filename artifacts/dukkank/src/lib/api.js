@@ -115,7 +115,7 @@ export const apiListSubscribers = () => client.get("/admin/subscribers").then((r
 export const apiDeleteSubscriber = (email) =>
     client.delete(`/admin/subscribers/${encodeURIComponent(email)}`).then((r) => r.data);
 export const apiSendEmailResend = (data) =>
-    client.post("/admin/marketing/send-email", data).then((r) => r.data).catch(() => ({ ok: true, success: true }));
+    client.post("/admin/marketing/send-email", data).then((r) => r.data);
 
 // Audit log
 export const apiListAudit = (limit = 100) =>

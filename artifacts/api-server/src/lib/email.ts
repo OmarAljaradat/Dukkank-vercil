@@ -1,21 +1,25 @@
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-
 export interface SendEmailOptions {
     to: string | string[];
     subject: string;
     html: string;
     from?: string;
+    apiKey?: string;
 }
 
-export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, from, apiKey }: SendEmailOptions) {
     const recipients = Array.isArray(to) ? to : [to];
-    const sender = from || process.env.RESEND_FROM_EMAIL || "متجر دُكانك <noreply@dukkank.store>";
+    const key = (apiKey || process.env.RESEND_API_KEY || "").trim();
+    const sender = from || process.env.RESEND_FROM_EMAIL || "متجر دُكانك <onboarding@resend.dev>";
+
+    if (!key) {
+        return { success: false, error: "مفتاح Resend API غير محدد. يرجى إدخاله في الإعدادات أو لوحة التحكم." };
+    }
 
     try {
         const res = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${RESEND_API_KEY}`,
+                "Authorization": `Bearer ${key}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
@@ -29,7 +33,8 @@ export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
         const data = await res.json();
         if (!res.ok) {
             console.error("[Resend API Error]:", data);
-            return { success: false, error: data };
+            const errDetail = data?.message || data?.error || JSON.stringify(data);
+            return { success: false, error: errDetail };
         }
 
         console.log("[Resend Email Sent Successfully]:", data);

@@ -46062,15 +46062,18 @@ var bcryptjs_default = {
 var import_jsonwebtoken = __toESM(require_jsonwebtoken(), 1);
 
 // src/lib/email.ts
-var RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-async function sendEmail({ to, subject, html, from }) {
+async function sendEmail({ to, subject, html, from, apiKey }) {
   const recipients = Array.isArray(to) ? to : [to];
-  const sender = from || process.env.RESEND_FROM_EMAIL || "\u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 <noreply@dukkank.store>";
+  const key = (apiKey || process.env.RESEND_API_KEY || "").trim();
+  const sender = from || process.env.RESEND_FROM_EMAIL || "\u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 <onboarding@resend.dev>";
+  if (!key) {
+    return { success: false, error: "\u0645\u0641\u062A\u0627\u062D Resend API \u063A\u064A\u0631 \u0645\u062D\u062F\u062F. \u064A\u0631\u062C\u0649 \u0625\u062F\u062E\u0627\u0644\u0647 \u0641\u064A \u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0623\u0648 \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645." };
+  }
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Authorization": `Bearer ${key}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -46083,7 +46086,8 @@ async function sendEmail({ to, subject, html, from }) {
     const data = await res.json();
     if (!res.ok) {
       console.error("[Resend API Error]:", data);
-      return { success: false, error: data };
+      const errDetail = data?.message || data?.error || JSON.stringify(data);
+      return { success: false, error: errDetail };
     }
     console.log("[Resend Email Sent Successfully]:", data);
     return { success: true, data };
@@ -50567,7 +50571,7 @@ router15.post("/send-otp", async (req, res) => {
 });
 router15.post("/send-email", async (req, res) => {
   try {
-    const { to, subject, html, orderDetails } = req.body;
+    const { to, subject, html, orderDetails, from, apiKey } = req.body;
     if (orderDetails && to) {
       const result2 = await sendOrderReceiptEmail(to, orderDetails);
       return res.json(result2);
@@ -50575,13 +50579,77 @@ router15.post("/send-email", async (req, res) => {
     if (!to || !subject || !html) {
       return res.status(400).json({ error: "Missing required fields (to, subject, html)" });
     }
-    const result = await sendEmail({ to, subject, html });
+    const result = await sendEmail({ to, subject, html, from, apiKey });
     return res.json(result);
   } catch (error) {
     console.error("Route send-email error:", error);
     return res.status(500).json({ error: error.message || "Failed to send email" });
   }
 });
+var marketingSendHandler = async (req, res) => {
+  try {
+    const { resendApiKey, from, to, subject, bodyText, autoCoupon } = req.body || {};
+    if (!to || Array.isArray(to) && to.length === 0) {
+      return res.status(400).json({ error: "\u0644\u0645 \u064A\u062A\u0645 \u062A\u062D\u062F\u064A\u062F \u0623\u064A \u0628\u0631\u064A\u062F \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0645\u0633\u062A\u0647\u062F\u0641" });
+    }
+    const recipients = Array.isArray(to) ? to : [to];
+    const formattedHtml = `
+            <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; padding: 40px 20px; color: #ffffff;">
+                <div style="max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+                    <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 32px 24px; text-align: center;">
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">\u{1F3AE} \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u2014 \u0639\u0631\u0636 \u062E\u0627\u0635</h1>
+                        <p style="margin: 8px 0 0; font-size: 14px; color: #dbeafe;">${subject || "\u062E\u0635\u0645 \u062D\u0635\u0631\u064A \u0648\u0645\u0645\u064A\u0632 \u0644\u0643"}</p>
+                    </div>
+                    <div style="padding: 32px 24px;">
+                        <div style="font-size: 15px; line-height: 1.8; color: #cbd5e1; white-space: pre-wrap; margin-bottom: 24px;">
+                            ${bodyText || ""}
+                        </div>
+                        ${autoCoupon?.code ? `
+                            <div style="background: rgba(245, 158, 11, 0.15); border: 2px dashed #f59e0b; border-radius: 16px; padding: 20px; text-align: center; margin: 24px 0;">
+                                <span style="font-size: 12px; color: #fbbf24; font-weight: 700; display: block; margin-bottom: 6px;">\u0643\u0648\u062F \u0627\u0644\u062E\u0635\u0645 \u0627\u0644\u062D\u0635\u0631\u064A:</span>
+                                <span style="font-size: 26px; font-weight: 900; color: #f59e0b; font-family: monospace; letter-spacing: 2px;">${autoCoupon.code}</span>
+                                <span style="font-size: 12px; color: #34d399; font-weight: 700; display: block; margin-top: 6px;">\u062E\u0635\u0645 ${autoCoupon.discountPercent}% \u2022 \u0645\u062A\u0627\u062D \u0644\u0623\u0648\u0644 ${autoCoupon.maxUses} \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u26A1</span>
+                            </div>
+                        ` : ""}
+                        <div style="text-align: center; margin-top: 32px;">
+                            <a href="https://dukkank.store" style="display: inline-block; background: #3b82f6; color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                                \u062A\u0633\u0648\u0651\u0642 \u0627\u0644\u0622\u0646 \u0645\u0646 \u0627\u0644\u0645\u062A\u062C\u0631 \u{1F680}
+                            </a>
+                        </div>
+                    </div>
+                    <div style="background: #0f172a; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); font-size: 11px; color: #64748b;">
+                        \xA9 \u062F\u064F\u0643\u0627\u0646\u0643 \u2014 \u0645\u062A\u062C\u0631 \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0648\u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A \u0627\u0644\u0631\u0642\u0645\u064A\u0629 \u0627\u0644\u0645\u0639\u062A\u0645\u062F.
+                    </div>
+                </div>
+            </div>
+        `;
+    const result = await sendEmail({
+      to: recipients,
+      subject: subject || "\u0631\u0633\u0627\u0644\u0629 \u062E\u0627\u0635\u0629 \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F3AE}",
+      html: formattedHtml,
+      from: from || "\u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 <onboarding@resend.dev>",
+      apiKey: resendApiKey
+    });
+    if (!result.success) {
+      console.error("[Marketing Resend Failed]:", result.error);
+      return res.status(400).json({
+        ok: false,
+        error: typeof result.error === "string" ? result.error : JSON.stringify(result.error)
+      });
+    }
+    return res.json({
+      ok: true,
+      success: true,
+      message: `\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0628\u0646\u062C\u0627\u062D \u0644\u0640 ${recipients.length} \u0645\u0633\u062A\u0644\u0645!`,
+      couponCreated: autoCoupon?.code ? `\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0643\u0648\u062F (${autoCoupon.code}) \u0628\u062E\u0635\u0645 ${autoCoupon.discountPercent}%` : null
+    });
+  } catch (error) {
+    console.error("Route marketing send-email error:", error);
+    return res.status(500).json({ ok: false, error: error.message || "\u062D\u062F\u062B \u062E\u0637\u0623 \u0623\u062B\u0646\u0627\u0621 \u0627\u0644\u0625\u0631\u0633\u0627\u0644" });
+  }
+};
+router15.post("/admin/marketing/send-email", marketingSendHandler);
+router15.post("/marketing/send-email", marketingSendHandler);
 var email_default = router15;
 
 // src/routes/index.ts
