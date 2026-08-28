@@ -128,9 +128,9 @@ export default function AccountWishlistTab({ wishGames, wishCount, addToCart, re
                                     <button
                                         type="button"
                                         onClick={() => setInquiryModalItem(item)}
-                                        className="h-9.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
+                                        className="h-9.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-90 text-white font-extrabold text-xs flex items-center justify-center gap-1 shadow-xs transition-opacity cursor-pointer"
                                     >
-                                        <MessageCircle className="w-3.5 h-3.5" />
+                                        <Instagram className="w-3.5 h-3.5" />
                                         <span>استفسار 💬</span>
                                     </button>
 
