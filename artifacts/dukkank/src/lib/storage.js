@@ -70,11 +70,33 @@ export function getPopupSettings() {
 }
 export function setPopupSettings(s) { lsSet("popup", s); }
 
+const LEGACY_MOCK_PHONES = new Set(["966501234567", "966559876543", "96599112233", "966543210987"]);
+
 // Registered Users & Password Management for CRM
 export function getRegisteredUsers() {
-    return lsGet("registered_users", []);
+    const list = lsGet("registered_users", []);
+    const cleaned = list.filter(u => u && u.phone && !LEGACY_MOCK_PHONES.has(u.phone));
+    if (cleaned.length !== list.length) {
+        setRegisteredUsers(cleaned);
+    }
+    return cleaned;
 }
 export function setRegisteredUsers(list) { lsSet("registered_users", list); }
+export function deleteRegisteredUser(phone) {
+    const list = getRegisteredUsers();
+    const updated = list.filter(x => x.phone !== phone);
+    setRegisteredUsers(updated);
+    return true;
+}
+export function clearAllRegisteredUsers() {
+    setRegisteredUsers([]);
+    lsSet("customer_wallets", {});
+    lsSet("customer_wallet_logs", {});
+    lsSet("crm_customer_notes", {});
+    lsSet("crm_customer_flags", {});
+    lsSet("crm_customer_tags", {});
+    lsSet("crm_manual_customers", []);
+}
 export function saveRegisteredUser(u) {
     const list = getRegisteredUsers();
     const idx = list.findIndex(x => x.phone === u.phone || (x.email && x.email === u.email));

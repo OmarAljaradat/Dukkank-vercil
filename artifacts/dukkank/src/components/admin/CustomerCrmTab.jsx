@@ -1,14 +1,18 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useStoreData } from "../../contexts/DataContext";
 import { toast } from "sonner";
-import { lsGet, lsSet, getRegisteredUsers, updateUserPassword, getCustomerWallets, getCustomerWalletBalance, updateCustomerWalletBalance, getCustomerWalletLogs } from "../../lib/storage";
+import { 
+    lsGet, lsSet, getRegisteredUsers, setRegisteredUsers, deleteRegisteredUser, clearAllRegisteredUsers,
+    updateUserPassword, getCustomerWallets, setCustomerWallets, getCustomerWalletBalance, 
+    updateCustomerWalletBalance, getCustomerWalletLogs 
+} from "../../lib/storage";
 import {
     Users, Search, Crown, Sparkles, MessageCircle, ShoppingBag,
     DollarSign, Filter, Gift, ArrowUpRight, ShieldCheck, Mail, UserCheck,
     Download, Plus, Edit, FileText, Check, Clock, Phone, AlertCircle,
     Send, ShieldAlert, Heart, Frown, Smile, Megaphone, CheckCircle2, Copy,
     Tag, History, User, Layers, RefreshCw, X, ChevronLeft, Calendar,
-    Eye, EyeOff, Key, Lock, Wallet, PlusCircle, MinusCircle, Coins
+    Eye, EyeOff, Key, Lock, Wallet, PlusCircle, MinusCircle, Coins, Trash2
 } from "lucide-react";
 
 function getCountryFromPhone(phone) {
@@ -42,7 +46,20 @@ export default function CustomerCrmTab() {
     const [customerNotes, setCustomerNotes] = useState(() => lsGet("crm_customer_notes", {}));
     const [customerFlags, setCustomerFlags] = useState(() => lsGet("crm_customer_flags", {}));
     const [customerTagsState, setCustomerTagsState] = useState(() => lsGet("crm_customer_tags", {}));
-    const [manualCustomers, setManualCustomers] = useState(() => lsGet("crm_manual_customers", []));
+    const [manualCustomers, setManualCustomers] = useState(() => {
+        const stored = lsGet("crm_manual_customers", []);
+        const mockPhones = ["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"];
+        return (stored || []).filter(c => c && c.phone && !mockPhones.includes(c.phone));
+    });
+
+    useEffect(() => {
+        const mockPhones = ["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"];
+        const stored = lsGet("registered_users", []);
+        const filtered = (stored || []).filter(u => u && u.phone && !mockPhones.includes(u.phone));
+        if (filtered.length !== stored.length) {
+            setRegisteredUsers(filtered);
+        }
+    }, []);
 
     // Modal & Drawer State
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -387,6 +404,34 @@ export default function CustomerCrmTab() {
         toast.success("تم نسخ كافة أرقام العملاء للحملات الإعلانية! 📱📋");
     };
 
+    // Single Customer Delete
+    const handleDeleteCustomer = (phone) => {
+        if (window.confirm("هل أنت متأكد من حذف هذا العميل نهائياً من النظام؟")) {
+            deleteRegisteredUser(phone);
+            setManualCustomers((prev) => prev.filter(c => c.phone !== phone));
+            const updatedWallets = { ...walletsState };
+            delete updatedWallets[phone];
+            setCustomerWallets(updatedWallets);
+            setWalletsState(updatedWallets);
+            setSelectedCustomer(null);
+            toast.success("تم حذف العميل بنجاح 🗑️");
+        }
+    };
+
+    // Wipe all customer records
+    const handleClearAllCustomers = () => {
+        if (window.confirm("⚠️ تحذير: هل أنت متأكد من مسح وتصفير كافة العملاء المسجلين والبدء من الصفر؟")) {
+            clearAllRegisteredUsers();
+            setManualCustomers([]);
+            setCustomerNotes({});
+            setCustomerFlags({});
+            setCustomerTagsState({});
+            setWalletsState({});
+            setSelectedCustomer(null);
+            toast.success("تم تصفير قاعدة بيانات العملاء بالكامل والبدء من الصفر! 🧹✨");
+        }
+    };
+
     return (
         <div data-testid="customer-crm-tab" className="space-y-6">
             {/* Header Title Card */}
@@ -408,6 +453,15 @@ export default function CustomerCrmTab() {
 
                     {/* Header Action Buttons */}
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <button
+                            onClick={handleClearAllCustomers}
+                            className="px-3.5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            title="تصفير ومسح كافة العملاء والبدء من الصفر"
+                        >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                            <span>تصفير الكل 🧹</span>
+                        </button>
+
                         <button
                             onClick={() => setShowBroadcastModal(true)}
                             className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-black transition shadow shadow-emerald-500/20 flex items-center gap-1.5 cursor-pointer"
@@ -678,6 +732,14 @@ export default function CustomerCrmTab() {
                                                 >
                                                     <User className="w-3 h-3" />
                                                     <span>البروفايل</span>
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleDeleteCustomer(c.phone)}
+                                                    className="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center transition border border-red-500/20 cursor-pointer shrink-0"
+                                                    title="حذف هذا العميل نهائياً"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </td>
@@ -1157,18 +1219,29 @@ export default function CustomerCrmTab() {
                         </div>
 
                         {/* Drawer Footer Actions */}
-                        <div className="bg-slate-100 dark:bg-slate-950 p-4 px-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                            <button
-                                onClick={() => openWhatsApp(selectedCustomer)}
-                                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow"
-                            >
-                                <MessageCircle className="w-4 h-4" />
-                                <span>مراسلة واتساب</span>
-                            </button>
+                        <div className="bg-slate-100 dark:bg-slate-950 p-4 px-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => openWhatsApp(selectedCustomer)}
+                                    className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow cursor-pointer"
+                                >
+                                    <MessageCircle className="w-4 h-4" />
+                                    <span>مراسلة واتساب</span>
+                                </button>
+
+                                <button
+                                    onClick={() => handleDeleteCustomer(selectedCustomer.phone)}
+                                    className="px-3.5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+                                    title="حذف هذا العميل نهائياً من قاعدة البيانات"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span>حذف العميل 🗑️</span>
+                                </button>
+                            </div>
 
                             <button
                                 onClick={handleSaveCustomerDrawer}
-                                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-1.5 shadow"
+                                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-1.5 shadow cursor-pointer"
                             >
                                 <Check className="w-4 h-4" />
                                 <span>حفظ وتحديث البروفايل 📝</span>
