@@ -130,7 +130,27 @@ export default function LoginPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [instagram, setInstagram] = useState("");
+    const [instagramList, setInstagramList] = useState([""]); // Up to 3 accounts
+
+    const handleAddInstagram = () => {
+        if (instagramList.length < 3) {
+            setInstagramList([...instagramList, ""]);
+        } else {
+            toast.info("الحد الأقصى لحسابات الإنستجرام هو 3 حسابات");
+        }
+    };
+
+    const handleRemoveInstagram = (idx) => {
+        if (instagramList.length > 1) {
+            setInstagramList(instagramList.filter((_, i) => i !== idx));
+        }
+    };
+
+    const handleInstagramChange = (idx, val) => {
+        const next = [...instagramList];
+        next[idx] = val;
+        setInstagramList(next);
+    };
     const [signupPass, setSignupPass] = useState("");
     const [showSignupPass, setShowSignupPass] = useState(false);
     const [signupLoading, setSignupLoading] = useState(false);
@@ -211,9 +231,16 @@ export default function LoginPage() {
         const nameCheck = validateFullName(name);
         if (!nameCheck.valid) errs.name = nameCheck.error;
 
-        if (phone.trim()) {
+        if (!phone || !phone.trim()) {
+            errs.phone = "رقم الهاتف مطلوب لتأكيد وتفعيل الحساب والتواصل";
+        } else {
             const phoneCheck = validatePhoneNumber(phone);
             if (!phoneCheck.valid) errs.phone = phoneCheck.error;
+        }
+
+        const validInstas = instagramList.map(a => a.trim()).filter(Boolean);
+        if (validInstas.length === 0) {
+            errs.instagram = "يرجى كتابة حساب إنستجرام واحد على الأقل للتواصل (@username)";
         }
 
         const emailCheck = validateEmailAddress(email);
@@ -240,7 +267,7 @@ export default function LoginPage() {
             const res = await fetch("/api/auth/register/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: nameCheck.clean, email: emailCheck.clean, phone, instagram: instagram.trim(), password: signupPass }),
+                body: JSON.stringify({ name: nameCheck.clean, email: emailCheck.clean, phone: phone.trim(), instagram: instagramList.map(a => a.trim()).filter(Boolean).join(" ، "), password: signupPass }),
             });
             const data = await res.json();
             if (res.status === 409) {
@@ -274,7 +301,7 @@ export default function LoginPage() {
             });
             const data = await res.json();
             if (res.ok && data.ok) {
-                signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
+                signup({ name, email: otpEmail, phone: phone.trim(), instagram: instagramList.map(a => a.trim()).filter(Boolean).join(" ، "), password: signupPass });
                 toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
                 navigate("/account");
             } else if (res.ok === false && data.error) {
@@ -283,7 +310,7 @@ export default function LoginPage() {
                 return;
             } else {
                 // If local verification
-                signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
+                signup({ name, email: otpEmail, phone: phone.trim(), instagram: instagramList.map(a => a.trim()).filter(Boolean).join(" ، "), password: signupPass });
                 toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
                 navigate("/account");
             }
@@ -527,10 +554,12 @@ export default function LoginPage() {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">البريد الإلكتروني</label>
+                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">
+                                            البريد الإلكتروني <span className="text-red-500">*</span>
+                                        </label>
                                         <div className="relative">
                                             <Mail className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/40" />
-                                            <input type="email" value={email}
+                                            <input type="email" required value={email}
                                                 onChange={(e) => { setEmail(e.target.value); setFieldErrors({}); }}
                                                 placeholder="you@example.com"
                                                 className={`w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all ${fieldErrors.email ? "border-red-500 ring-2 ring-red-500/20" : "border-[hsl(var(--brand-ink))]/15"}`} />
@@ -538,28 +567,70 @@ export default function LoginPage() {
                                         {fieldErrors.email && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.email}</p>}
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">حساب إنستجرام (Instagram)</label>
+                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">
+                                            رقم الهاتف <span className="text-red-500">*</span> <span className="text-[10px] text-slate-500 font-normal">(إجباري للتواصل والتفعيل)</span>
+                                        </label>
                                         <div className="relative">
-                                            <Instagram className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-pink-500" />
-                                            <input type="text" value={instagram}
-                                                onChange={(e) => { setInstagram(e.target.value); setFieldErrors({}); }}
-                                                placeholder="@username"
-                                                dir="ltr"
-                                                className="w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all font-mono text-right" />
+                                            <Phone className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/40" />
+                                            <input type="tel" required value={phone}
+                                                onChange={(e) => { setPhone(e.target.value); setFieldErrors({}); }}
+                                                placeholder="079..."
+                                                className={`w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all ${fieldErrors.phone ? "border-red-500 ring-2 ring-red-500/20" : "border-[hsl(var(--brand-ink))]/15"}`} />
                                         </div>
+                                        {fieldErrors.phone && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.phone}</p>}
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">رقم الهاتف (اختياري)</label>
-                                    <div className="relative">
-                                        <Phone className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/40" />
-                                        <input type="tel" value={phone}
-                                            onChange={(e) => { setPhone(e.target.value); setFieldErrors({}); }}
-                                            placeholder="079..."
-                                            className={`w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all ${fieldErrors.phone ? "border-red-500 ring-2 ring-red-500/20" : "border-[hsl(var(--brand-ink))]/15"}`} />
+                                {/* Dynamic Instagram Accounts (1 to 3) */}
+                                <div className="space-y-2 p-3.5 rounded-2xl bg-pink-50/50 dark:bg-pink-950/10 border border-pink-200/50">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80 flex items-center gap-1.5">
+                                            <Instagram className="w-4 h-4 text-pink-500" />
+                                            <span>حسابات إنستجرام للتواصل والتفعيل <span className="text-red-500">*</span></span>
+                                            <span className="text-[10px] text-pink-600 font-bold bg-pink-100 dark:bg-pink-900/40 px-2 py-0.5 rounded-full">
+                                                (بحد أقصى 3 حسابات)
+                                            </span>
+                                        </label>
+                                        {instagramList.length < 3 && (
+                                            <button
+                                                type="button"
+                                                onClick={handleAddInstagram}
+                                                className="text-[11px] font-bold text-pink-600 hover:text-pink-700 flex items-center gap-1 hover:underline cursor-pointer"
+                                            >
+                                                <Plus className="w-3.5 h-3.5" />
+                                                <span>+ إضافة حساب آخر</span>
+                                            </button>
+                                        )}
                                     </div>
-                                    {fieldErrors.phone && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.phone}</p>}
+
+                                    <div className="space-y-2">
+                                        {instagramList.map((insta, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <div className="relative flex-1">
+                                                    <Instagram className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-pink-500" />
+                                                    <input
+                                                        type="text"
+                                                        value={insta}
+                                                        onChange={(e) => { handleInstagramChange(idx, e.target.value); setFieldErrors({}); }}
+                                                        placeholder={idx === 0 ? "الحساب الأساسي (مثال: @username)" : `حساب إضافي ${idx + 1} (اختياري)`}
+                                                        dir="ltr"
+                                                        className="w-full h-11 pr-10 pl-3 rounded-xl bg-white dark:bg-white/5 border border-pink-200/80 text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-pink-500 focus:outline-none transition-all font-mono text-right"
+                                                    />
+                                                </div>
+                                                {instagramList.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveInstagram(idx)}
+                                                        className="w-9 h-11 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                                                        title="حذف هذا الحساب"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {fieldErrors.instagram && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.instagram}</p>}
                                 </div>
 
                                 <div className="space-y-1">
