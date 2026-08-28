@@ -13,7 +13,7 @@ import { SEO } from "../components/SEO";
 import {
     User, Mail, Phone, Lock, LogIn, UserPlus, ShieldCheck, Gamepad2,
     Home, CheckCircle2, KeyRound, RotateCw, AlertCircle, Eye, EyeOff,
-    Loader2, ArrowRight, Shield, RefreshCw, AlertTriangle, Instagram
+    Loader2, ArrowRight, Shield, RefreshCw, AlertTriangle, Instagram, Plus, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { validateFullName, validatePhoneNumber, validateEmailAddress, validatePassword } from "../lib/validation";
