@@ -16,13 +16,12 @@ import { MobileBottomNav } from "../components/MobileBottomNav";
 import { SEO } from "../components/SEO";
 import {
     ShoppingBag, Heart, LogOut, Instagram,
-    Gamepad2, Home, Wallet, Gift, BookOpen, User,
+    Gamepad2, Home, Wallet, BookOpen, User,
 } from "lucide-react";
 
 // ── Tab Components ──
 import AccountOrdersTab from "../components/account/AccountOrdersTab";
 import AccountLibraryTab from "../components/account/AccountLibraryTab";
-import AccountGiftTab from "../components/account/AccountGiftTab";
 import AccountGuideTab from "../components/account/AccountGuideTab";
 import AccountWalletTab from "../components/account/AccountWalletTab";
 import AccountWishlistTab from "../components/account/AccountWishlistTab";
@@ -73,7 +72,6 @@ export default function AllAccountPage() {
     const tabs = [
         { id: "orders",   icon: ShoppingBag, label: "طلباتي",           badge: totalOrdersCount },
         { id: "library",  icon: Gamepad2,    label: "مكتبتي الرقمية",   badge: libraryGames.length, iconColor: "text-purple-500" },
-        { id: "gift",     icon: Gift,        label: "إهداء لعبة لصديق", iconColor: "text-pink-500" },
         { id: "guide",    icon: BookOpen,    label: "دليل التفعيل",     iconColor: "text-blue-500" },
         { id: "wallet",   icon: Wallet,      label: "محفظتي",           badgeText: `$${walletBalance?.toFixed(2)}`, iconColor: "text-emerald-500" },
         { id: "wishlist", icon: Heart,       label: "المفضلة",          badge: wishCount || 0, iconColor: "text-red-500" },
@@ -219,9 +217,6 @@ export default function AllAccountPage() {
                     )}
                     {activeTab === "library" && (
                         <AccountLibraryTab libraryGames={libraryGames} addToCart={addToCart} setCartOpen={setCartOpen} />
-                    )}
-                    {activeTab === "gift" && (
-                        <AccountGiftTab addToCart={addToCart} setCartOpen={setCartOpen} />
                     )}
                     {activeTab === "guide" && (
                         <AccountGuideTab />
