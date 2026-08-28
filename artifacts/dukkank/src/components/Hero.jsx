@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, BadgeCheck, Zap, MessageCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, BadgeCheck, Zap, Instagram } from "lucide-react";
 import { quickInquiry } from "../lib/whatsapp";
 import { useLang, pickLocalized } from "../contexts/LanguageContext";
 import { useStoreData } from "../contexts/DataContext";
@@ -45,25 +45,27 @@ export const Hero = () => {
                             data-testid="hero-cta-browse"
                             className="inline-flex items-center justify-center gap-2 rounded-full px-6 h-13 sm:h-12 bg-[hsl(var(--brand-ink))] text-[hsl(var(--brand-cream))] text-sm font-bold hover:bg-[hsl(var(--brand-blue-deep))] transition-colors active:scale-[0.97]"
                         >
-                            {c.ctaBrowse}
+                            {c.ctaBrowse || "تصفح العروض"}
                             <Arrow className="w-4 h-4" />
                         </a>
-                        <button
-                            onClick={() => quickInquiry(null, store, waTemplates)}
-                            data-testid="hero-cta-whatsapp"
-                            className="inline-flex items-center justify-center gap-2 rounded-full px-6 h-13 sm:h-12 bg-[#25D366] text-white text-sm font-bold hover:bg-[#1DA851] transition-colors active:scale-[0.97]"
+                        <a
+                            href="https://ig.me/m/dukkank15"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-testid="hero-cta-instagram"
+                            className="inline-flex items-center justify-center gap-2 rounded-full px-6 h-13 sm:h-12 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-95 text-white text-sm font-bold shadow-md transition-all active:scale-[0.97] cursor-pointer"
                         >
-                            <MessageCircle className="w-4 h-4 wa-pulse" />
-                            {c.ctaWhatsApp}
-                        </button>
+                            <Instagram className="w-4 h-4" />
+                            <span>تواصل عبر إنستجرام 💬</span>
+                        </a>
                     </div>
 
                     {/* Trust badges */}
                     <div className="mt-7 sm:mt-10 grid grid-cols-3 gap-2 sm:gap-3 max-w-xs sm:max-w-lg">
                         {[
-                            { icon: Zap, label: c.benefitInstant },
-                            { icon: BadgeCheck, label: c.benefitOriginal },
-                            { icon: MessageCircle, label: c.benefitSupport },
+                            { icon: Zap, label: c.benefitInstant || "تسليم فوري ⚡" },
+                            { icon: BadgeCheck, label: c.benefitOriginal || "حسابات أصلية 100%" },
+                            { icon: Instagram, label: "دعم إنستجرام مباشر" },
                         ].map((b, i) => (
                             <div
                                 key={i}

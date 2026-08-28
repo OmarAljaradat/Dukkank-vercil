@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, ShieldCheck, MessageCircle, RotateCw, ArrowRight, Zap, QrCode, Camera, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, ShieldCheck, Instagram, RotateCw, ArrowRight, Zap, QrCode, Camera, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AccountOrdersTab({ orders, addToCart, setCartOpen }) {
@@ -114,23 +114,23 @@ export default function AccountOrdersTab({ orders, addToCart, setCartOpen }) {
                                     <div className="bg-white/10 backdrop-blur p-3.5 rounded-xl border border-white/15 space-y-1.5">
                                         <div className="flex items-center gap-2 font-black text-xs text-[hsl(var(--brand-gold))]">
                                             <span className="w-5 h-5 rounded-full bg-[hsl(var(--brand-gold))] text-[#3a2400] text-[11px] flex items-center justify-center font-black">3</span>
-                                            <span>أرسل الصورة للواتساب</span>
+                                            <span>أرسل الصورة لإنستجرام</span>
                                         </div>
                                         <p className="text-[11px] text-slate-200 font-medium leading-relaxed">
-                                            أرسل الصورة للفريق ونسجل الدخول في جهازك فوراً وتلعب مباشرة! 🎮
+                                            أرسل الصورة لخاص حسابنا على إنستجرام ونسجل الدخول في جهازك فوراً وتلعب مباشرة! 🎮
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Direct Action Button */}
+                                {/* Direct Instagram DM Action Button */}
                                 <a
-                                    href={`https://wa.me/962790000000?text=${encodeURIComponent(`مرحباً، أود تفعيل طلب رقم (${ord.id}) - منتج: ${(ord.items || []).join(" + ")} وسأرسل لكم صورة الـ QR Code من شاشة السوني الآن 🎮`)}`}
+                                    href="https://ig.me/m/dukkank15"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all"
+                                    className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-95 text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all cursor-pointer"
                                 >
-                                    <MessageCircle className="w-5 h-5" />
-                                    <span>إرسال صورة الـ QR والتفعيل عبر الواتساب الآن 🚀</span>
+                                    <Instagram className="w-5 h-5" />
+                                    <span>إرسال صورة الـ QR والتفعيل عبر خاص الإنستجرام الآن 📸✨</span>
                                     <ArrowRight className="w-4 h-4 rotate-180" />
                                 </a>
                             </div>

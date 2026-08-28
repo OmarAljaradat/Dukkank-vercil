@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useStoreData } from "../contexts/DataContext";
-import { ShoppingCart, MessageCircle, Star, Shield, Zap, Clock, Flame, Gift, Trophy, Activity } from "lucide-react";
+import { ShoppingCart, Instagram, Star, Shield, Zap, Clock, Flame, Gift, Trophy, Activity } from "lucide-react";
 import { quickInquiry } from "../lib/whatsapp";
 
 /* ─────────────────────────────────────────────────────
@@ -126,8 +126,8 @@ export function EAFCSection() {
         }
     }
 
-    function handleWhatsApp() {
-        quickInquiry(la.gameName || "EA FC 27", store, waTemplates);
+    function handleInstagram() {
+        window.open("https://ig.me/m/dukkank15", "_blank");
     }
 
     const imageUrl = la.imageUrl || la.image || "";
@@ -362,17 +362,17 @@ export function EAFCSection() {
                                 </button>
 
                                 <button
-                                    onClick={handleWhatsApp}
-                                    className="inline-flex items-center gap-2 h-14 px-6 rounded-2xl font-bold text-sm transition-all active:scale-95"
+                                    onClick={handleInstagram}
+                                    className="inline-flex items-center gap-2 h-14 px-6 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                                     style={{
-                                        background: "rgba(0,0,0,0.12)",
+                                        background: "linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15))",
                                         backdropFilter: "blur(10px)",
-                                        border: "1px solid rgba(0,0,0,0.1)",
-                                        color: "rgba(0,30,15,0.8)",
+                                        border: "1px solid rgba(236, 72, 153, 0.3)",
+                                        color: "#ec4899",
                                     }}
                                 >
-                                    <MessageCircle className="w-4 h-4" />
-                                    تواصل على واتساب
+                                    <Instagram className="w-4 h-4" />
+                                    تواصل على إنستجرام
                                 </button>
                             </div>
                         </div>

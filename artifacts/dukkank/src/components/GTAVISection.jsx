@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useStoreData } from "../contexts/DataContext";
-import { ShoppingCart, MessageCircle, Star, Shield, Zap, Clock, Flame, Gift, Award, ChevronDown } from "lucide-react";
+import { ShoppingCart, Instagram, Star, Shield, Zap, Clock, Flame, Gift, Award, ChevronDown } from "lucide-react";
 import { quickInquiry } from "../lib/whatsapp";
 
 /* ─────────────────────────────────────────────────────
@@ -268,8 +268,8 @@ export function GTAVISection() {
         }
     }
 
-    function handleWhatsApp() {
-        quickInquiry(la.gameName || "GTA VI", store, waTemplates);
+    function handleInstagram() {
+        window.open("https://ig.me/m/dukkank15", "_blank");
     }
 
     const imageUrl = la.imageUrl || la.image || "";
@@ -580,24 +580,24 @@ export function GTAVISection() {
                                 </button>
 
                                 <button
-                                    onClick={handleWhatsApp}
-                                    className="inline-flex items-center gap-2 h-14 px-6 rounded-2xl font-bold text-sm transition-all active:scale-95"
+                                    onClick={handleInstagram}
+                                    className="inline-flex items-center gap-2 h-14 px-6 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                                     style={{
-                                        background: "rgba(37,211,102,0.12)",
-                                        border: "1px solid rgba(37,211,102,0.3)",
-                                        color: "#4ade80",
+                                        background: "linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15))",
+                                        border: "1px solid rgba(236, 72, 153, 0.3)",
+                                        color: "#f472b6",
                                     }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.background = "rgba(37,211,102,0.2)";
-                                        e.currentTarget.style.borderColor = "rgba(37,211,102,0.5)";
+                                        e.currentTarget.style.background = "rgba(236, 72, 153, 0.25)";
+                                        e.currentTarget.style.borderColor = "rgba(236, 72, 153, 0.5)";
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.background = "rgba(37,211,102,0.12)";
-                                        e.currentTarget.style.borderColor = "rgba(37,211,102,0.3)";
+                                        e.currentTarget.style.background = "linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15))";
+                                        e.currentTarget.style.borderColor = "rgba(236, 72, 153, 0.3)";
                                     }}
                                 >
-                                    <MessageCircle className="w-4 h-4" />
-                                    اسألنا على واتساب
+                                    <Instagram className="w-4 h-4" />
+                                    اسألنا على إنستجرام
                                 </button>
                             </div>
                         </div>

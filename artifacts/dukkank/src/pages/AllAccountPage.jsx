@@ -15,7 +15,7 @@ import { StickyCartBar } from "../components/StickyCartBar";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { SEO } from "../components/SEO";
 import {
-    ShoppingBag, Heart, LogOut, MessageCircle,
+    ShoppingBag, Heart, LogOut, Instagram,
     Gamepad2, Home, Wallet, Gift, BookOpen, User,
 } from "lucide-react";
 
@@ -191,23 +191,23 @@ export default function AllAccountPage() {
                         )}
                     </div>
 
-                    {/* Support */}
-                    <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-5 rounded-3xl space-y-3">
-                        <div className="flex items-center gap-2 text-emerald-700 font-extrabold text-xs">
-                            <MessageCircle className="w-4 h-4" />
-                            <span>الدعم الفني</span>
+                    {/* Instagram Support Box */}
+                    <div className="bg-gradient-to-br from-pink-500/10 via-rose-500/10 to-purple-500/10 border border-pink-500/20 p-5 rounded-3xl space-y-3">
+                        <div className="flex items-center gap-2 text-pink-700 font-extrabold text-xs">
+                            <Instagram className="w-4 h-4" />
+                            <span>الدعم الفني عبر إنستجرام</span>
                         </div>
                         <p className="text-xs text-[hsl(var(--brand-ink))]/70 leading-relaxed font-medium">
-                            واجهتك مشكلة؟ تواصل معنا عبر الواتساب.
+                            واجهتك مشكلة أو استفسار؟ تواصل مباشرة مع فريق المتجر على إنستجرام.
                         </p>
                         <a
-                            href="https://wa.me/962790000000"
+                            href="https://ig.me/m/dukkank15"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full h-10 rounded-xl bg-[#25D366] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:bg-[#1DA851] transition-colors"
+                            className="w-full h-10 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-90 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-opacity cursor-pointer"
                         >
-                            <MessageCircle className="w-4 h-4" />
-                            تواصل مع الدعم
+                            <Instagram className="w-4 h-4" />
+                            <span>مراسلة الدعم على إنستجرام 💬</span>
                         </a>
                     </div>
                 </aside>

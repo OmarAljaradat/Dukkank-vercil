@@ -42,32 +42,29 @@ export const Footer = () => {
                         {t("footer.contact")}
                     </h4>
                     <div className="space-y-3">
-                        <button
-                            onClick={() => quickInquiry(null, store, waTemplates)}
-                            data-testid="footer-whatsapp"
+                        <a
+                            href={store.instagram || "https://www.instagram.com/dukkank15/"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-testid="footer-instagram"
                             className="flex items-center gap-3 group"
                         >
-                            <span className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <MessageCircle className="w-4 h-4 text-white" />
+                            <span className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
+                                <Instagram className="w-4 h-4 text-white" />
                             </span>
-                            <span className="text-sm font-bold">
-                                {t("footer.whatsapp")}: {store.whatsappDisplay}
-                            </span>
-                        </button>
-                        {store.instagram && (
-                            <a
-                                href={store.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                data-testid="footer-instagram"
-                                className="flex items-center gap-3 group"
-                            >
-                                <span className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <Instagram className="w-4 h-4 text-white" />
-                                </span>
-                                <span className="text-sm font-bold">{t("footer.instagram")}</span>
-                            </a>
-                        )}
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold">إنستجرام المتجر الرسمي</span>
+                                <span className="text-xs opacity-75 font-mono dir-ltr text-right">@dukkank15</span>
+                            </div>
+                        </a>
+                        <a
+                            href="https://ig.me/m/dukkank15"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold transition cursor-pointer"
+                        >
+                            <span>مراسلة الدعم عبر الخاص 💬</span>
+                        </a>
                     </div>
                 </div>
 

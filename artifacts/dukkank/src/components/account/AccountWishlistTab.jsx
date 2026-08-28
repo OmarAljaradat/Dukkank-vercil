@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingBag, Trash2, MessageCircle, Gamepad2, X, Send, HelpCircle } from "lucide-react";
+import { Heart, ShoppingBag, Trash2, Instagram, Gamepad2, X, Send, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AccountWishlistTab({ wishGames, wishCount, addToCart, removeWish, format }) {
@@ -30,9 +30,7 @@ export default function AccountWishlistTab({ wishGames, wishCount, addToCart, re
     const handleSendInquiry = (e) => {
         e.preventDefault();
         if (!inquiryModalItem) return;
-        const name = inquiryModalItem.name || inquiryModalItem.title;
-        const msg = `مرحباً، أود الاستفسار عن لعبة (${name}) من قائمة المفضلة:\n${inquiryText || "أود معرفة تفاصيل التفعيل والتوفر"}`;
-        window.open(`https://wa.me/962790000000?text=${encodeURIComponent(msg)}`, "_blank");
+        window.open("https://ig.me/m/dukkank15", "_blank");
         setInquiryModalItem(null);
         setInquiryText("");
     };
@@ -172,37 +170,26 @@ export default function AccountWishlistTab({ wishGames, wishCount, addToCart, re
 
                         <div className="space-y-1">
                             <h3 className="font-black text-base text-[hsl(var(--brand-ink))] flex items-center gap-2">
-                                <HelpCircle className="w-5 h-5 text-emerald-600" />
+                                <HelpCircle className="w-5 h-5 text-pink-600" />
                                 <span>استفسار عن: {inquiryModalItem.name || inquiryModalItem.title}</span>
                             </h3>
                             <p className="text-xs text-[hsl(var(--brand-ink))]/60 font-medium">
-                                اكتب سؤالك أو ما تحتاجه وسيتم تحويلك مباشرة لفريق الدعم عبر الواتساب.
+                                تواصل مباشرة مع فريق الدعم الفني عبر خاص إنستجرام للاستفسار عن هذه اللعبة.
                             </p>
                         </div>
 
-                        <form onSubmit={handleSendInquiry} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-[hsl(var(--brand-ink))]/70 mb-1.5">
-                                    نص الاستفسار أو السؤال:
-                                </label>
-                                <textarea
-                                    required
-                                    rows={4}
-                                    value={inquiryText}
-                                    onChange={(e) => setInquiryText(e.target.value)}
-                                    placeholder="مثال: أود الاستفسار عن توفر اللغة العربية ومدّة التفعيل..."
-                                    className="w-full p-3.5 rounded-2xl border border-[hsl(var(--brand-ink))]/15 text-xs font-medium focus:outline-none focus:border-emerald-600 bg-[hsl(var(--brand-cream))]/40"
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full h-11 rounded-2xl bg-[#25D366] hover:bg-[#1DA851] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-colors cursor-pointer"
+                        <div className="pt-2">
+                            <a
+                                href="https://ig.me/m/dukkank15"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setInquiryModalItem(null)}
+                                className="w-full h-11 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-opacity cursor-pointer"
                             >
-                                <Send className="w-4 h-4" />
-                                <span>إرسال الاستفسار للواتساب 🚀</span>
-                            </button>
-                        </form>
+                                <Instagram className="w-4 h-4" />
+                                <span>فتح خاص إنستجرام ومراسلة المتجر 💬</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             )}

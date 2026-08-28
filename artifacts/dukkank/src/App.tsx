@@ -60,7 +60,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
-import { MessageCircle } from "lucide-react";
+import { Instagram } from "lucide-react";
 import { quickInquiry } from "./lib/whatsapp";
 import { useVisitorHeartbeat } from "./hooks/useVisitorHeartbeat";
 
@@ -198,13 +198,15 @@ const SECTION_RENDERERS: Record<string, any> = {
                                 <h3 className="text-2xl sm:text-3xl font-bold leading-tight">{c.customGameTitle}</h3>
                                 <p className="opacity-85 mt-2 text-sm sm:text-base">{c.customGameSubtitle}</p>
                             </div>
-                            <button
-                                onClick={() => quickInquiry("لعبة مخصصة بطلب عميل", store, waTemplates)}
-                                className="inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 bg-[#25D366] text-white font-semibold hover:bg-[#1DA851] transition-colors w-fit"
+                            <a
+                                href="https://ig.me/m/dukkank15"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-95 text-white font-bold shadow-md transition-opacity w-fit cursor-pointer"
                             >
-                                <MessageCircle className="w-4 h-4 wa-pulse" />
-                                {c.customGameCta}
-                            </button>
+                                <Instagram className="w-4 h-4" />
+                                <span>طلب لعبة عبر إنستجرام 🎮</span>
+                            </a>
                         </div>
                     </div>
                 </div>

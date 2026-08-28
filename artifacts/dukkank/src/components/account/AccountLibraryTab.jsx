@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Gamepad2, MessageCircle, Check, HelpCircle, X, Send } from "lucide-react";
+import { Gamepad2, Instagram, Check, HelpCircle, X, Send } from "lucide-react";
 
 export default function AccountLibraryTab({ libraryGames }) {
     const [helpModalGame, setHelpModalGame] = useState(null);
@@ -67,8 +67,7 @@ export default function AccountLibraryTab({ libraryGames }) {
     const handleSendHelp = (e) => {
         e.preventDefault();
         if (!helpModalGame) return;
-        const msg = `مرحباً، أواجه مشكلة في (${helpModalGame.name}):\n${problemText || "أحتاج مساعدة في التفعيل"}`;
-        window.open(`https://wa.me/962790000000?text=${encodeURIComponent(msg)}`, "_blank");
+        window.open("https://ig.me/m/dukkank15", "_blank");
         setHelpModalGame(null);
         setProblemText("");
     };
@@ -157,37 +156,26 @@ export default function AccountLibraryTab({ libraryGames }) {
 
                         <div className="space-y-1">
                             <h3 className="font-black text-base text-[hsl(var(--brand-ink))] flex items-center gap-2">
-                                <HelpCircle className="w-5 h-5 text-emerald-600" />
+                                <HelpCircle className="w-5 h-5 text-pink-600" />
                                 <span>طلب مساعدة: {helpModalGame.name}</span>
                             </h3>
                             <p className="text-xs text-[hsl(var(--brand-ink))]/60 font-medium">
-                                اكتب مشكلتك وسيتم تحويلك مباشرة لفريق الدعم الفني عبر الواتساب.
+                                تواصل مباشرة مع فريق الدعم الفني عبر خاص إنستجرام لحل مشكلتك فوراً.
                             </p>
                         </div>
 
-                        <form onSubmit={handleSendHelp} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-[hsl(var(--brand-ink))]/70 mb-1.5">
-                                    وصف المشكلة:
-                                </label>
-                                <textarea
-                                    required
-                                    rows={4}
-                                    value={problemText}
-                                    onChange={(e) => setProblemText(e.target.value)}
-                                    placeholder="مثال: يظهر لي كود خطأ في السوني عند الدخول للحساب..."
-                                    className="w-full p-3.5 rounded-2xl border border-[hsl(var(--brand-ink))]/15 text-xs font-medium focus:outline-none focus:border-emerald-600 bg-[hsl(var(--brand-cream))]/40"
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full h-11 rounded-2xl bg-[#25D366] hover:bg-[#1DA851] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
+                        <div className="pt-2">
+                            <a
+                                href="https://ig.me/m/dukkank15"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setHelpModalGame(null)}
+                                className="w-full h-11 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-95 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-opacity cursor-pointer"
                             >
-                                <Send className="w-4 h-4" />
-                                <span>إرسال المشكلة للواتساب 🚀</span>
-                            </button>
-                        </form>
+                                <Instagram className="w-4 h-4" />
+                                <span>فتح خاص إنستجرام ومراسلة الدعم 💬</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             )}
