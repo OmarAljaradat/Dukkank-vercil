@@ -865,7 +865,7 @@ export function CustomerAuthModal({ open, onOpenChange }) {
                                                 <Phone className="w-4 h-4 text-[hsl(var(--brand-blue-deep))]" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] text-[hsl(var(--brand-ink))]/50">رقم الواتساب</p>
+                                                <p className="text-[10px] text-[hsl(var(--brand-ink))]/50">رقم الهاتف</p>
                                                 <p className="font-bold">{customer.phone || "غير محدد"}</p>
                                             </div>
                                         </div>
@@ -904,7 +904,7 @@ export function CustomerAuthModal({ open, onOpenChange }) {
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-sm focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]" />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">رقم الواتساب</label>
+                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">رقم الهاتف</label>
                                         <input type="text" value={editPhone}
                                             onChange={(e) => setEditPhone(e.target.value)}
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-sm focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]" />

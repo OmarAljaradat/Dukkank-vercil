@@ -66,7 +66,7 @@ export function AbandonmentPopup() {
                         className="w-full inline-flex items-center justify-center gap-2 rounded-full h-12 bg-[#25D366] text-white font-bold hover:bg-[#1DA851] transition-colors"
                     >
                         <MessageCircle className="w-5 h-5 wa-pulse" />
-                        تواصل معنا على واتساب
+                        تواصل معنا عبر إنستجرام
                     </button>
 
                     <button

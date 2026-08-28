@@ -32,6 +32,7 @@ import {
     Zap,
     TrendingUp,
     HeartHandshake,
+    Instagram,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -538,9 +539,9 @@ export default function AllCartPage() {
                                         <Lock className="w-3.5 h-3.5 shrink-0" />
                                         <span>تشفير SSL 256-Bit</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200/50 text-purple-700 dark:text-purple-300">
-                                        <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                                        <span>دعم واتساب حي 24/7</span>
+                                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-pink-50 dark:bg-pink-950/30 border border-pink-200/50 text-pink-700 dark:text-pink-300">
+                                        <Instagram className="w-3.5 h-3.5 shrink-0" />
+                                        <span>دعم إنستجرام حي 24/7</span>
                                     </div>
                                 </div>
 

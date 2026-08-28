@@ -20,7 +20,7 @@ export function GoldenGuarantee() {
     },
     {
       icon: c.item3Icon || "headphones",
-      title: c.item3Title || "دعم ٢٤/٧ على واتساب",
+      title: c.item3Title || "دعم ٢٤/٧ على إنستجرام",
       desc: c.item3Desc || "فريقنا موجود دائماً لأي استفسار أو مشكلة.",
     },
     {
