@@ -233,7 +233,7 @@ export default function AccountTab() {
                                             </Field>
                                         </div>
                                         <button 
-                                            onClick={savePin}
+                                            onClick={handlePinSave}
                                             disabled={pin.length < 4}
                                             className="h-11 px-4 rounded-xl bg-[hsl(var(--brand-ink))] text-[hsl(var(--brand-cream))] text-sm font-bold hover:bg-[hsl(var(--brand-blue-deep))] disabled:opacity-50"
                                         >

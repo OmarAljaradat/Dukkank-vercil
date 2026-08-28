@@ -315,7 +315,7 @@ export default function LoginPage() {
                 navigate("/account");
             }
         } catch {
-            signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
+            signup({ name, email: otpEmail, phone: phone.trim(), instagram: instagramList.map(a => a.trim()).filter(Boolean).join(" ، "), password: signupPass });
             toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
             navigate("/account");
         } finally {

@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const ts = require('typescript');
 
 function scanDir(dir) {
     let files = [];
+    if (!fs.existsSync(dir)) return files;
     fs.readdirSync(dir).forEach(file => {
         const full = path.join(dir, file);
         if (fs.statSync(full).isDirectory()) {
@@ -14,10 +16,16 @@ function scanDir(dir) {
     return files;
 }
 
+const srcDir = path.join(__dirname, 'src');
+const allFiles = scanDir(srcDir);
+
+console.log(`🔍 [AST SCAN] Scanning ${allFiles.length} files for undefined identifiers and missing imports...`);
+
+// 1. Check Lucide Icons
 const allLucideIcons = [
     'User', 'Mail', 'Phone', 'Lock', 'LogIn', 'UserPlus', 'ShieldCheck', 'Gamepad2',
     'Home', 'CheckCircle2', 'KeyRound', 'RotateCw', 'AlertCircle', 'Eye', 'EyeOff',
-    'Loader2', 'ArrowRight', 'Shield', 'RefreshCw', 'AlertTriangle', 'Instagram', 'Plus',
+    'Loader2', 'ArrowRight', 'ArrowLeft', 'Shield', 'RefreshCw', 'AlertTriangle', 'Instagram', 'Plus',
     'Trash2', 'Minus', 'Tag', 'Sparkles', 'Gift', 'Zap', 'TrendingUp', 'HeartHandshake',
     'ShoppingBag', 'Heart', 'LogOut', 'BookOpen', 'Wallet', 'CreditCard', 'Star',
     'Clock', 'Calendar', 'Laptop', 'Smartphone', 'Search', 'Filter', 'X', 'Check',
@@ -26,20 +34,15 @@ const allLucideIcons = [
     'Flame', 'Trophy', 'Activity', 'Award', 'HelpCircle', 'Headphones', 'Sliders',
     'Layers', 'Grid', 'Package', 'ArrowUpRight', 'ArrowDownLeft', 'DollarSign',
     'Percent', 'Save', 'Pencil', 'PlusCircle', 'Ticket', 'Download', 'Share2',
-    'Moon', 'Sun', 'Globe', 'Bell', 'SlidersHorizontal', 'Maximize2', 'Minimize2'
+    'Moon', 'Sun', 'Globe', 'Bell', 'SlidersHorizontal', 'Maximize2', 'Minimize2', 'BadgeCheck'
 ];
-
-const srcDir = 'c:/Users/omarj/OneDrive/Desktop/Dukkank.UP-main/artifacts/dukkank/src';
-const allFiles = scanDir(srcDir);
 
 let totalErrors = 0;
 
 allFiles.forEach(file => {
     const code = fs.readFileSync(file, 'utf8');
     
-    // Check Lucide icons used in JSX: <IconName or IconName.
     allLucideIcons.forEach(icon => {
-        // regex for JSX tag or prop: <IconName or icon={IconName} or icon: IconName
         const jsxRegex = new RegExp('<' + icon + '(\\s|\\/|>)');
         const propRegex = new RegExp('(icon|Icon):\\s*' + icon + '\\b');
         const iconPropRegex = new RegExp('icon=\\{' + icon + '\\}');
@@ -47,19 +50,62 @@ allFiles.forEach(file => {
         const isUsed = jsxRegex.test(code) || propRegex.test(code) || iconPropRegex.test(code);
         
         if (isUsed) {
-            // Check if icon is declared or imported
-            // 1. In import ... from "lucide-react" or from any path
-            // 2. Or defined as const Icon = ... / function Icon ...
             const isImported = new RegExp('\\b' + icon + '\\b.*from\\s+["\'].*["\']').test(code) ||
                                new RegExp('import\\s*\\{[^}]*\\b' + icon + '\\b[^}]*\\}').test(code) ||
                                new RegExp('(const|let|var|function)\\s+' + icon + '\\b').test(code);
             
             if (!isImported) {
-                console.error(`ERROR: In file "${file}": Lucide icon "${icon}" is used but NOT IMPORTED!`);
+                console.error(`❌ [IMPORT ERROR] In file "${file}": Lucide icon "${icon}" is used but NOT IMPORTED!`);
                 totalErrors++;
             }
         }
     });
 });
 
-console.log(`\nScan complete. Total missing import errors found: ${totalErrors}`);
+// 2. Deep TypeScript AST Scope Check
+const options = {
+    allowJs: true,
+    checkJs: true,
+    jsx: ts.JsxEmit.ReactJSX,
+    noEmit: true,
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+};
+
+const program = ts.createProgram(allFiles, options);
+const diagnostics = ts.getPreEmitDiagnostics(program);
+
+const knownGlobals = [
+    'window', 'document', 'fetch', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
+    'localStorage', 'sessionStorage', 'console', 'alert', 'confirm', 'prompt', 'navigator',
+    'location', 'history', 'URL', 'URLSearchParams', 'FormData', 'Blob', 'File', 'FileReader',
+    'Image', 'Audio', 'Event', 'CustomEvent', 'KeyboardEvent', 'MouseEvent', 'HTMLElement',
+    'HTMLInputElement', 'HTMLTextAreaElement', 'HTMLButtonElement', 'HTMLDivElement',
+    'performance', 'caches', 'crypto', 'Math', 'JSON', 'Date', 'Promise', 'Array', 'Object',
+    'String', 'Number', 'Boolean', 'RegExp', 'Map', 'Set', 'WeakMap', 'WeakSet', 'Error',
+    'process', 'Buffer', 'global', 'NodeJS', 'React', 'JSX'
+];
+
+diagnostics.forEach(diag => {
+    if (diag.code === 2304 || diag.code === 2552) {
+        const msg = ts.flattenDiagnosticMessageText(diag.messageText, '\n');
+        const file = diag.file ? diag.file.fileName : 'unknown';
+        const { line, character } = diag.file ? diag.file.getLineAndCharacterOfPosition(diag.start) : { line: 0, character: 0 };
+        
+        const match = msg.match(/Cannot find name '([^']+)'/);
+        const name = match ? match[1] : '';
+        
+        if (name && !knownGlobals.includes(name)) {
+            console.error(`❌ [SCOPE ERROR] ${file}:${line + 1}:${character + 1} - ${msg}`);
+            totalErrors++;
+        }
+    }
+});
+
+if (totalErrors > 0) {
+    console.error(`\n🚨 Pre-build check FAILED with ${totalErrors} errors! Build aborted.`);
+    process.exit(1);
+} else {
+    console.log(`✅ [100% CLEAN] Pre-build check PASSED! (0 errors across ${allFiles.length} files)\n`);
+}

@@ -110,7 +110,16 @@ function useCountdown(seconds) {
 export function CustomerAuthModal({ open, onOpenChange }) {
     const { customer, orders, walletBalance, tickets, login, signup, logout, updateProfile } = useCustomer();
 
-    // ── View State ───────────────────�    // ── Signup State ──────────────────────────────────
+        // ── View State ─────────────────────────────────────
+    const [view, setView] = useState("login"); // "login" | "signup" | "otp" | "forgot" | "forgot-otp" | "forgot-reset" | "profile" | "orders"
+
+    // ── Login State ────────────────────────────────────
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPass, setLoginPass] = useState("");
+    const [showLoginPass, setShowLoginPass] = useState(false);
+    const [loginLoading, setLoginLoading] = useState(false);
+
+    // ── Signup State ───────────────────────────────────
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
