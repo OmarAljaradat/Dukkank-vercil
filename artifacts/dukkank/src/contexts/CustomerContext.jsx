@@ -30,26 +30,7 @@ export function CustomerProvider({ children }) {
             if (savedOrders) {
                 setOrders(JSON.parse(savedOrders));
             } else {
-                const demoOrders = [
-                    {
-                        id: "ORD-92841",
-                        date: "2026-07-20",
-                        items: ["EA Sports FC 26 — PS5"],
-                        total: "22.98$",
-                        status: "مكتمل",
-                        paymentMethod: "PayTabs Online Checkout",
-                    },
-                    {
-                        id: "ORD-81723",
-                        date: "2026-07-15",
-                        items: ["PlayStation Plus Extra — 12 شهر"],
-                        total: "54.99$",
-                        status: "مكتمل",
-                        paymentMethod: "PayTabs Online Checkout",
-                    }
-                ];
-                setOrders(demoOrders);
-                localStorage.setItem(ORDERS_KEY, JSON.stringify(demoOrders));
+                setOrders([]);
             }
 
             if (savedWallet !== null) {
@@ -58,25 +39,12 @@ export function CustomerProvider({ children }) {
                 setWalletBalance(clamped);
             } else {
                 setWalletBalance(0.00);
-                localStorage.setItem(WALLET_KEY, "0");
             }
 
             if (savedTickets) {
                 setTickets(JSON.parse(savedTickets));
             } else {
-                const demoTickets = [
-                    {
-                        id: "TCK-8812",
-                        orderId: "ORD-92841",
-                        subject: "طلب مساعدة في تفعيل الـ QR",
-                        category: "تفعيل السوني",
-                        status: "تم الحل 🟢",
-                        date: "2026-07-21",
-                        message: "أنا جاهز لتأكيد صورة الـ QR من شاشة التلفزيون."
-                    }
-                ];
-                setTickets(demoTickets);
-                localStorage.setItem(TICKETS_KEY, JSON.stringify(demoTickets));
+                setTickets([]);
             }
         } catch (e) {
             console.error("CustomerContext load error:", e);

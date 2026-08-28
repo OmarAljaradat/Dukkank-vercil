@@ -46,19 +46,34 @@ export default function CustomerCrmTab() {
     const [customerNotes, setCustomerNotes] = useState(() => lsGet("crm_customer_notes", {}));
     const [customerFlags, setCustomerFlags] = useState(() => lsGet("crm_customer_flags", {}));
     const [customerTagsState, setCustomerTagsState] = useState(() => lsGet("crm_customer_tags", {}));
+    const [siteUsers, setSiteUsers] = useState(() => {
+        const mockPhones = new Set(["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"]);
+        const mockNames = new Set(["عبدالعزيز الشمري", "فهد العتيبي", "محمد الخالدي", "خالد السالم", "demo"]);
+        const stored = lsGet("registered_users", []);
+        const filtered = (stored || []).filter(u => u && u.phone && !mockPhones.has(u.phone) && !mockNames.has(u.name));
+        lsSet("registered_users", filtered);
+        return filtered;
+    });
     const [manualCustomers, setManualCustomers] = useState(() => {
         const stored = lsGet("crm_manual_customers", []);
-        const mockPhones = ["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"];
-        return (stored || []).filter(c => c && c.phone && !mockPhones.includes(c.phone));
+        const mockPhones = new Set(["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"]);
+        const mockNames = new Set(["عبدالعزيز الشمري", "فهد العتيبي", "محمد الخالدي", "خالد السالم", "demo"]);
+        return (stored || []).filter(c => c && c.phone && !mockPhones.has(c.phone) && !mockNames.has(c.name));
     });
 
     useEffect(() => {
-        const mockPhones = ["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"];
+        const mockPhones = new Set(["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"]);
+        const mockNames = new Set(["عبدالعزيز الشمري", "فهد العتيبي", "محمد الخالدي", "خالد السالم", "demo"]);
+        
         const stored = lsGet("registered_users", []);
-        const filtered = (stored || []).filter(u => u && u.phone && !mockPhones.includes(u.phone));
-        if (filtered.length !== stored.length) {
-            setRegisteredUsers(filtered);
-        }
+        const filtered = (stored || []).filter(u => u && u.phone && !mockPhones.has(u.phone) && !mockNames.has(u.name));
+        setRegisteredUsers(filtered);
+        setSiteUsers(filtered);
+
+        const storedManual = lsGet("crm_manual_customers", []);
+        const filteredManual = (storedManual || []).filter(u => u && u.phone && !mockPhones.has(u.phone) && !mockNames.has(u.name));
+        setManualCustomers(filteredManual);
+        lsSet("crm_manual_customers", filteredManual);
     }, []);
 
     // Modal & Drawer State
@@ -123,11 +138,12 @@ export default function CustomerCrmTab() {
     // Aggregate Master Customer List (Registered Site Users + Manual + Store Real Orders)
     const customers = useMemo(() => {
         const map = new Map();
+        const mockPhones = new Set(["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"]);
+        const mockNames = new Set(["عبدالعزيز الشمري", "فهد العتيبي", "محمد الخالدي", "خالد السالم", "demo"]);
 
         // 1. Site Registered Users (Automatic Sync)
-        const siteUsers = getRegisteredUsers();
         (siteUsers || []).forEach((u) => {
-            if (!u.phone) return;
+            if (!u || !u.phone || mockPhones.has(u.phone) || mockNames.has(u.name)) return;
             map.set(u.phone, {
                 phone: u.phone,
                 name: u.name || "زبون مسجل",
@@ -147,13 +163,14 @@ export default function CustomerCrmTab() {
 
         // 2. Manual added customers
         (manualCustomers || []).forEach((c) => {
-            if (c && c.phone) map.set(c.phone, { ...c });
+            if (!c || !c.phone || mockPhones.has(c.phone) || mockNames.has(c.name)) return;
+            map.set(c.phone, { ...c });
         });
 
         // 3. Real Store Orders Aggregation
         (orders || []).forEach((o) => {
             const rawPhone = o.contact_whatsapp || o.customer_phone || o.customerPhone || o.phone || "";
-            if (!rawPhone || rawPhone === "غير محدد") return;
+            if (!rawPhone || rawPhone === "غير محدد" || mockPhones.has(rawPhone) || mockNames.has(o.customer_name)) return;
             const phone = rawPhone.trim();
             const name = o.customer_name || o.customerName || o.name || "عميل دُكانك";
             const email = o.customer_email || o.customerEmail || o.email || "";
@@ -238,7 +255,7 @@ export default function CustomerCrmTab() {
                 walletBalance,
             };
         });
-    }, [orders, manualCustomers, customerNotes, customerFlags, customerTagsState, walletsState]);
+    }, [siteUsers, orders, manualCustomers, customerNotes, customerFlags, customerTagsState, walletsState]);
 
     // Multi-Criteria Filtering
     const filteredCustomers = useMemo(() => {
@@ -408,6 +425,7 @@ export default function CustomerCrmTab() {
     const handleDeleteCustomer = (phone) => {
         if (window.confirm("هل أنت متأكد من حذف هذا العميل نهائياً من النظام؟")) {
             deleteRegisteredUser(phone);
+            setSiteUsers((prev) => prev.filter(u => u.phone !== phone));
             setManualCustomers((prev) => prev.filter(c => c.phone !== phone));
             const updatedWallets = { ...walletsState };
             delete updatedWallets[phone];
@@ -422,6 +440,7 @@ export default function CustomerCrmTab() {
     const handleClearAllCustomers = () => {
         if (window.confirm("⚠️ تحذير: هل أنت متأكد من مسح وتصفير كافة العملاء المسجلين والبدء من الصفر؟")) {
             clearAllRegisteredUsers();
+            setSiteUsers([]);
             setManualCustomers([]);
             setCustomerNotes({});
             setCustomerFlags({});

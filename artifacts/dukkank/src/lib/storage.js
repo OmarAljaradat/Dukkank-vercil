@@ -70,12 +70,13 @@ export function getPopupSettings() {
 }
 export function setPopupSettings(s) { lsSet("popup", s); }
 
-const LEGACY_MOCK_PHONES = new Set(["966501234567", "966559876543", "96599112233", "966543210987"]);
+const LEGACY_MOCK_PHONES = new Set(["966501234567", "966559876543", "96599112233", "966543210987", "0790000000"]);
+const LEGACY_MOCK_NAMES = new Set(["عبدالعزيز الشمري", "فهد العتيبي", "محمد الخالدي", "خالد السالم", "demo"]);
 
 // Registered Users & Password Management for CRM
 export function getRegisteredUsers() {
     const list = lsGet("registered_users", []);
-    const cleaned = list.filter(u => u && u.phone && !LEGACY_MOCK_PHONES.has(u.phone));
+    const cleaned = (list || []).filter(u => u && u.phone && !LEGACY_MOCK_PHONES.has(u.phone) && !LEGACY_MOCK_NAMES.has(u.name));
     if (cleaned.length !== list.length) {
         setRegisteredUsers(cleaned);
     }
