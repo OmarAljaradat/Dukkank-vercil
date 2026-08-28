@@ -72,12 +72,7 @@ export function setPopupSettings(s) { lsSet("popup", s); }
 
 // Registered Users & Password Management for CRM
 export function getRegisteredUsers() {
-    return lsGet("registered_users", [
-        { phone: "966501234567", name: "عبدالعزيز الشمري", email: "abdulaziz@example.com", pass: "Aziz2026#", createdAt: Date.now() - 86400000 * 30 },
-        { phone: "966559876543", name: "فهد العتيبي", email: "fahad@example.com", pass: "Fahad9988", createdAt: Date.now() - 86400000 * 15 },
-        { phone: "96599112233", name: "محمد الخالدي", email: "mohammed@example.com", pass: "KhaledPass123", createdAt: Date.now() - 86400000 * 10 },
-        { phone: "966543210987", name: "خالد السالم", email: "khaled@example.com", pass: "Salem7788", createdAt: Date.now() - 86400000 * 5 },
-    ]);
+    return lsGet("registered_users", []);
 }
 export function setRegisteredUsers(list) { lsSet("registered_users", list); }
 export function saveRegisteredUser(u) {
@@ -103,11 +98,7 @@ export function updateUserPassword(phone, newPass) {
 
 // Customer Wallet Balance System
 export function getCustomerWallets() {
-    return lsGet("customer_wallets", {
-        "966501234567": 35.00,
-        "966559876543": 15.50,
-        "96599112233": 50.00,
-    });
+    return lsGet("customer_wallets", {});
 }
 
 export function setCustomerWallets(wallets) {
@@ -121,9 +112,7 @@ export function getCustomerWalletBalance(phone) {
 
 export function getCustomerWalletLogs(phone) {
     const allLogs = lsGet("customer_wallet_logs", {});
-    return allLogs[phone] || [
-        { id: "TX-1", date: new Date().toLocaleDateString('ar-EG'), type: "charge", amount: 25, reason: "شحن رصيد هدية ترقية VIP", admin: "الأدمن" }
-    ];
+    return allLogs[phone] || [];
 }
 
 export function updateCustomerWalletBalance(phone, amount, reason = "تعديل رصيد بواسطة الأدمن") {

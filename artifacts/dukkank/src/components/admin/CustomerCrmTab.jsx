@@ -11,76 +11,6 @@ import {
     Eye, EyeOff, Key, Lock, Wallet, PlusCircle, MinusCircle, Coins
 } from "lucide-react";
 
-function generate100DemoCustomers() {
-    const firstNames = ["عبدالعزيز", "فهد", "تركي", "محمد", "خالد", "عبدالله", "سلطان", "فيصل", "عمر", "أحمد", "يوسف", "سالم", "ريان", "مشاري", "بدر", "راشد", "حمزة", "علي", "زياد", "طارق"];
-    const lastNames = ["الشمري", "العتيبي", "الخالدي", "السالم", "القحطاني", "الزهراني", "المطيري", "الدوسري", "الشهري", "الحربي", "العنزي", "العجمي", "السبيعي", "الغامدي", "المالكي"];
-    
-    const prefixes = [
-        { prefix: "96650", country: "الرياض، السعودية" },
-        { prefix: "96655", country: "جدة، السعودية" },
-        { prefix: "96654", country: "الدمام، السعودية" },
-        { prefix: "96599", country: "الكويت" },
-        { prefix: "96566", country: "الكويت" },
-        { prefix: "97150", country: "دبي، الإمارات" },
-        { prefix: "97455", country: "الدوحة، قطر" },
-        { prefix: "96899", country: "مسقط، عُمان" },
-        { prefix: "97339", country: "المنامة، البحرين" },
-        { prefix: "96279", country: "عَمّان، الأردن" },
-        { prefix: "2010",  country: "القاهرة، مصر" },
-    ];
-
-    const games = [
-        "EA SPORTS FC 25 Ultimate Edition",
-        "GTA VI (Pre-Order Deluxe)",
-        "PlayStation Plus Deluxe 12 Month",
-        "Call of Duty: Black Ops 6",
-        "God of War Ragnarok PS5",
-        "Spider-Man 2 Digital Deluxe",
-        "Elden Ring Shadow of Erdtree",
-        "FC 25 12000 Points Code",
-        "PlayStation Plus Extra 12 Month",
-        "Minecraft PS5 Edition",
-        "Tekken 8 Ultimate Edition",
-        "Resident Evil 4 Remake"
-    ];
-
-    const list = [];
-    for (let i = 1; i <= 100; i++) {
-        const fn = firstNames[(i - 1) % firstNames.length];
-        const ln = lastNames[(i * 3) % lastNames.length];
-        const pref = prefixes[i % prefixes.length];
-        const phone = pref.prefix + String(100000 + (i * 98765) % 899999);
-        const name = `${fn} ${ln}`;
-        const game = games[i % games.length];
-        const ordersCount = (i % 9) + 1;
-        const totalSpent = ordersCount * 45 + (i * 17) % 200;
-        const daysAgo = (i * 2) % 50;
-        const lastOrderDate = Date.now() - 86400000 * daysAgo;
-        const trustScore = i % 18 === 0 ? "flagged" : i % 8 === 0 ? "medium" : "high";
-
-        list.push({
-            phone,
-            name,
-            email: `customer_${i}@gmail.com`,
-            city: pref.country,
-            ordersCount,
-            totalSpent,
-            lastOrderDate,
-            recentGame: game,
-            notes: i % 5 === 0 ? "زبون دائم يفضل الشراء المباشر" : i % 11 === 0 ? "طلب كود بلس سعودي" : "",
-            trustScore,
-            tags: totalSpent >= 250 ? ["VIP", "مشتري_مميز"] : ordersCount >= 3 ? ["دائم"] : ["جديد"],
-            pass: `Pass${i * 8888}#`,
-            ordersList: [
-                { id: `ORD-${1000 + i}`, date: new Date(lastOrderDate).toLocaleDateString('ar-EG'), item: game, price: Math.round(totalSpent / ordersCount), status: "تم التسليم" }
-            ]
-        });
-    }
-    return list;
-}
-
-const INITIAL_DEMO_CUSTOMERS = generate100DemoCustomers();
-
 function getCountryFromPhone(phone) {
     const clean = (phone || "").replace(/[^0-9]/g, "");
     if (clean.startsWith("966") || clean.startsWith("05")) return { flag: "🇸🇦", name: "السعودية" };
@@ -173,77 +103,79 @@ export default function CustomerCrmTab() {
     useEffect(() => { lsSet("crm_customer_tags", customerTagsState); }, [customerTagsState]);
     useEffect(() => { lsSet("crm_manual_customers", manualCustomers); }, [manualCustomers]);
 
-    // Aggregate Master Customer List (Registered Site Users + Demo + Manual + Store Real Orders)
+    // Aggregate Master Customer List (Registered Site Users + Manual + Store Real Orders)
     const customers = useMemo(() => {
         const map = new Map();
 
-        // 1. Initial demo customers
-        INITIAL_DEMO_CUSTOMERS.forEach((c) => map.set(c.phone, { ...c }));
-
-        // 2. Site Registered Users (Automatic Sync)
+        // 1. Site Registered Users (Automatic Sync)
         const siteUsers = getRegisteredUsers();
-        siteUsers.forEach((u) => {
-            if (map.has(u.phone)) {
-                const existing = map.get(u.phone);
-                existing.pass = u.pass || existing.pass || "Dk123456#";
-                if (u.email) existing.email = u.email;
-            } else {
-                map.set(u.phone, {
-                    phone: u.phone,
-                    name: u.name || "زبون مسجل",
-                    email: u.email || "",
-                    city: "السعودية",
-                    ordersCount: 0,
-                    totalSpent: 0,
-                    lastOrderDate: u.createdAt || Date.now(),
-                    recentGame: "حساب جديد",
-                    notes: "مسجل تلقائياً بالموقع",
-                    trustScore: "high",
-                    tags: ["مسجل_بالموقع"],
-                    pass: u.pass || "Dk123456#",
-                    ordersList: [],
-                });
-            }
+        (siteUsers || []).forEach((u) => {
+            if (!u.phone) return;
+            map.set(u.phone, {
+                phone: u.phone,
+                name: u.name || "زبون مسجل",
+                email: u.email || "",
+                city: "السعودية",
+                ordersCount: 0,
+                totalSpent: 0,
+                lastOrderDate: u.createdAt || Date.now(),
+                recentGame: "حساب جديد",
+                notes: "مسجل تلقائياً بالموقع",
+                trustScore: "high",
+                tags: ["مسجل_بالموقع"],
+                pass: u.pass || "Dk123456#",
+                ordersList: [],
+            });
         });
 
-        // 3. Manual added customers
-        manualCustomers.forEach((c) => map.set(c.phone, { ...c }));
+        // 2. Manual added customers
+        (manualCustomers || []).forEach((c) => {
+            if (c && c.phone) map.set(c.phone, { ...c });
+        });
 
-        // 4. Real Store Orders Aggregation
+        // 3. Real Store Orders Aggregation
         (orders || []).forEach((o) => {
-            const phone = o.customerPhone || o.phone || "غير محدد";
-            const name = o.customerName || o.name || "عميل دُكانك";
-            const total = Number(o.total || o.totalAmount || 0);
+            const rawPhone = o.contact_whatsapp || o.customer_phone || o.customerPhone || o.phone || "";
+            if (!rawPhone || rawPhone === "غير محدد") return;
+            const phone = rawPhone.trim();
+            const name = o.customer_name || o.customerName || o.name || "عميل دُكانك";
+            const email = o.customer_email || o.customerEmail || o.email || "";
+            const total = Number(o.customer_paid || o.total || o.totalAmount || 0);
+            const itemName = o.game_name || o.subscription_type || o.product_type || o.items?.[0]?.title || "طلب رقمي";
+            const orderDate = o.created_at || o.createdAt || Date.now();
+            const orderId = o.order_number || o.id || `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
 
             if (!map.has(phone)) {
                 map.set(phone, {
                     phone,
                     name,
-                    email: o.email || "",
-                    city: o.city || "السعودية",
+                    email,
+                    city: "السعودية",
                     ordersCount: 1,
                     totalSpent: total,
-                    lastOrderDate: o.createdAt || Date.now(),
-                    recentGame: o.items?.[0]?.title || "لعبة رقمية",
+                    lastOrderDate: orderDate,
+                    recentGame: itemName,
                     notes: "",
                     trustScore: "high",
                     tags: ["مشتري_مباشر"],
                     pass: "Dk123456#",
                     ordersList: [
-                        { id: o.id || `ORD-${Math.floor(1000 + Math.random() * 9000)}`, date: new Date(o.createdAt || Date.now()).toLocaleDateString('ar-EG'), item: o.items?.[0]?.title || "منتج رقمي", price: total, status: "مكتمل" }
+                        { id: orderId, date: new Date(orderDate).toLocaleDateString('ar-EG'), item: itemName, price: total, status: o.status === "completed" || o.status === "delivered" ? "تم التسليم" : "قيد التنفيذ" }
                     ]
                 });
             } else {
                 const existing = map.get(phone);
                 existing.ordersCount += 1;
                 existing.totalSpent += total;
+                if (!existing.email && email) existing.email = email;
+                if (existing.name === "زبون مسجل" && name !== "عميل دُكانك") existing.name = name;
                 if (!existing.ordersList) existing.ordersList = [];
                 existing.ordersList.push({
-                    id: o.id || `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-                    date: new Date(o.createdAt || Date.now()).toLocaleDateString('ar-EG'),
-                    item: o.items?.[0]?.title || "منتج رقمي",
+                    id: orderId,
+                    date: new Date(orderDate).toLocaleDateString('ar-EG'),
+                    item: itemName,
                     price: total,
-                    status: "مكتمل"
+                    status: o.status === "completed" || o.status === "delivered" ? "تم التسليم" : "قيد التنفيذ"
                 });
             }
         });
@@ -606,8 +538,26 @@ export default function CustomerCrmTab() {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                             {paginatedCustomers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-slate-400 font-bold">
-                                        لا يوجد عملاء يطابقون خيارات البحث الحالية
+                                    <td colSpan={6} className="py-14 px-4 text-center">
+                                        <div className="flex flex-col items-center justify-center max-w-md mx-auto space-y-3">
+                                            <div className="w-14 h-14 rounded-3xl bg-blue-500/10 text-blue-500 flex items-center justify-center shadow-inner">
+                                                <Users className="w-7 h-7" />
+                                            </div>
+                                            <h4 className="text-base font-black text-slate-900 dark:text-white">
+                                                قاعدة بيانات العملاء نظيفة وجاهزة 👥
+                                            </h4>
+                                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                                لم يتم تسجيل أي عملاء بعد. ستظهر بيانات العملاء والطلبات الحقيقية هنا تلقائياً فور قيام الزوار بإنشاء حسابات أو إتمام عمليات شراء في المتجر.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAddModal(true)}
+                                                className="mt-2 px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-2 shadow cursor-pointer"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                                <span>إضافة عميل يدوياً</span>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
