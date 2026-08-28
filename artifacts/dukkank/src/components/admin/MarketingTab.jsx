@@ -1416,19 +1416,37 @@ export default function MarketingTab({ onChanged }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  البريد الإلكتروني للمُرسل (Sender Domain / Email)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    البريد الإلكتروني للمُرسل (Sender Domain / Email)
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setSenderEmail("متجر دُكانك <noreply@dukkank.store>")}
+                      className="text-[10px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold px-2 py-0.5 rounded-md cursor-pointer transition"
+                    >
+                      استخدام noreply@dukkank.store
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSenderEmail("متجر دُكانك <support@dukkank.store>")}
+                      className="text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-md cursor-pointer transition"
+                    >
+                      استخدام support@dukkank.store
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="text"
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  placeholder="Dukkank Store <onboarding@resend.dev>"
+                  placeholder="متجر دُكانك <noreply@dukkank.store>"
                   dir="ltr"
-                  className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-xs font-mono text-slate-900 dark:text-white"
+                  className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-xs font-mono text-slate-900 dark:text-white focus:border-purple-500"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  ملاحظة: إذا لم تكن قمت بربط نطاق مخصص في Resend استخدم النطاق المجاني: <code className="font-mono text-purple-500">onboarding@resend.dev</code>
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
+                  <span>✅ بما أن دومين متجرك <code className="font-mono bg-emerald-500/10 px-1 py-0.5 rounded">dukkank.store</code> موثق ونشط في Resend، استخدم دائماً: <code className="font-mono underline">noreply@dukkank.store</code> للإرسال لجميع العملاء دون أي قيود!</span>
                 </p>
               </div>
 
