@@ -74,23 +74,13 @@ router.delete("/admin/subscribers/:email", (req, res) => {
 });
 
 // ── Notify Requests ───────────────────────────────────────────────────────────
-let notifyRequests: any[] = [
-  {
-    id: "nr-sample-1",
-    gameId: "batman-arkham",
-    name: "خالد العتيبي",
-    contact: "966501234567",
-    phone: "966501234567",
-    email: "",
-    contact_info: "966501234567",
-    createdAt: new Date().toISOString()
-  }
-];
+let notifyRequests: any[] = [];
 
 router.post("/notify-requests", async (req, res) => {
   const { gameId, name, contact, email, phone, contact_info } = req.body || {};
   if (!gameId) { res.status(400).json({ error: "gameId مطلوب" }); return; }
   const contactVal = String(contact || phone || email || contact_info || "").trim();
+  const current = await dbLoad("notifyRequests", []);
   const item = {
     id: `nr-${Date.now()}`,
     gameId,
@@ -101,20 +91,23 @@ router.post("/notify-requests", async (req, res) => {
     contact_info: contactVal,
     createdAt: new Date().toISOString()
   };
-  notifyRequests.push(item);
-  await dbSave("notifyRequests", notifyRequests);
+  const list = Array.isArray(current) ? current : [];
+  list.unshift(item);
+  await dbSave("notifyRequests", list);
   res.status(201).json(item);
 });
 
-router.get("/admin/notify-requests", (req, res) => {
+router.get("/admin/notify-requests", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  res.json(notifyRequests);
+  const list = await dbLoad("notifyRequests", []);
+  res.json(Array.isArray(list) ? list : []);
 });
 
-router.delete("/admin/notify-requests/:id", (req, res) => {
+router.delete("/admin/notify-requests/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const idx = notifyRequests.findIndex(n => n.id === req.params.id);
-  if (idx !== -1) notifyRequests.splice(idx, 1);
+  const current = await dbLoad("notifyRequests", []);
+  const list = (Array.isArray(current) ? current : []).filter((n: any) => n && n.id !== req.params.id);
+  await dbSave("notifyRequests", list);
   res.json({ ok: true });
 });
 

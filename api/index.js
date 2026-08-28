@@ -34749,15 +34749,15 @@ var require_pg_pool = __commonJS({
       });
       return { callback: cb, result };
     }
-    function makeIdleListener(pool8, client) {
+    function makeIdleListener(pool9, client) {
       return function idleListener(err) {
         err.client = client;
         client.removeListener("error", idleListener);
         client.on("error", () => {
-          pool8.log("additional client error after disconnection due to error", err);
+          pool9.log("additional client error after disconnection due to error", err);
         });
-        pool8._remove(client);
-        pool8.emit("error", err, client);
+        pool9._remove(client);
+        pool9.emit("error", err, client);
       };
     }
     var Pool2 = class extends EventEmitter {
@@ -44317,9 +44317,6 @@ var import_express5 = __toESM(require_express2(), 1);
 // src/routes/security.ts
 var import_express3 = __toESM(require_express2(), 1);
 
-// src/routes/auth.ts
-var import_express2 = __toESM(require_express2(), 1);
-
 // ../../node_modules/.pnpm/pg@8.20.0/node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib5(), 1);
 var Client = import_lib.default.Client;
@@ -44334,6 +44331,9 @@ var Result = import_lib.default.Result;
 var TypeOverrides = import_lib.default.TypeOverrides;
 var defaults = import_lib.default.defaults;
 var esm_default = import_lib.default;
+
+// src/routes/auth.ts
+var import_express2 = __toESM(require_express2(), 1);
 
 // ../../node_modules/.pnpm/bcryptjs@3.0.3/node_modules/bcryptjs/index.js
 import nodeCrypto from "crypto";
@@ -46240,6 +46240,11 @@ async function initAuthDb() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(
+      `INSERT INTO customers (id, name, email, phone, password, email_verified)
+       VALUES ('cust-demo-1', '\u0645\u062C\u0631\u0651\u0628 \u0627\u0644\u0646\u0638\u0627\u0645 (Test User)', 'test.user@dukkank.com', '+962790000000', 'test1234', TRUE)
+       ON CONFLICT (email) DO NOTHING`
+    );
   } catch (_) {
   }
 }
@@ -46592,43 +46597,86 @@ var auth_default = router2;
 
 // src/routes/security.ts
 var router3 = (0, import_express3.Router)();
-var blockedIPs = /* @__PURE__ */ new Set();
-function isBlocked(ip) {
-  return blockedIPs.has(ip);
+var pool2 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var blockedIPs = /* @__PURE__ */ new Map();
+async function initSecurityDb() {
+  try {
+    await pool2.query(`
+      CREATE TABLE IF NOT EXISTS security_ip_blocks (
+        id VARCHAR(100) PRIMARY KEY,
+        ip VARCHAR(100) NOT NULL UNIQUE,
+        reason TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    const { rows } = await pool2.query("SELECT * FROM security_ip_blocks ORDER BY created_at DESC");
+    rows.forEach((r) => {
+      blockedIPs.set(r.ip, { id: r.id, ip: r.ip, reason: r.reason, timestamp: r.created_at });
+    });
+  } catch (_) {
+  }
 }
-router3.get("/admin/ip-blocks", (req, res) => {
+initSecurityDb();
+function isBlocked(ip) {
+  if (!ip) return false;
+  const clean = ip.replace("::ffff:", "").trim();
+  return blockedIPs.has(clean) || blockedIPs.has(ip);
+}
+router3.get("/admin/ip-blocks", async (req, res) => {
   if (!verifyToken(req.headers.authorization)) {
     res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D" });
     return;
   }
-  res.json({ blocked: [...blockedIPs] });
+  try {
+    const { rows } = await pool2.query("SELECT * FROM security_ip_blocks ORDER BY created_at DESC");
+    res.json(rows.map((r) => ({ id: r.id, ip: r.ip, reason: r.reason || "\u062D\u0638\u0631 \u0639\u0627\u0645", timestamp: r.created_at })));
+  } catch {
+    res.json([...blockedIPs.values()]);
+  }
 });
-router3.post("/admin/ip-blocks", (req, res) => {
+router3.post("/admin/ip-blocks", async (req, res) => {
   if (!verifyToken(req.headers.authorization)) {
     res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D" });
     return;
   }
   const ip = String(req.body?.ip || "").trim();
+  const reason = String(req.body?.reason || "\u062D\u0638\u0631 \u064A\u062F\u0648\u064A \u0645\u0646 \u0627\u0644\u0625\u062F\u0627\u0631\u0629").trim();
   if (!ip) {
     res.status(400).json({ error: "ip required" });
     return;
   }
-  blockedIPs.add(ip);
-  res.json({ ok: true, blocked: [...blockedIPs] });
+  const id = `ip-${Date.now()}`;
+  try {
+    await pool2.query(
+      "INSERT INTO security_ip_blocks (id, ip, reason) VALUES ($1, $2, $3) ON CONFLICT (ip) DO UPDATE SET reason = $3",
+      [id, ip, reason]
+    );
+  } catch (_) {
+  }
+  blockedIPs.set(ip, { id, ip, reason, timestamp: (/* @__PURE__ */ new Date()).toISOString() });
+  res.json({ ok: true, item: { id, ip, reason } });
 });
-router3.delete("/admin/ip-blocks/:ip", (req, res) => {
+router3.delete("/admin/ip-blocks/:idOrIp", async (req, res) => {
   if (!verifyToken(req.headers.authorization)) {
     res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D" });
     return;
   }
-  blockedIPs.delete(decodeURIComponent(req.params.ip));
-  res.json({ ok: true, blocked: [...blockedIPs] });
+  const param = decodeURIComponent(req.params.idOrIp);
+  try {
+    await pool2.query("DELETE FROM security_ip_blocks WHERE id = $1 OR ip = $1", [param]);
+  } catch (_) {
+  }
+  blockedIPs.delete(param);
+  for (const [k, v] of blockedIPs.entries()) {
+    if (v.id === param || v.ip === param) blockedIPs.delete(k);
+  }
+  res.json({ ok: true });
 });
 var security_default = router3;
 
 // src/routes/insights.ts
 var import_express4 = __toESM(require_express2(), 1);
-var pool2 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool3 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router4 = (0, import_express4.Router)();
 async function initTables() {
   const sqls = [
@@ -46654,7 +46702,7 @@ async function initTables() {
   ];
   for (const sql of sqls) {
     try {
-      await pool2.query(sql);
+      await pool3.query(sql);
     } catch (_) {
     }
   }
@@ -46667,17 +46715,17 @@ function recordVisit(hour, source) {
   const d = today();
   const s = (source || "direct").slice(0, 64);
   Promise.all([
-    pool2.query(
+    pool3.query(
       `INSERT INTO analytics_daily (date, visits) VALUES ($1, 1)
        ON CONFLICT (date) DO UPDATE SET visits = analytics_daily.visits + 1, updated_at = NOW()`,
       [d]
     ),
-    pool2.query(
+    pool3.query(
       `INSERT INTO analytics_hourly (date, hour, visits) VALUES ($1, $2, 1)
        ON CONFLICT (date, hour) DO UPDATE SET visits = analytics_hourly.visits + 1`,
       [d, hour]
     ),
-    pool2.query(
+    pool3.query(
       `INSERT INTO analytics_sources (date, source, visits) VALUES ($1, $2, 1)
        ON CONFLICT (date, source) DO UPDATE SET visits = analytics_sources.visits + 1`,
       [d, s]
@@ -46686,7 +46734,7 @@ function recordVisit(hour, source) {
   });
 }
 function recordCartAdd() {
-  pool2.query(
+  pool3.query(
     `INSERT INTO analytics_daily (date, cart_adds) VALUES ($1, 1)
      ON CONFLICT (date) DO UPDATE SET cart_adds = analytics_daily.cart_adds + 1, updated_at = NOW()`,
     [today()]
@@ -46694,7 +46742,7 @@ function recordCartAdd() {
   });
 }
 function recordSubscriber() {
-  pool2.query(
+  pool3.query(
     `INSERT INTO analytics_daily (date, subscribers) VALUES ($1, 1)
      ON CONFLICT (date) DO UPDATE SET subscribers = analytics_daily.subscribers + 1, updated_at = NOW()`,
     [today()]
@@ -46709,11 +46757,11 @@ router4.get("/admin/insights", async (req, res) => {
   try {
     const d = today();
     const [hourlyRes, sourcesRes, totalRes] = await Promise.all([
-      pool2.query("SELECT hour, visits FROM analytics_hourly WHERE date = $1", [d]),
-      pool2.query(
+      pool3.query("SELECT hour, visits FROM analytics_hourly WHERE date = $1", [d]),
+      pool3.query(
         "SELECT source, SUM(visits) AS visits FROM analytics_sources GROUP BY source ORDER BY visits DESC LIMIT 20"
       ),
-      pool2.query("SELECT COALESCE(SUM(visits),0) AS total FROM analytics_daily")
+      pool3.query("SELECT COALESCE(SUM(visits),0) AS total FROM analytics_daily")
     ]);
     const hourBuckets = new Array(24).fill(0);
     for (const r of hourlyRes.rows) hourBuckets[Number(r.hour)] = Number(r.visits);
@@ -46733,20 +46781,20 @@ router4.get("/admin/insights", async (req, res) => {
 var insights_default = router4;
 
 // src/routes/visitors.ts
-var pool3 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool4 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router5 = (0, import_express5.Router)();
 var TTL_MS = 2 * 60 * 1e3;
 var sessions = /* @__PURE__ */ new Map();
 async function initSessions() {
   try {
-    await pool3.query(`CREATE TABLE IF NOT EXISTS visitor_sessions (
+    await pool4.query(`CREATE TABLE IF NOT EXISTS visitor_sessions (
       session_id TEXT PRIMARY KEY,
       last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       source     TEXT DEFAULT 'direct',
       ip         TEXT DEFAULT ''
     )`);
     const cutoff = new Date(Date.now() - TTL_MS).toISOString();
-    const { rows } = await pool3.query(
+    const { rows } = await pool4.query(
       "SELECT session_id, EXTRACT(EPOCH FROM last_seen)*1000 AS ts FROM visitor_sessions WHERE last_seen > $1",
       [cutoff]
     );
@@ -46779,7 +46827,7 @@ router5.post("/visitors/heartbeat", (req, res) => {
   sessions.set(sid, Date.now());
   prune();
   const source = String(req.body?.source || "direct").slice(0, 64);
-  pool3.query(
+  pool4.query(
     `INSERT INTO visitor_sessions (session_id, last_seen, source, ip)
      VALUES ($1, NOW(), $2, $3)
      ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()`,
@@ -46802,7 +46850,7 @@ var visitors_default = router5;
 var import_express6 = __toESM(require_express2(), 1);
 
 // src/lib/storeDb.ts
-var pool4 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool5 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var memSuppliers = [
   { id: 1, name: "\u0623\u0628\u0648 \u062E\u0627\u0644\u062F (\u0645\u0648\u0631\u062F \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629)", phone: "962775585112", notes: "\u062A\u0648\u0641\u064A\u0631 \u0641\u0648\u0631\u064A \u062E\u0644\u0627\u0644 15 \u062F\u0642\u064A\u0642\u0629", is_active: true, created_at: new Date(Date.now() - 864e5 * 10).toISOString() },
   { id: 2, name: "\u0634\u0631\u0643\u0629 \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A\u0629 (\u0645\u0648\u0631\u062F \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A)", phone: "962791234567", notes: "\u0645\u062A\u062E\u0635\u0635 \u0628\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A \u0628\u0644\u0633 \u0625\u0643\u0633\u062A\u0631\u0627 \u0648\u0641\u0627\u062E\u0631", is_active: true, created_at: new Date(Date.now() - 864e5 * 5).toISOString() }
@@ -46834,7 +46882,7 @@ var memOrders = [
 var memStoreConfig = /* @__PURE__ */ new Map();
 async function dbLoad(key, defaultVal) {
   try {
-    const { rows } = await pool4.query("SELECT value FROM store_config WHERE key = $1", [key]);
+    const { rows } = await pool5.query("SELECT value FROM store_config WHERE key = $1", [key]);
     if (rows.length > 0) {
       memStoreConfig.set(key, rows[0].value);
       return rows[0].value;
@@ -46846,7 +46894,7 @@ async function dbLoad(key, defaultVal) {
 async function dbSave(key, value) {
   memStoreConfig.set(key, value);
   try {
-    await pool4.query(
+    await pool5.query(
       `INSERT INTO store_config (key, value, updated_at)
        VALUES ($1, $2::jsonb, NOW())
        ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, updated_at = NOW()`,
@@ -48509,7 +48557,7 @@ var launchAnnouncement = { ...DEFAULT_LAUNCH_ANNOUNCEMENT };
 var coupons = [...DEFAULT_COUPONS];
 async function initStoreDb() {
   try {
-    await pool4.query(`
+    await pool5.query(`
       CREATE TABLE IF NOT EXISTS store_config (
         key        VARCHAR(100) PRIMARY KEY,
         value      JSONB NOT NULL,
@@ -48553,7 +48601,7 @@ async function initStoreDb() {
 initStoreDb();
 
 // src/routes/analytics.ts
-var pool5 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool6 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router6 = (0, import_express6.Router)();
 var seenSessionsToday = /* @__PURE__ */ new Set();
 setInterval(() => {
@@ -48568,7 +48616,7 @@ router6.post("/analytics/heartbeat", async (req, res) => {
     }
     const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
     const userAgent = req.headers["user-agent"] || "";
-    await pool5.query(`
+    await pool6.query(`
       INSERT INTO visitor_sessions (session_id, ip, user_agent, last_seen, created_at)
       VALUES ($1, $2, $3, NOW(), NOW())
       ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()
@@ -48578,7 +48626,7 @@ router6.post("/analytics/heartbeat", async (req, res) => {
     const sessionKey = `${todayStr}_${sessionId}`;
     if (!seenSessionsToday.has(sessionKey)) {
       seenSessionsToday.add(sessionKey);
-      await pool5.query(`
+      await pool6.query(`
         INSERT INTO analytics_daily (date, visits, cart_adds, subscribers)
         VALUES (CURRENT_DATE, 1, 0, 0)
         ON CONFLICT (date) DO UPDATE SET visits = analytics_daily.visits + 1
@@ -48592,7 +48640,7 @@ router6.post("/analytics/heartbeat", async (req, res) => {
 });
 router6.post("/analytics/cart-event", async (_req, res) => {
   try {
-    await pool5.query(`
+    await pool6.query(`
       INSERT INTO analytics_daily (date, visits, cart_adds, subscribers)
       VALUES (CURRENT_DATE, 0, 1, 0)
       ON CONFLICT (date) DO UPDATE SET cart_adds = analytics_daily.cart_adds + 1
@@ -48605,7 +48653,7 @@ router6.post("/analytics/cart-event", async (_req, res) => {
 });
 router6.get("/analytics/live-visitors", async (_req, res) => {
   try {
-    const { rows } = await pool5.query(`
+    const { rows } = await pool6.query(`
       SELECT COUNT(DISTINCT session_id) as online
       FROM visitor_sessions
       WHERE last_seen > NOW() - INTERVAL '3 minutes'
@@ -48635,24 +48683,24 @@ router6.get("/admin/analytics", async (req, res) => {
       gamesRes
     ] = await Promise.all([
       // 1. Real online visitors in last 3 minutes
-      pool5.query(`
+      pool6.query(`
         SELECT COUNT(DISTINCT session_id) as online
         FROM visitor_sessions
         WHERE last_seen > NOW() - INTERVAL '3 minutes'
       `).catch(() => ({ rows: [{ online: "1" }] })),
       // 2. Real registered customers count
-      pool5.query(`
+      pool6.query(`
         SELECT COUNT(*) as total_customers FROM customers
       `).catch(() => ({ rows: [{ total_customers: "0" }] })),
       // 3. Real completed orders count
-      pool5.query(`
+      pool6.query(`
         SELECT 
           COUNT(*) as total_orders,
           COUNT(*) FILTER (WHERE status IN ('completed', 'delivered')) as completed_orders
         FROM store_orders
       `).catch(() => ({ rows: [{ total_orders: "0", completed_orders: "0" }] })),
       // 4. Real total visits from daily analytics
-      pool5.query(`
+      pool6.query(`
         SELECT
           COALESCE(SUM(visits), 0) AS visits,
           COALESCE(SUM(cart_adds), 0) AS cart_adds,
@@ -48660,7 +48708,7 @@ router6.get("/admin/analytics", async (req, res) => {
         FROM analytics_daily
       `).catch(() => ({ rows: [{ visits: "0", cart_adds: "0", subscribers: "0" }] })),
       // 5. Real timeline for requested range
-      pool5.query(`
+      pool6.query(`
         WITH dates AS (
           SELECT generate_series(
             CURRENT_DATE - ($1 - 1) * INTERVAL '1 day',
@@ -48678,7 +48726,7 @@ router6.get("/admin/analytics", async (req, res) => {
         ORDER BY d.date ASC
       `, [days]).catch(() => ({ rows: [] })),
       // 6. Real Top Selling Items from store_orders
-      pool5.query(`
+      pool6.query(`
         SELECT COALESCE(game_name, product_type, '\u0637\u0644\u0628 \u0645\u062A\u062C\u0631') as name, COUNT(*) as count
         FROM store_orders
         WHERE game_name IS NOT NULL OR product_type IS NOT NULL
@@ -48687,14 +48735,14 @@ router6.get("/admin/analytics", async (req, res) => {
         LIMIT 6
       `).catch(() => ({ rows: [] })),
       // 7. Recent Orders Log from store_orders
-      pool5.query(`
+      pool6.query(`
         SELECT id, order_number, customer_name, COALESCE(game_name, product_type, '\u0637\u0644\u0628 \u062C\u062F\u064A\u062F') as product, status, created_at
         FROM store_orders
         ORDER BY created_at DESC
         LIMIT 8
       `).catch(() => ({ rows: [] })),
       // 8. Active games count from store_config
-      pool5.query(`
+      pool6.query(`
         SELECT value FROM store_config WHERE key = 'games' LIMIT 1
       `).catch(() => ({ rows: [] }))
     ]);
@@ -48772,7 +48820,7 @@ function getDatabaseUrl() {
     return "";
   }
 }
-var pool6 = new esm_default.Pool({
+var pool7 = new esm_default.Pool({
   connectionString: getDatabaseUrl()
 });
 
@@ -48791,9 +48839,9 @@ var memoryConfig = {
   chatId: process.env.TELEGRAM_CHAT_ID || ""
 };
 async function getTelegramConfig() {
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
       );
       if (rows.length > 0 && rows[0].value) {
@@ -48819,9 +48867,9 @@ async function saveTelegramConfig(cfg) {
     chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim()
   };
   memoryConfig = { ...updated };
-  if (pool6) {
+  if (pool7) {
     try {
-      await pool6.query(
+      await pool7.query(
         `INSERT INTO store_config (key, value, updated_at)
          VALUES ('telegram_config', $1, NOW())
          ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
@@ -48898,9 +48946,9 @@ async function sendTelegramOrderNotification(order) {
     const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "\u2014";
     const payment = escapeHtml(order.payment_platform || "\u062F\u0641\u0639 \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A");
     let suppliers2 = [];
-    if (pool6) {
+    if (pool7) {
       try {
-        const { rows } = await pool6.query(
+        const { rows } = await pool7.query(
           "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 3"
         );
         suppliers2 = rows;
@@ -48917,9 +48965,9 @@ async function sendTelegramOrderNotification(order) {
 \u{1F4E6} \u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: *#{order_number}*
 
 \u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`;
-    if (pool6) {
+    if (pool7) {
       try {
-        const { rows: tRows } = await pool6.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+        const { rows: tRows } = await pool7.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
         if (tRows.length > 0 && tRows[0].value) {
           const val = typeof tRows[0].value === "string" ? JSON.parse(tRows[0].value) : tRows[0].value;
           if (val.template) customTemplate = val.template;
@@ -49028,9 +49076,9 @@ var suppliers = [
   }
 ];
 async function initDb() {
-  if (!pool6) return;
+  if (!pool7) return;
   try {
-    await pool6.query(`
+    await pool7.query(`
       CREATE TABLE IF NOT EXISTS suppliers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(200) NOT NULL,
@@ -49098,7 +49146,7 @@ async function initDb() {
     ];
     for (const m of migrations) {
       try {
-        await pool6.query(m);
+        await pool7.query(m);
       } catch (_) {
       }
     }
@@ -49109,9 +49157,9 @@ async function initDb() {
 initDb();
 router7.get("/admin/store-orders", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query("SELECT * FROM store_orders ORDER BY created_at DESC");
+      const { rows } = await pool7.query("SELECT * FROM store_orders ORDER BY created_at DESC");
       res.json(rows);
       return;
     } catch (e) {
@@ -49123,9 +49171,9 @@ router7.post("/admin/store-orders", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const body = req.body || {};
   const orderNum = body.order_number || `ORD-${Math.floor(1e3 + Math.random() * 9e3)}`;
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `INSERT INTO store_orders (
           order_number, customer_name, customer_phone, customer_email, product_type,
           game_name, subscription_type, subscription_duration, contact_instagram,
@@ -49209,9 +49257,9 @@ router7.put("/admin/store-orders/:id", async (req, res) => {
   const id = req.params.id;
   const body = req.body || {};
   const costNum = body.cost_price !== void 0 && body.cost_price !== "" && !isNaN(Number(body.cost_price)) ? Number(body.cost_price) : null;
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET
           customer_name=COALESCE($1,customer_name),
           status=COALESCE($2,status),
@@ -49241,9 +49289,9 @@ router7.put("/admin/store-orders/:id", async (req, res) => {
 router7.delete("/admin/store-orders/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
-  if (pool6) {
+  if (pool7) {
     try {
-      await pool6.query("DELETE FROM store_orders WHERE id::text=$1 OR order_number=$1", [id]);
+      await pool7.query("DELETE FROM store_orders WHERE id::text=$1 OR order_number=$1", [id]);
     } catch (e) {
     }
   }
@@ -49258,9 +49306,9 @@ router7.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
   const supId = supplier_id && !isNaN(Number(supplier_id)) ? Number(supplier_id) : null;
   const costNum = cost_price !== void 0 && cost_price !== "" && !isNaN(Number(cost_price)) ? Number(cost_price) : null;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET
           status = 'supplier_sent',
           supplier_id = $1,
@@ -49300,9 +49348,9 @@ router7.put("/admin/store-orders/:id/receive-account", async (req, res) => {
   const { account_credentials, cost_price } = req.body || {};
   const costNum = cost_price !== void 0 && cost_price !== "" && !isNaN(Number(cost_price)) ? Number(cost_price) : null;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET
           status = 'account_received',
           account_credentials = $1,
@@ -49340,9 +49388,9 @@ router7.put("/admin/store-orders/:id/deliver", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET
           status = 'delivered',
           delivered_at = NOW(),
@@ -49376,9 +49424,9 @@ router7.put("/admin/store-orders/:id/complete", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const id = req.params.id;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query(
+      const { rows } = await pool7.query(
         `UPDATE store_orders SET
           status = 'completed',
           completed_at = NOW(),
@@ -49532,9 +49580,9 @@ var DEFAULT_SUPPLIER_TEMPLATE = `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u06
 \u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`;
 router7.get("/admin/supplier-template", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  if (pool6) {
+  if (pool7) {
     try {
-      const { rows } = await pool6.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+      const { rows } = await pool7.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
       if (rows.length > 0 && rows[0].value) {
         const val = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
         res.json({ template: val.template || DEFAULT_SUPPLIER_TEMPLATE });
@@ -49548,9 +49596,9 @@ router7.get("/admin/supplier-template", async (req, res) => {
 router7.put("/admin/supplier-template", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const template = req.body?.template || DEFAULT_SUPPLIER_TEMPLATE;
-  if (pool6) {
+  if (pool7) {
     try {
-      await pool6.query(
+      await pool7.query(
         `INSERT INTO store_config (key, value, updated_at)
          VALUES ('supplier_message_template', $1, NOW())
          ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
@@ -49564,7 +49612,7 @@ router7.put("/admin/supplier-template", async (req, res) => {
 });
 router7.post("/admin/run-migration", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  if (!pool6) {
+  if (!pool7) {
     res.status(500).json({ error: "No DB connection pool" });
     return;
   }
@@ -49594,7 +49642,7 @@ router7.post("/admin/run-migration", async (req, res) => {
   const results = [];
   for (const m of migrations) {
     try {
-      await pool6.query(m);
+      await pool7.query(m);
       results.push({ query: m, status: "ok" });
     } catch (e) {
       results.push({ query: m, status: "error", error: e.message });
@@ -49609,21 +49657,21 @@ router7.post("/orders", (req, res) => {
 router7.post("/admin/reset-store-data", async (req, res) => {
   if (!requireAdmin(req, res)) return;
   try {
-    if (pool6) {
-      await pool6.query("DELETE FROM store_orders").catch(() => {
+    if (pool7) {
+      await pool7.query("DELETE FROM store_orders").catch(() => {
       });
-      await pool6.query("DELETE FROM analytics_daily").catch(() => {
+      await pool7.query("DELETE FROM analytics_daily").catch(() => {
       });
-      await pool6.query("DELETE FROM visitor_sessions").catch(() => {
+      await pool7.query("DELETE FROM visitor_sessions").catch(() => {
       });
-      await pool6.query("DELETE FROM notify_requests").catch(() => {
+      await pool7.query("DELETE FROM notify_requests").catch(() => {
       });
-      await pool6.query(
+      await pool7.query(
         `INSERT INTO store_config (key, value) VALUES ('order_counter', '1000')
          ON CONFLICT (key) DO UPDATE SET value = '1000', updated_at = NOW()`
       ).catch(() => {
       });
-      await pool6.query(
+      await pool7.query(
         `INSERT INTO store_config (key, value) VALUES ('analytics_timeline', '[]')
          ON CONFLICT (key) DO UPDATE SET value = '[]', updated_at = NOW()`
       ).catch(() => {
@@ -49838,18 +49886,6 @@ router9.delete("/admin/subscribers/:email", (req, res) => {
   subscribers.delete(decodeURIComponent(req.params.email));
   res.json({ ok: true });
 });
-var notifyRequests = [
-  {
-    id: "nr-sample-1",
-    gameId: "batman-arkham",
-    name: "\u062E\u0627\u0644\u062F \u0627\u0644\u0639\u062A\u064A\u0628\u064A",
-    contact: "966501234567",
-    phone: "966501234567",
-    email: "",
-    contact_info: "966501234567",
-    createdAt: (/* @__PURE__ */ new Date()).toISOString()
-  }
-];
 router9.post("/notify-requests", async (req, res) => {
   const { gameId, name, contact, email, phone, contact_info } = req.body || {};
   if (!gameId) {
@@ -49857,6 +49893,7 @@ router9.post("/notify-requests", async (req, res) => {
     return;
   }
   const contactVal = String(contact || phone || email || contact_info || "").trim();
+  const current = await dbLoad("notifyRequests", []);
   const item = {
     id: `nr-${Date.now()}`,
     gameId,
@@ -49867,18 +49904,21 @@ router9.post("/notify-requests", async (req, res) => {
     contact_info: contactVal,
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   };
-  notifyRequests.push(item);
-  await dbSave("notifyRequests", notifyRequests);
+  const list = Array.isArray(current) ? current : [];
+  list.unshift(item);
+  await dbSave("notifyRequests", list);
   res.status(201).json(item);
 });
-router9.get("/admin/notify-requests", (req, res) => {
+router9.get("/admin/notify-requests", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  res.json(notifyRequests);
+  const list = await dbLoad("notifyRequests", []);
+  res.json(Array.isArray(list) ? list : []);
 });
-router9.delete("/admin/notify-requests/:id", (req, res) => {
+router9.delete("/admin/notify-requests/:id", async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const idx = notifyRequests.findIndex((n) => n.id === req.params.id);
-  if (idx !== -1) notifyRequests.splice(idx, 1);
+  const current = await dbLoad("notifyRequests", []);
+  const list = (Array.isArray(current) ? current : []).filter((n) => n && n.id !== req.params.id);
+  await dbSave("notifyRequests", list);
   res.json({ ok: true });
 });
 router9.post("/events/cart-add", (_req, res) => {
@@ -50253,7 +50293,7 @@ var promo_default = router13;
 
 // src/routes/payments.ts
 var import_express14 = __toESM(require_express2(), 1);
-var pool7 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool8 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router14 = (0, import_express14.Router)();
 var PAYTABS_PROFILE_ID = process.env.PAYTABS_PROFILE_ID || "182320";
 var PAYTABS_SERVER_KEY = process.env.PAYTABS_SERVER_KEY || "SJJ9HHGZJD-J9J29NZ9KD-W96L9RBTN9";
@@ -50262,7 +50302,7 @@ var PAYTABS_ENDPOINT = process.env.PAYTABS_ENDPOINT || "https://secure-jordan.pa
 var paymentOrdersStore = /* @__PURE__ */ new Map();
 async function createStoreOrderFromPayment(order) {
   try {
-    const { rows: seqRows } = await pool7.query(
+    const { rows: seqRows } = await pool8.query(
       "UPDATE order_number_seq SET last_number = last_number + 1 RETURNING last_number"
     );
     const num = seqRows[0]?.last_number ?? 1;
@@ -50274,7 +50314,7 @@ async function createStoreOrderFromPayment(order) {
     const platform = firstItem?.platform || null;
     const customerPaid = order.totalPrice || 0;
     const gatewayFee = +(customerPaid * 0.05).toFixed(2);
-    const { rows: insertedRows } = await pool7.query(
+    const { rows: insertedRows } = await pool8.query(
       `INSERT INTO store_orders (
         order_number, customer_name, product_type, game_name, platform,
         contact_whatsapp, customer_phone, customer_email, contact_instagram,
@@ -50627,9 +50667,61 @@ app.use((_req, res, next) => {
   res.setHeader("Expires", "0");
   next();
 });
+app.use((req, res, next) => {
+  const rawIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "";
+  const cleanIp = rawIp.replace("::ffff:", "").trim();
+  if (cleanIp && isBlocked(cleanIp) && !req.url.startsWith("/api/auth/me") && !req.url.startsWith("/api/admin")) {
+    res.status(403).json({ error: "\u062A\u0645 \u062D\u0638\u0631 \u0647\u0630\u0627 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0645\u0646 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0646\u0635\u0629 \u0644\u0623\u0633\u0628\u0627\u0628 \u0623\u0645\u0646\u064A\u0629." });
+    return;
+  }
+  next();
+});
 app.use(import_express17.default.json({ limit: "50mb" }));
 app.use(import_express17.default.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/api", globalLimiter, routes_default);
+app.get("/robots.txt", (_req, res) => {
+  res.type("text/plain");
+  res.send(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /_next/
+
+Sitemap: https://www.dukkank.store/sitemap.xml
+`);
+});
+app.get("/sitemap.xml", (_req, res) => {
+  res.type("application/xml");
+  const baseUrl = "https://www.dukkank.store";
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/all-games</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/reviews</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/policies</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>`);
+});
 var app_default = app;
 export {
   app_default as default

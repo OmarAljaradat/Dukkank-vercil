@@ -62,13 +62,27 @@ export default function NotifyTab() {
     }, []);
 
     const onDelete = async (id) => {
-        if (!window.confirm("هل أنت تأكد من حذف هذا الطلب؟")) return;
+        if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+        setItems((prev) => prev.filter((i) => i.id !== id));
         try {
             await apiDeleteNotifyRequest(id);
             toast.success("تم حذف الطلب بنجاح ✅");
-            reload();
         } catch (e) {
             toast.error(formatApiError(e));
+            reload();
+        }
+    };
+
+    const handleClearAll = async () => {
+        if (!window.confirm("هل أنت متأكد من مسح وتصفير كافة طلبات التنبيه والبدء من الصفر؟")) return;
+        const currentItems = [...items];
+        setItems([]);
+        try {
+            await Promise.all(currentItems.map(item => apiDeleteNotifyRequest(item.id).catch(() => null)));
+            toast.success("تم تصفير كافة طلبات التنبيه بنجاح 🧹");
+        } catch (e) {
+            toast.error("حدث خطأ أثناء التصفير");
+            reload();
         }
     };
 
@@ -194,6 +208,16 @@ export default function NotifyTab() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    <button
+                        onClick={handleClearAll}
+                        disabled={items.length === 0}
+                        className="px-3.5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                        title="تصفير ومسح كافة طلبات التنبيه"
+                    >
+                        <Trash2 className="w-4 h-4 text-red-400" />
+                        <span>تصفير الكل 🧹</span>
+                    </button>
+
                     <button
                         onClick={() => setShowTemplateEditor(!showTemplateEditor)}
                         className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
