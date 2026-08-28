@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Lock, KeyRound, Eye, EyeOff, Laptop, Smartphone, LogOut, CheckCircle2, Clock, Calendar, Mail, Phone, Save } from "lucide-react";
+import { Shield, Lock, KeyRound, Eye, EyeOff, Laptop, Smartphone, LogOut, CheckCircle2, Clock, Calendar, Mail, Phone, Save, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AccountProfileTab({ customer, updateProfile }) {
@@ -7,6 +7,7 @@ export default function AccountProfileTab({ customer, updateProfile }) {
     const [editName, setEditName] = useState(customer?.name || "");
     const [editPhone, setEditPhone] = useState(customer?.phone || "");
     const [editEmail, setEditEmail] = useState(customer?.email || "");
+    const [editInstagram, setEditInstagram] = useState(customer?.instagram || "");
 
     // Security PIN State
     const [pinCode, setPinCode] = useState("");
@@ -39,6 +40,14 @@ export default function AccountProfileTab({ customer, updateProfile }) {
             icon: Smartphone,
         }
     ]);
+
+    const handleUpdateBasicProfile = (e) => {
+        e.preventDefault();
+        if (updateProfile) {
+            updateProfile({ name: editName, phone: editPhone, instagram: editInstagram });
+        }
+        toast.success("تم تحديث البيانات الشخصية بنجاح! ✨");
+    };
 
     const handleSavePin = (e) => {
         e.preventDefault();
@@ -107,37 +116,48 @@ export default function AccountProfileTab({ customer, updateProfile }) {
                 </div>
 
                 {/* Metric Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
                     {/* Item 1: Email */}
                     <div className="bg-[hsl(var(--brand-cream))]/40 p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/5 space-y-1.5">
                         <div className="flex items-center gap-2 text-xs font-bold text-[hsl(var(--brand-ink))]/60">
                             <Mail className="w-4 h-4 text-slate-500" />
                             <span>البريد الإلكتروني</span>
                         </div>
-                        <div className="text-xs sm:text-sm font-black text-[hsl(var(--brand-ink))] truncate">
+                        <div className="text-xs sm:text-sm font-black text-[hsl(var(--brand-ink))] truncate" dir="ltr">
                             {customer?.email || "user@dukkank.com"}
                         </div>
                     </div>
 
-                    {/* Item 2: Last Login */}
+                    {/* Item 2: Instagram */}
                     <div className="bg-[hsl(var(--brand-cream))]/40 p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/5 space-y-1.5">
                         <div className="flex items-center gap-2 text-xs font-bold text-[hsl(var(--brand-ink))]/60">
-                            <Clock className="w-4 h-4 text-amber-500" />
-                            <span>آخر تسجيل دخول</span>
+                            <Instagram className="w-4 h-4 text-pink-500" />
+                            <span>حساب إنستجرام</span>
                         </div>
-                        <div className="text-xs sm:text-sm font-black text-[hsl(var(--brand-ink))]">
-                            اليوم، 10:45 صباحاً
+                        <div className="text-xs sm:text-sm font-black text-pink-600 truncate font-mono" dir="ltr">
+                            {customer?.instagram || "غير مسجّل"}
                         </div>
                     </div>
 
-                    {/* Item 3: Created Date */}
+                    {/* Item 3: Phone */}
                     <div className="bg-[hsl(var(--brand-cream))]/40 p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/5 space-y-1.5">
                         <div className="flex items-center gap-2 text-xs font-bold text-[hsl(var(--brand-ink))]/60">
-                            <Calendar className="w-4 h-4 text-emerald-500" />
-                            <span>تاريخ الإنشاء</span>
+                            <Phone className="w-4 h-4 text-emerald-500" />
+                            <span>رقم الهاتف</span>
+                        </div>
+                        <div className="text-xs sm:text-sm font-black text-[hsl(var(--brand-ink))] truncate" dir="ltr">
+                            {customer?.phone || "غير مسجّل"}
+                        </div>
+                    </div>
+
+                    {/* Item 4: Created Date */}
+                    <div className="bg-[hsl(var(--brand-cream))]/40 p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/5 space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[hsl(var(--brand-ink))]/60">
+                            <Calendar className="w-4 h-4 text-blue-500" />
+                            <span>عضو منذ</span>
                         </div>
                         <div className="text-xs sm:text-sm font-black text-[hsl(var(--brand-ink))]">
-                            مارس 2024
+                            {customer?.createdAt ? new Date(customer.createdAt).toLocaleDateString("ar-EG") : "2024"}
                         </div>
                     </div>
                 </div>
@@ -254,7 +274,75 @@ export default function AccountProfileTab({ customer, updateProfile }) {
                 </div>
 
                 {/* RIGHT COLUMN: Change Password Form (7 Cols) */}
-                <div className="md:col-span-7">
+                <div className="md:col-span-7 space-y-6">
+                    {/* Personal Info Edit Form */}
+                    <form onSubmit={handleUpdateBasicProfile} className="bg-white rounded-3xl p-6 sm:p-7 border border-[hsl(var(--brand-ink))]/10 shadow-xs space-y-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                <Mail className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-base text-[hsl(var(--brand-ink))]">البيانات الشخصية وحسابات التواصل</h3>
+                                <p className="text-xs text-[hsl(var(--brand-ink))]/50 font-medium">
+                                    تعديل الاسم ورقم الهاتف وحساب الإنستجرام المعتمد
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">الاسم الكامل</label>
+                                <input
+                                    type="text"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    placeholder="الاسم الكامل"
+                                    className="w-full h-11 px-4 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:outline-none focus:border-slate-800"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">حساب إنستجرام (Instagram)</label>
+                                    <div className="relative">
+                                        <Instagram className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-500" />
+                                        <input
+                                            type="text"
+                                            value={editInstagram}
+                                            onChange={(e) => setEditInstagram(e.target.value)}
+                                            placeholder="@username"
+                                            dir="ltr"
+                                            className="w-full h-11 pr-10 pl-3 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:outline-none focus:border-slate-800 font-mono text-right"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">رقم الهاتف (للتواصل والتفعيل)</label>
+                                    <div className="relative">
+                                        <Phone className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                                        <input
+                                            type="tel"
+                                            value={editPhone}
+                                            onChange={(e) => setEditPhone(e.target.value)}
+                                            placeholder="079..."
+                                            className="w-full h-11 pr-10 pl-3 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:outline-none focus:border-slate-800"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100 flex justify-end">
+                            <button
+                                type="submit"
+                                className="h-11 px-8 rounded-full bg-[hsl(var(--brand-blue-deep))] hover:opacity-90 text-white text-xs font-black shadow-md transition-opacity flex items-center gap-2 cursor-pointer"
+                            >
+                                <Save className="w-4 h-4" />
+                                <span>حفظ البيانات الشخصية ✨</span>
+                            </button>
+                        </div>
+                    </form>
                     <form onSubmit={handleChangePassword} className="bg-white rounded-3xl p-6 sm:p-7 border border-[hsl(var(--brand-ink))]/10 shadow-xs space-y-6 flex flex-col justify-between h-full">
                         <div className="space-y-6">
                             <div className="flex items-center gap-3">

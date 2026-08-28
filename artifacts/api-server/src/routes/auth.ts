@@ -41,7 +41,7 @@ export const otpLimiter = rateLimit({
 });
 
 // In-memory OTP store with expiration (10 minutes)
-const otpStore = new Map<string, { code: string; expiresAt: number; name?: string; phone?: string; password?: string }>();
+const otpStore = new Map<string, { code: string; expiresAt: number; name?: string; phone?: string; instagram?: string; password?: string }>();
 
 function generateOTP(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
@@ -73,14 +73,16 @@ async function initAuthDb() {
         name TEXT,
         email TEXT UNIQUE,
         phone TEXT,
+        instagram TEXT,
         password TEXT,
         email_verified BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    await pool.query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS instagram TEXT`).catch(() => {});
     await pool.query(
-      `INSERT INTO customers (id, name, email, phone, password, email_verified)
-       VALUES ('cust-demo-1', 'مجرّب النظام (Test User)', 'test.user@dukkank.com', '+962790000000', 'test1234', TRUE)
+      `INSERT INTO customers (id, name, email, phone, instagram, password, email_verified)
+       VALUES ('cust-demo-1', 'مجرّب النظام (Test User)', 'test.user@dukkank.com', '+962790000000', '@dukkank15', 'test1234', TRUE)
        ON CONFLICT (email) DO NOTHING`
     );
   } catch (_) {}
@@ -236,7 +238,7 @@ router.post("/auth/change-password", handleChangePassword);
 
 // Step 1: Send OTP for registration
 router.post("/auth/register/send-otp", otpLimiter, async (req, res) => {
-  const { email, name, phone, password } = req.body || {};
+  const { email, name, phone, instagram, password } = req.body || {};
   if (!email) { res.status(400).json({ error: "البريد الإلكتروني مطلوب" }); return; }
 
   try {
@@ -256,6 +258,7 @@ router.post("/auth/register/send-otp", otpLimiter, async (req, res) => {
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 min
       name,
       phone,
+      instagram: instagram || "",
       password,
     });
 
@@ -299,10 +302,10 @@ router.post("/auth/register/verify-otp", async (req, res) => {
 
   try {
     await pool.query(
-      `INSERT INTO customers (id, name, email, phone, password, email_verified)
-       VALUES ($1, $2, $3, $4, $5, TRUE)
-       ON CONFLICT (email) DO UPDATE SET name = $2, phone = $4, password = $5, email_verified = TRUE`,
-      [id, stored.name || "عميل جديد", email.toLowerCase(), stored.phone || "", hashedPassword]
+      `INSERT INTO customers (id, name, email, phone, instagram, password, email_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, TRUE)
+       ON CONFLICT (email) DO UPDATE SET name = $2, phone = $4, instagram = $5, password = $6, email_verified = TRUE`,
+      [id, stored.name || "عميل جديد", email.toLowerCase(), stored.phone || "", stored.instagram || "", hashedPassword]
     );
 
     const token = makeToken(email.toLowerCase());
@@ -314,6 +317,7 @@ router.post("/auth/register/verify-otp", async (req, res) => {
         name: stored.name || "عميل جديد",
         email: email.toLowerCase(),
         phone: stored.phone || "",
+        instagram: stored.instagram || "",
         emailVerified: true,
       },
     });
@@ -364,6 +368,7 @@ router.post("/auth/customer/login", loginLimiter, async (req, res) => {
         name: cust.name,
         email: cust.email,
         phone: cust.phone,
+        instagram: cust.instagram || "",
         emailVerified: cust.email_verified,
       },
     });
@@ -437,15 +442,15 @@ router.post("/auth/forgot-password/reset", async (req, res) => {
 
 // Legacy register endpoint
 router.post("/auth/register", async (req, res) => {
-  const { name, email, phone, password } = req.body || {};
+  const { name, email, phone, instagram, password } = req.body || {};
   try {
     const id = `cust-${Date.now()}`;
     const hashedPassword = bcrypt.hashSync(password || "123456", 10);
     await pool.query(
-      `INSERT INTO customers (id, name, email, phone, password)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (email) DO UPDATE SET name = $2, phone = $4, password = $5`,
-      [id, name || "عميل جديد", (email || "").toLowerCase(), phone || "", hashedPassword]
+      `INSERT INTO customers (id, name, email, phone, instagram, password)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (email) DO UPDATE SET name = $2, phone = $4, instagram = $5, password = $6`,
+      [id, name || "عميل جديد", (email || "").toLowerCase(), phone || "", instagram || "", hashedPassword]
     );
     res.json({ ok: true, id });
   } catch (e: any) {
@@ -460,7 +465,7 @@ router.get("/admin/customers", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT id, name, email, phone, email_verified, created_at FROM customers ORDER BY created_at DESC LIMIT 500`
+      `SELECT id, name, email, phone, instagram, email_verified, created_at FROM customers ORDER BY created_at DESC LIMIT 500`
     );
     res.json(rows);
   } catch (e: any) {

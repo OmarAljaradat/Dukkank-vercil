@@ -13,7 +13,7 @@ import { SEO } from "../components/SEO";
 import {
     User, Mail, Phone, Lock, LogIn, UserPlus, ShieldCheck, Gamepad2,
     Home, CheckCircle2, KeyRound, RotateCw, AlertCircle, Eye, EyeOff,
-    Loader2, ArrowRight, Shield, RefreshCw, AlertTriangle
+    Loader2, ArrowRight, Shield, RefreshCw, AlertTriangle, Instagram
 } from "lucide-react";
 import { toast } from "sonner";
 import { validateFullName, validatePhoneNumber, validateEmailAddress, validatePassword } from "../lib/validation";
@@ -130,6 +130,7 @@ export default function LoginPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [instagram, setInstagram] = useState("");
     const [signupPass, setSignupPass] = useState("");
     const [showSignupPass, setShowSignupPass] = useState(false);
     const [signupLoading, setSignupLoading] = useState(false);
@@ -239,7 +240,7 @@ export default function LoginPage() {
             const res = await fetch("/api/auth/register/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: nameCheck.clean, email: emailCheck.clean, phone, password: signupPass }),
+                body: JSON.stringify({ name: nameCheck.clean, email: emailCheck.clean, phone, instagram: instagram.trim(), password: signupPass }),
             });
             const data = await res.json();
             if (res.status === 409) {
@@ -273,7 +274,7 @@ export default function LoginPage() {
             });
             const data = await res.json();
             if (res.ok && data.ok) {
-                signup({ name, email: otpEmail, phone, password: signupPass });
+                signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
                 toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
                 navigate("/account");
             } else if (res.ok === false && data.error) {
@@ -282,12 +283,12 @@ export default function LoginPage() {
                 return;
             } else {
                 // If local verification
-                signup({ name, email: otpEmail, phone, password: signupPass });
+                signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
                 toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
                 navigate("/account");
             }
         } catch {
-            signup({ name, email: otpEmail, phone, password: signupPass });
+            signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
             toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
             navigate("/account");
         } finally {
@@ -537,16 +538,28 @@ export default function LoginPage() {
                                         {fieldErrors.email && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.email}</p>}
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">رقم الواتساب</label>
+                                        <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">حساب إنستجرام (Instagram)</label>
                                         <div className="relative">
-                                            <Phone className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/40" />
-                                            <input type="tel" value={phone}
-                                                onChange={(e) => { setPhone(e.target.value); setFieldErrors({}); }}
-                                                placeholder="079..."
-                                                className={`w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all ${fieldErrors.phone ? "border-red-500 ring-2 ring-red-500/20" : "border-[hsl(var(--brand-ink))]/15"}`} />
+                                            <Instagram className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-pink-500" />
+                                            <input type="text" value={instagram}
+                                                onChange={(e) => { setInstagram(e.target.value); setFieldErrors({}); }}
+                                                placeholder="@username"
+                                                dir="ltr"
+                                                className="w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all font-mono text-right" />
                                         </div>
-                                        {fieldErrors.phone && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.phone}</p>}
                                     </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-extrabold text-[hsl(var(--brand-ink))]/80">رقم الهاتف (اختياري)</label>
+                                    <div className="relative">
+                                        <Phone className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/40" />
+                                        <input type="tel" value={phone}
+                                            onChange={(e) => { setPhone(e.target.value); setFieldErrors({}); }}
+                                            placeholder="079..."
+                                            className={`w-full h-12 pr-10 pl-3 rounded-2xl bg-[hsl(var(--brand-cream))]/60 dark:bg-white/5 border text-xs font-bold text-[hsl(var(--brand-ink))] placeholder:text-[hsl(var(--brand-ink))]/40 focus:border-[hsl(var(--brand-blue-deep))] focus:outline-none transition-all ${fieldErrors.phone ? "border-red-500 ring-2 ring-red-500/20" : "border-[hsl(var(--brand-ink))]/15"}`} />
+                                    </div>
+                                    {fieldErrors.phone && <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{fieldErrors.phone}</p>}
                                 </div>
 
                                 <div className="space-y-1">

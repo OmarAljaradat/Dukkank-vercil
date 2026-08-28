@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dial
 import {
     User, ShoppingBag, LogOut, ShieldCheck, Phone, Mail, Lock,
     CheckCircle2, Eye, EyeOff, ArrowRight, KeyRound, Loader2,
-    Sparkles, Shield, RefreshCw, AlertTriangle, Wallet, Ticket
+    Sparkles, Shield, RefreshCw, AlertTriangle, Wallet, Ticket, Instagram
 } from "lucide-react";
 import { toast } from "sonner";
 import { validateFullName, validatePhoneNumber, validateEmailAddress, validatePassword } from "../lib/validation";
@@ -110,20 +110,11 @@ function useCountdown(seconds) {
 export function CustomerAuthModal({ open, onOpenChange }) {
     const { customer, orders, walletBalance, tickets, login, signup, logout, updateProfile } = useCustomer();
 
-    // ── View State ────────────────────────────────────
-    // views: login | signup | otp | forgot | forgot-otp | forgot-reset | profile | orders
-    const [view, setView] = useState(customer ? "profile" : "login");
-
-    // ── Login State ───────────────────────────────────
-    const [loginEmail, setLoginEmail] = useState("");
-    const [loginPass, setLoginPass] = useState("");
-    const [showLoginPass, setShowLoginPass] = useState(false);
-    const [loginLoading, setLoginLoading] = useState(false);
-
-    // ── Signup State ──────────────────────────────────
+    // ── View State ───────────────────�    // ── Signup State ──────────────────────────────────
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [instagram, setInstagram] = useState("");
     const [signupPass, setSignupPass] = useState("");
     const [showSignupPass, setShowSignupPass] = useState(false);
     const [signupLoading, setSignupLoading] = useState(false);
@@ -147,6 +138,7 @@ export function CustomerAuthModal({ open, onOpenChange }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(customer?.name || "");
     const [editPhone, setEditPhone] = useState(customer?.phone || "");
+    const [editInstagram, setEditInstagram] = useState(customer?.instagram || "");
 
     // ── Sync view on customer change ──────────────────
     useEffect(() => {
@@ -218,7 +210,7 @@ export function CustomerAuthModal({ open, onOpenChange }) {
             const res = await fetch("/api/auth/register/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: nameCheck.clean, email: emailCheck.clean, phone, password: signupPass }),
+                body: JSON.stringify({ name: nameCheck.clean, email: emailCheck.clean, phone, instagram: instagram.trim(), password: signupPass }),
             });
             const data = await res.json();
             if (res.status === 409) {
@@ -250,7 +242,7 @@ export function CustomerAuthModal({ open, onOpenChange }) {
             });
             const data = await res.json();
             if (res.ok && data.ok) {
-                signup({ name: name || data.customer?.name, email: otpEmail, phone, password: signupPass });
+                signup({ name: name || data.customer?.name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
                 toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
                 setView("profile");
             } else {
@@ -258,7 +250,8 @@ export function CustomerAuthModal({ open, onOpenChange }) {
             }
         } catch {
             // Offline fallback
-            signup({ name, email: otpEmail, phone, password: signupPass });
+            signup({ name, email: otpEmail, phone, instagram: instagram.trim(), password: signupPass });
+            toast.success("تم تأكيد بريدك الإلكتروني وإنشاء الحساب بنجاح! 🎉");
             setView("profile");
         } finally {
             setOtpLoading(false);
@@ -516,14 +509,27 @@ export function CustomerAuthModal({ open, onOpenChange }) {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">رقم الواتساب</label>
+                                    <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">حساب إنستجرام (Instagram)</label>
                                     <div className="relative">
-                                        <Phone className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/35" />
-                                        <input type="tel" required value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            placeholder="079..."
-                                            className="w-full h-12 pr-10 pl-3 rounded-2xl bg-white dark:bg-white/[0.05] border border-[hsl(var(--brand-ink))]/15 text-sm focus:outline-none focus:border-[hsl(var(--brand-blue-deep))] focus:ring-2 focus:ring-[hsl(var(--brand-blue-deep))]/10 transition-all" />
+                                        <Instagram className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-pink-500" />
+                                        <input type="text" value={instagram}
+                                            onChange={(e) => setInstagram(e.target.value)}
+                                            placeholder="@username"
+                                            dir="ltr"
+                                            className="w-full h-12 pr-10 pl-3 rounded-2xl bg-white dark:bg-white/[0.05] border border-[hsl(var(--brand-ink))]/15 text-sm focus:outline-none focus:border-[hsl(var(--brand-blue-deep))] focus:ring-2 focus:ring-[hsl(var(--brand-blue-deep))]/10 transition-all font-mono text-right" />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Phone */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">رقم الهاتف (للتواصل والتفعيل)</label>
+                                <div className="relative">
+                                    <Phone className="absolute top-1/2 -translate-y-1/2 right-3.5 w-4 h-4 text-[hsl(var(--brand-ink))]/35" />
+                                    <input type="tel" required value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        placeholder="079..."
+                                        className="w-full h-12 pr-10 pl-3 rounded-2xl bg-white dark:bg-white/[0.05] border border-[hsl(var(--brand-ink))]/15 text-sm focus:outline-none focus:border-[hsl(var(--brand-blue-deep))] focus:ring-2 focus:ring-[hsl(var(--brand-blue-deep))]/10 transition-all" />
                                 </div>
                             </div>
 

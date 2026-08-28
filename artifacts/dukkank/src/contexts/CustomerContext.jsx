@@ -86,12 +86,13 @@ export function CustomerProvider({ children }) {
         return loggedCust;
     };
 
-    const signup = ({ name, email, phone, password }) => {
+    const signup = ({ name, email, phone, instagram, password }) => {
         const newCust = {
             id: `cust-${Date.now()}`,
             name: name || "عميل جديد",
             email: email || "",
             phone: phone || "",
+            instagram: instagram || "",
             createdAt: new Date().toISOString(),
         };
 
@@ -103,6 +104,7 @@ export function CustomerProvider({ children }) {
             phone: newCust.phone || newCust.email || `phone-${Date.now()}`,
             name: newCust.name,
             email: newCust.email,
+            instagram: newCust.instagram,
             pass: password || "CustomerPass123",
             createdAt: Date.now()
         });
@@ -111,7 +113,7 @@ export function CustomerProvider({ children }) {
         fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newCust.name, email: newCust.email, phone: newCust.phone, password })
+            body: JSON.stringify({ name: newCust.name, email: newCust.email, phone: newCust.phone, instagram: newCust.instagram, password })
         }).catch(() => null);
 
         toast.success("تم إنشاء الحساب بنجاح! 🎉", { description: newCust.name });
