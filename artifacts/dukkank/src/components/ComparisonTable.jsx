@@ -2,12 +2,14 @@ import { Check, X } from "lucide-react";
 import { useStoreData } from "../contexts/DataContext";
 
 const DEFAULT_ROWS = [
-    { feature: "اللعب أونلاين عبر الشبكة", essential: true, extra: true, deluxe: true },
-    { feature: "ألعاب شهرية مجانية", essential: true, extra: true, deluxe: true },
-    { feature: "مكتبة +400 لعبة ضخمة", essential: false, extra: true, deluxe: true },
-    { feature: "تجارب لعب مجانية (Trials)", essential: false, extra: false, deluxe: true },
-    { feature: "مكتبة ألعاب كلاسيكية (PS1/PS2/PSP)", essential: false, extra: false, deluxe: true },
-    { feature: "أولوية الدعم الفني الذهبي", essential: false, extra: false, deluxe: true },
+    { feature: "اللعب أونلاين عبر الشبكة (Online Multiplayer)", essential: true, extra: true, deluxe: true },
+    { feature: "ألعاب شهرية مجانية قابلة للتحميل كل شهر", essential: true, extra: true, deluxe: true },
+    { feature: "خصومات وعروض حصرية إضافية في الستور", essential: true, extra: true, deluxe: true },
+    { feature: "تخزين سحابي لحفظ التخزينات ومراحل الألعاب", essential: true, extra: true, deluxe: true },
+    { feature: "مكتبة ألعاب ضخمة (+400 لعبة كتالوج PS4 & PS5)", essential: false, extra: true, deluxe: true },
+    { feature: "كتالوج ألعاب يوبي سوفت (Ubisoft+ Classics)", essential: false, extra: true, deluxe: true },
+    { feature: "ألعاب استوديوهات بلايستيشن الحصرية (PlayStation Studios)", essential: false, extra: true, deluxe: true },
+    { feature: "تفعيل فوري مضمون كامل فترة الاشتراك 100%", essential: true, extra: true, deluxe: true },
 ];
 
 export const ComparisonTable = () => {

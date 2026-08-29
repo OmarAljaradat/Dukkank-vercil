@@ -165,8 +165,14 @@ const FALLBACK_CONTENT = {
         ctaEssential: "اختر الأساسي",
         ctaExtra: "اختر الإضافي",
         rows: [
-            { feature: "اللعب أونلاين", essential: true, extra: true },
-            { feature: "مكتبة +400 لعبة", essential: false, extra: true },
+            { feature: "اللعب أونلاين عبر الشبكة (Online Multiplayer)", essential: true, extra: true, deluxe: true },
+            { feature: "ألعاب شهرية مجانية قابلة للتحميل كل شهر", essential: true, extra: true, deluxe: true },
+            { feature: "خصومات وعروض حصرية إضافية في الستور", essential: true, extra: true, deluxe: true },
+            { feature: "تخزين سحابي لحفظ التخزينات ومراحل الألعاب", essential: true, extra: true, deluxe: true },
+            { feature: "مكتبة ألعاب ضخمة (+400 لعبة كتالوج PS4 & PS5)", essential: false, extra: true, deluxe: true },
+            { feature: "كتالوج ألعاب يوبي سوفت (Ubisoft+ Classics)", essential: false, extra: true, deluxe: true },
+            { feature: "ألعاب استوديوهات بلايستيشن الحصرية (PlayStation Studios)", essential: false, extra: true, deluxe: true },
+            { feature: "تفعيل فوري مضمون كامل فترة الاشتراك 100%", essential: true, extra: true, deluxe: true },
         ],
     },
     bundles: {
