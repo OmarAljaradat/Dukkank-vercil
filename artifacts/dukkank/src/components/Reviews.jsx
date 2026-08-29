@@ -19,7 +19,6 @@ const StarRow = ({ count = 5 }) => (
     </div>
 );
 
-
 const getReviewText = (r) => {
     const txt = r?.text || r?.comment || r?.content || r?.review || r?.message || r?.body;
     if (txt && typeof txt === "string" && txt.trim().length > 0) return txt.trim();
@@ -35,20 +34,24 @@ export const Reviews = () => {
     const [showReviewModal, setShowReviewModal] = useState(false);
 
     const sampleReviews = [
-        { id: "1", name: "خالد العنزي 🇸🇦", badge: "PS5", rating: 5, text: "أفضل تجربة شحن مررت بها للتجربة والموثوقية!", item: "FIFA 25 FUT — PS5" },
-        { id: "2", name: "أحمد الدوسري 🇸🇦", badge: "عميل جديد • Console", rating: 5, text: "صراحة لقيتهم عن طريق صديق ووالله ما توقعت تجربة بهالمستوى. التوصيل كان بأسرع وقت شفته.", item: "EA SPORTS FC 25" },
-        { id: "3", name: "مشعل المطوع 🇰🇼", badge: "عميل مميز • Console", rating: 5, text: "أكثر من سنة وأنا أتعامل معهم ولم يخذلوني ولو مرة. الخدمة ممتازة ودعم الواتساب سريع.", item: "PlayStation Plus Deluxe 12M" },
-        { id: "4", name: "خليل الهاشمي 🇦🇪", badge: "Xbox", rating: 5, text: "أفضل متجر شحن بلا منازع، الدعم الفني متعاون جداً والخدمة سريعة وممتازة.", item: "GTA VI Pre-Order" },
-        { id: "5", name: "حمد آل ثاني 🇶🇦", badge: "عميل مميز • Console", rating: 5, text: "أنصح كل الناس يشتروا من هنا. سعر أقل من المنافسين بكثير وضمان استرجاع وإعادة حق لجميع الزبائن.", item: "Call of Duty: Black Ops 6" },
-        { id: "6", name: "تركي السديري 🇸🇦", badge: "عميل VIP • PS5", rating: 5, text: "جربت كثير من المتاجر وهذا الأفضل بكل المقاييس. المتجر موثوق، توصيل فوري، ودعم جاهز يرد فوراً.", item: "Elden Ring Shadow of Erdtree" },
+        { id: "s-1", name: "خالد العنزي 🇸🇦", badge: "PS5 • عميل موثق", rating: 5, text: "أفضل تجربة شحن مررت بها للتجربة والموثوقية والتسليم كان فوري بدون أي تأخير!", item: "EA SPORTS FC 25" },
+        { id: "s-2", name: "أحمد الدوسري 🇸🇦", badge: "PS5 / PS4 • عميل موثق", rating: 5, text: "صراحة ما توقعت السرعة والاحترافية بهالمستوى! الحساب تفعل فوراً والضمان شغال 100%.", item: "PlayStation Plus Deluxe 12M" },
+        { id: "s-3", name: "مشعل المطوع 🇰🇼", badge: "PS5 • عميل VIP", rating: 5, text: "أكثر من سنة وأنا أتعامل مع متجر دُكانك والخدمة ممتازة ودعم الإنستجرام سريع جداً.", item: "PlayStation Plus Extra 12M" },
+        { id: "s-4", name: "خليل الهاشمي 🇦🇪", badge: "Console • عميل موثق", rating: 5, text: "أفضل متجر شحن بلا منازع، الدعم الفني متعاون جداً والخدمة سريعة وممتازة.", item: "GTA VI Pre-Order" },
+        { id: "s-5", name: "حمد آل ثاني 🇶🇦", badge: "PS5 • عميل مميز", rating: 5, text: "أنصح بالتعامل معهم، سعر أرخص من الستور الرسمي بكثير مع ضمان ذهبي معتمد.", item: "Call of Duty: Black Ops 6" },
+        { id: "s-6", name: "تركي السديري 🇸🇦", badge: "PS5 • عميل VIP", rating: 5, text: "جربت كثير من المتاجر ودُكانك الأفضل بكل المقاييس. سرعة ومصداقية ودعم محترم.", item: "Elden Ring Shadow of Erdtree" },
     ];
 
-    // Filter to only display approved / visible reviews (prioritizing pinned ones for Top 6 Homepage slots)
-    const approvedReviews = (reviews || []).filter(r => r.visible !== false && r.status !== "pending");
+    // Filter to only display approved / visible reviews (prioritizing pinned ones)
+    const approvedReviews = (reviews || []).filter(r => r && r.visible !== false && r.status !== "pending");
     const pinnedReviews = approvedReviews.filter(r => r.pinned);
     const unpinnedReviews = approvedReviews.filter(r => !r.pinned);
-    const sortedList = [...pinnedReviews, ...unpinnedReviews];
-    const displayList = (sortedList.length >= 1 ? sortedList : sampleReviews).slice(0, 6);
+    
+    // Combine custom reviews with sample reviews so we always have at least 6 rich reviews
+    const existingNames = new Set(approvedReviews.map(r => (r.name || "").trim().toLowerCase()));
+    const additionalSamples = sampleReviews.filter(s => !existingNames.has(s.name.trim().toLowerCase()));
+    const combinedReviews = [...pinnedReviews, ...unpinnedReviews, ...additionalSamples];
+    const displayList = combinedReviews.slice(0, 6);
 
     return (
         <section
@@ -99,13 +102,15 @@ export const Reviews = () => {
                     </div>
                 </div>
 
-                {/* 6 Reviews Grid (3 columns) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Reviews Grid: 3 reviews on mobile, 6 on desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                     {displayList.map((r, i) => (
                         <article
                             key={r.id || i}
                             data-testid={`review-card-${i}`}
-                            className="bg-white dark:bg-white/[0.04] rounded-3xl p-6 border border-[hsl(var(--brand-ink))]/10 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                            className={`bg-white dark:bg-white/[0.04] rounded-3xl p-5 sm:p-6 border border-[hsl(var(--brand-ink))]/10 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 ${
+                                i >= 3 ? "hidden sm:flex" : "flex"
+                            }`}
                         >
                             <div className="space-y-3">
                                 {/* User Info Header */}
