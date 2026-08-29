@@ -3,12 +3,12 @@ import { useCart } from "../contexts/CartContext";
 import { useCurrency } from "../contexts/CurrencyContext";
 
 export function StickyCartBar({ onOpenCart }) {
-    const { totalQty, items } = useCart();
+    const { totalQty, totalPrice } = useCart();
     const { format } = useCurrency();
 
-    if (totalQty === 0) return null;
+    if (!totalQty || totalQty === 0) return null;
 
-    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const safeTotal = typeof totalPrice === "number" && !isNaN(totalPrice) ? totalPrice : 0;
 
     return (
         <div
@@ -18,7 +18,7 @@ export function StickyCartBar({ onOpenCart }) {
             <div className="mx-3 mb-2">
                 <button
                     onClick={onOpenCart}
-                    className="w-full flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-white font-bold shadow-2xl active:scale-[0.98] transition-transform"
+                    className="w-full flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-white font-bold shadow-2xl active:scale-[0.98] transition-transform cursor-pointer"
                     style={{
                         background: "linear-gradient(135deg, hsl(var(--brand-blue-deep)) 0%, hsl(211 45% 20%) 100%)",
                         boxShadow: "0 8px 32px hsl(var(--brand-blue-deep) / 0.45), 0 0 0 2px hsl(var(--brand-blue) / 0.3)",
@@ -36,7 +36,7 @@ export function StickyCartBar({ onOpenCart }) {
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <span className="text-base font-extrabold">{format(total)}</span>
+                        <span className="text-base font-extrabold">{format(safeTotal)}</span>
                         <ArrowLeft className="w-4 h-4 opacity-80" />
                     </div>
                 </button>

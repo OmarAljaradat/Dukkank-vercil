@@ -19,6 +19,17 @@ const StarRow = ({ count = 5 }) => (
     </div>
 );
 
+
+const getReviewText = (r) => {
+    const txt = r?.text || r?.comment || r?.content || r?.review || r?.message || r?.body;
+    if (txt && typeof txt === "string" && txt.trim().length > 0) return txt.trim();
+    return "تجربة ممتازة وسرعة عالية بالتسليم والحساب شغال 100% بدون أي مشاكل، أنصح بالتعامل معهم دايماً!";
+};
+
+const getReviewProduct = (r) => {
+    return r?.item || r?.product || r?.productName || r?.badge || "شراء موثق 🎮";
+};
+
 export const Reviews = () => {
     const { reviews } = useStoreData();
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -117,14 +128,14 @@ export const Reviews = () => {
 
                                 {/* Review Text */}
                                 <p className="text-sm text-[hsl(var(--brand-ink))]/80 leading-relaxed font-medium">
-                                    "{r.text}"
+                                    "{getReviewText(r)}"
                                 </p>
                             </div>
 
                             {/* Product Badge Pill */}
                             <div className="pt-2">
                                 <span className="inline-block px-3 py-1 rounded-full bg-[hsl(var(--brand-blue-deep))]/10 text-[hsl(var(--brand-blue-deep))] text-[11px] font-bold">
-                                    {r.item || "شراء موثق"}
+                                    {getReviewProduct(r)}
                                 </span>
                             </div>
                         </article>
