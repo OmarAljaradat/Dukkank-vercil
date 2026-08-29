@@ -154,11 +154,12 @@ export const GameCard = ({ game }) => {
                             const avail = game[t] != null;
                             return (
                                 <button key={t} onClick={() => avail && setTier(t)} disabled={!avail}
-                                    className={`text-[11px] font-bold px-2.5 h-7 rounded-lg border-2 transition-all disabled:opacity-35 flex-shrink-0 ${
+                                    className={`text-[11px] font-black px-2.5 h-7 rounded-lg border-2 transition-all disabled:opacity-35 flex-shrink-0 active:scale-95 ${
                                         tier === t && avail
                                             ? "bg-[hsl(var(--brand-blue-deep))] text-white border-[hsl(var(--brand-blue-deep))]"
-                                            : "bg-transparent text-[hsl(var(--brand-ink))]/70 border-[hsl(var(--brand-ink))]/20"
+                                            : "bg-transparent text-[hsl(var(--brand-ink))]/70 border-[hsl(var(--brand-ink))]/20 hover:border-slate-400"
                                     }`}>
+                                    {TIER_LABEL[t]}
                                 </button>
                             );
                         })}

@@ -150,28 +150,29 @@ export default function AllAccountPage() {
 
                 {/* Sidebar */}
                 <aside className="space-y-4 lg:col-span-1">
-                    <div className="bg-white rounded-3xl border border-[hsl(var(--brand-ink))]/10 p-3 shadow-sm space-y-1">
+                    {/* Mobile Horizontal Scrollable Tabs & Desktop Vertical Menu */}
+                    <div className="bg-white rounded-3xl border border-[hsl(var(--brand-ink))]/10 p-2 sm:p-3 shadow-sm flex lg:flex-col overflow-x-auto no-scrollbar gap-1.5">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`w-full h-11 px-4 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center justify-between transition-all ${
+                                className={`h-11 px-4 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center justify-between transition-all shrink-0 active:scale-95 cursor-pointer ${
                                     activeTab === tab.id
                                         ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md"
-                                        : "text-[hsl(var(--brand-ink))]/80 hover:bg-[hsl(var(--brand-ink))]/5"
+                                        : "text-[hsl(var(--brand-ink))]/80 hover:bg-[hsl(var(--brand-ink))]/5 bg-slate-50 lg:bg-transparent"
                                 }`}
                             >
-                                <div className="flex items-center gap-2.5">
-                                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "" : (tab.iconColor || "")}`} />
-                                    <span>{tab.label}</span>
+                                <div className="flex items-center gap-2">
+                                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "text-white" : (tab.iconColor || "")}`} />
+                                    <span className="whitespace-nowrap">{tab.label}</span>
                                 </div>
                                 {tab.badge != null && (
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-black/10"}`}>
+                                    <span className={`mr-2 px-2 py-0.5 rounded-full text-[10px] font-black ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-black/10"}`}>
                                         {tab.badge}
                                     </span>
                                 )}
                                 {tab.badgeText && (
-                                    <span className="text-xs font-black text-emerald-600">
+                                    <span className="mr-2 text-xs font-black text-emerald-600">
                                         {tab.badgeText}
                                     </span>
                                 )}
@@ -181,16 +182,16 @@ export default function AllAccountPage() {
                         {customer && (
                             <button
                                 onClick={handleLogout}
-                                className="w-full h-11 px-4 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center gap-2.5 text-red-600 hover:bg-red-50 transition-all pt-2 border-t border-[hsl(var(--brand-ink))]/10 cursor-pointer"
+                                className="h-11 px-4 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center gap-2 text-red-600 hover:bg-red-50 transition-all lg:pt-2 lg:border-t lg:border-[hsl(var(--brand-ink))]/10 cursor-pointer shrink-0"
                             >
                                 <LogOut className="w-4 h-4" />
-                                <span>تسجيل الخروج</span>
+                                <span className="whitespace-nowrap">خروج</span>
                             </button>
                         )}
                     </div>
 
-                    {/* Instagram Support Box */}
-                    <div className="bg-gradient-to-br from-pink-500/10 via-rose-500/10 to-purple-500/10 border border-pink-500/20 p-5 rounded-3xl space-y-3">
+                    {/* Instagram Support Box — Desktop & Tablet */}
+                    <div className="hidden lg:block bg-gradient-to-br from-pink-500/10 via-rose-500/10 to-purple-500/10 border border-pink-500/20 p-5 rounded-3xl space-y-3">
                         <div className="flex items-center gap-2 text-pink-700 font-extrabold text-xs">
                             <Instagram className="w-4 h-4" />
                             <span>الدعم الفني عبر إنستجرام</span>

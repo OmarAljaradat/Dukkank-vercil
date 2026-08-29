@@ -227,26 +227,26 @@ export function PsPlusPricingTable() {
                     <span>اختر نوع جهاز بلايستيشن الخاص بك:</span>
                 </div>
 
-                <div className="inline-flex p-1.5 rounded-2xl bg-white dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/15 shadow-sm">
+                <div className="w-full max-w-sm grid grid-cols-2 p-1.5 rounded-2xl bg-white dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/15 shadow-sm">
                     <button
                         onClick={() => setPlatform("five")}
-                        className={`px-6 h-11 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
                             platform === "five"
-                                ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md scale-105"
+                                ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md"
                                 : "text-[hsl(var(--brand-ink))]/70 hover:bg-[hsl(var(--brand-ink))]/5"
                         }`}
                     >
-                        <span>🎮 بلايستيشن 5 (PS5)</span>
+                        <span>🎮 سوني 5 (PS5)</span>
                     </button>
                     <button
                         onClick={() => setPlatform("four")}
-                        className={`px-6 h-11 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2 cursor-pointer ${
+                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
                             platform === "four"
-                                ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md scale-105"
+                                ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md"
                                 : "text-[hsl(var(--brand-ink))]/70 hover:bg-[hsl(var(--brand-ink))]/5"
                         }`}
                     >
-                        <span>🎮 بلايستيشن 4 (PS4)</span>
+                        <span>🎮 سوني 4 (PS4)</span>
                     </button>
                 </div>
             </div>
