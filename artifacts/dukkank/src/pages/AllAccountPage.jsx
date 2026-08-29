@@ -79,7 +79,7 @@ export default function AllAccountPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-account-page">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-account-page">
             <SEO
                 title={`حسابي | ${customer?.name || "متجر دُكانك"}`}
                 description="لوحة تحكم حساب العميل — الطلبات، المكتبة، المحفظة، والمزيد."

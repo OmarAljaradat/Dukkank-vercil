@@ -387,7 +387,7 @@ export default function LoginPage() {
     const newPassStrength = getPasswordStrength(newPassword);
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="login-page">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="login-page">
             <SEO
                 title={`تسجيل الدخول والتحقق | ${storeName}`}
                 description="سجّل دخولك ووثّق حسابك برمز OTP المكون من 4 أرقام لمتابعة طلباتك وااشتراكاتك."

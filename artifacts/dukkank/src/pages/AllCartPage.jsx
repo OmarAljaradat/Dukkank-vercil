@@ -187,7 +187,7 @@ export default function AllCartPage() {
     const origin = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.host}` : "";
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-cart-page">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-cart-page">
             <SEO
                 title="سلة الشراء | متجر دُكانك"
                 description="استعرض ألعابك واشتراكاتك في سلة الشراء وأتمم عملية الدفع أونلاين بسهولة وأمان."

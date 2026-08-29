@@ -250,7 +250,7 @@ function HomePage() {
 
     if (loading && games?.length === 0) {
         return (
-            <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg" data-testid="app-root">
+            <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg" data-testid="app-root">
                 <SEO title={homeTitle} description={heroDesc} canonical={origin} image="" jsonLd={[]} />
                 <Header onOpenCart={() => setCartOpen(true)} onOpenWishlist={() => setWishOpen(true)} onOpenCustomerAuth={() => setCustomerAuthOpen(true)} />
                 <HomeSkeleton />

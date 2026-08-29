@@ -56,7 +56,7 @@ export default function AllReviewsPage() {
     const visiblePages = getVisiblePageNumbers(currentPage, totalPages);
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-reviews-page">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-reviews-page">
             <SEO
                 title="آراء وتقييمات العملاء | متجر دُكانك"
                 description="تصفح تقييمات وآراء أكثر من 1,500 عميل حقيقي جربوا الشراء والتفعيل عبر متجر دُكانك."

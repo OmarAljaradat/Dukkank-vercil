@@ -26,7 +26,7 @@ export default function AllGamesPage() {
     const origin = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.host}` : "";
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-games-page">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="all-games-page">
             <SEO
                 title="جميع الألعاب الرقمية | متجر دُكانك"
                 description="تصفح مكتبة الألعاب الرقمية المتاحة للتفعيل الفوري على بلايستيشن 5 وبلايستيشن 4 بأفضل الأسعار."

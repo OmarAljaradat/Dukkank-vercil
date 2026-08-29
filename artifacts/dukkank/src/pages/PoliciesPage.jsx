@@ -42,7 +42,7 @@ export default function PoliciesPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="policies-page">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden relative bg-[hsl(var(--brand-cream))] grain-bg flex flex-col" data-testid="policies-page">
             <SEO
                 title={`الشروط والسياسات والضمان | ${storeName}`}
                 description={`مستند الشروط والأحكام وسياسة الخصوصية والضمان والاسترجاع المعتمدة لمتجر ${storeName}.`}
