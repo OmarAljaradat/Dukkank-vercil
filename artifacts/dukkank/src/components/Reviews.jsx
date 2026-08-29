@@ -58,24 +58,29 @@ export const Reviews = () => {
                     </h2>
 
                     {/* Rating Pill Badge */}
-                    <div className="inline-flex flex-wrap items-center justify-center gap-3 bg-white dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/10 px-5 py-2.5 rounded-full shadow-sm text-xs font-bold">
-                        <span className="flex items-center gap-1.5 text-emerald-600">
-                            <ShieldCheck className="w-4 h-4" />
-                            تقييمات موثقة
-                        </span>
-                        <span className="text-[hsl(var(--brand-ink))]/20">|</span>
-                        <div className="flex items-center gap-1.5">
-                            <StarRow count={5} />
-                            <span className="font-extrabold text-sm text-[hsl(var(--brand-ink))]">4.9 / 5</span>
+                    <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-4 bg-white dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/10 p-3 sm:px-6 sm:py-2.5 rounded-2xl sm:rounded-full shadow-sm text-xs font-bold">
+                        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap justify-center">
+                            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full border border-emerald-500/20 text-[11px]">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>تقييمات موثقة</span>
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                                <StarRow count={5} />
+                                <span className="font-extrabold text-sm text-[hsl(var(--brand-ink))]">4.9 من 5</span>
+                            </div>
                         </div>
-                        <span className="text-[hsl(var(--brand-ink))]/20">|</span>
-                        <span className="text-[hsl(var(--brand-ink))]/70">
-                            بناءً على +1,500 تقييم حقيقي من عملائنا
+
+                        <div className="hidden sm:block w-px h-4 bg-[hsl(var(--brand-ink))]/15" />
+
+                        <span className="text-[hsl(var(--brand-ink))]/70 text-center sm:text-right text-xs font-medium">
+                            بناءً على أكثر من 1,500+ تقييم حقيقي
                         </span>
-                        <span className="text-[hsl(var(--brand-ink))]/20">|</span>
+
+                        <div className="hidden sm:block w-px h-4 bg-[hsl(var(--brand-ink))]/15" />
+
                         <button
                             onClick={() => setShowReviewModal(true)}
-                            className="px-3.5 py-1 rounded-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] transition cursor-pointer flex items-center gap-1 shadow-sm"
+                            className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
                         >
                             <Plus className="w-3.5 h-3.5" />
                             <span>أضف تقييمك ⭐</span>
