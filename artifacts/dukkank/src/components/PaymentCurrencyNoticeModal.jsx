@@ -100,21 +100,12 @@ export function PaymentCurrencyNoticeModal({
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-2 flex flex-col-reverse sm:flex-row items-center gap-2.5">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={loading}
-                            className="w-full sm:w-1/3 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer disabled:opacity-50"
-                        >
-                            تراجع / تعديل السلة
-                        </button>
-
+                    <div className="pt-2">
                         <button
                             type="button"
                             onClick={onConfirm}
                             disabled={loading}
-                            className="w-full sm:w-2/3 h-12 rounded-2xl bg-gradient-to-r from-[hsl(var(--brand-blue-deep))] to-blue-700 hover:opacity-95 text-white font-black text-xs sm:text-sm transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
+                            className="w-full h-13 rounded-2xl bg-gradient-to-r from-[hsl(var(--brand-blue-deep))] to-blue-700 hover:opacity-95 text-white font-black text-sm transition shadow-xl hover:shadow-2xl flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
                         >
                             {loading ? (
                                 <>
