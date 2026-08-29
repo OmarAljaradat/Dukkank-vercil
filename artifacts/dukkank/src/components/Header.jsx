@@ -114,16 +114,16 @@ export const Header = ({ onOpenCart, onOpenCustomerAuth, onOpenWishlist }) => {
                 </nav>
 
                 {/* Right Controls */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                         <CurrencySwitcher compact />
                         <ThemeToggle />
                     </div>
 
                     <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
-                    {/* Customer Account Button */}
+                    {/* Customer Account Button — Desktop only (available in bottom nav on mobile) */}
                     <button
                         onClick={() => {
                             if (customer) {
@@ -133,22 +133,22 @@ export const Header = ({ onOpenCart, onOpenCustomerAuth, onOpenWishlist }) => {
                             }
                         }}
                         data-testid="open-customer-auth"
-                        className="h-10 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-black text-slate-800 dark:text-white flex items-center gap-2 transition-colors cursor-pointer"
+                        className="hidden sm:flex h-10 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-black text-slate-800 dark:text-white items-center gap-2 transition-colors cursor-pointer"
                     >
                         <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span className="hidden sm:inline">
+                        <span>
                             {customer ? customer.name.split(" ")[0] : "حسابي"}
                         </span>
                     </button>
 
-                    {/* Cart Button */}
+                    {/* Cart Button — Desktop only (available in bottom nav on mobile) */}
                     <Link
                         to="/cart"
                         data-testid="open-cart-button"
-                        className="h-10 sm:h-11 px-4.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-blue-600 dark:hover:bg-slate-100 font-black text-xs sm:text-sm flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                        className="hidden sm:flex h-10 sm:h-11 px-4.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-blue-600 dark:hover:bg-slate-100 font-black text-xs sm:text-sm items-center gap-2 transition-all shadow-sm cursor-pointer"
                     >
                         <ShoppingBag className="w-4 h-4" />
-                        <span className="hidden sm:inline">السلة</span>
+                        <span>السلة</span>
                         {totalQty > 0 && (
                             <span data-testid="cart-badge" className="min-w-[19px] h-[19px] px-1 rounded-full bg-blue-600 dark:bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">
                                 {totalQty}

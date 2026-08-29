@@ -133,7 +133,7 @@ const FALLBACK_CONTENT = {
         badge: "متجر موثوق • تسليم فوري ⚡",
         titleLine1: "كل ألعابك وااشتراكاتك",
         titleLine2: "بضغطة زر واحدة.",
-        subtitle: "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودعم مباشر على واتساب.",
+        subtitle: "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودعم مباشر على إنستجرام.",
         ctaBrowse: "تصفّح المنتجات 🎮",
         ctaWhatsApp: "تواصل مع الدعم الفني 💬",
         benefitInstant: "تسليم فوري ⚡",

@@ -245,7 +245,7 @@ function HomePage() {
     }, []);
 
     const origin = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.host}` : "";
-    const heroDesc = content?.hero?.subtitle || "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودعم مباشر على واتساب.";
+    const heroDesc = content?.hero?.subtitle || "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودعم مباشر على إنستجرام.";
     const homeTitle = `${store?.name || "دُكانك"} | متجر الاشتراكات والألعاب الرقمية`;
 
     if (loading && games?.length === 0) {
