@@ -11,6 +11,7 @@ import { buildOrderMessage, openWhatsApp } from "../lib/whatsapp";
 import { addOrder } from "../lib/storage";
 import { apiPayTabsCheckout } from "../lib/api";
 import { ApplePaySafariBanner } from "./ApplePaySafariBanner";
+import { PaymentCurrencyNoticeModal } from "./PaymentCurrencyNoticeModal";
 import { toast } from "sonner";
 
 async function validateCoupon(code, total) {
@@ -106,6 +107,7 @@ export const CartDrawer = ({ open, onOpenChange }) => {
     const [customerPhone, setCustomerPhone] = useState("");
     const [customerEmail, setCustomerEmail] = useState("");
     const [payLoading, setPayLoading] = useState(false);
+    const [showCurrencyNotice, setShowCurrencyNotice] = useState(false);
 
     useEffect(() => {
         try {
@@ -119,7 +121,13 @@ export const CartDrawer = ({ open, onOpenChange }) => {
         } catch {}
     }, []);
 
-    const handlePayTabsCheckout = async (e) => {
+    const handlePreCheckout = (e) => {
+        e?.preventDefault?.();
+        if (items.length === 0) return;
+        setShowCurrencyNotice(true);
+    };
+
+    const handlePayTabsCheckout = async () => {
         e?.preventDefault();
         if (items.length === 0) return;
         if (!customerName.trim() || !customerPhone.trim()) {
@@ -333,7 +341,7 @@ export const CartDrawer = ({ open, onOpenChange }) => {
                         </div>
 
                         {/* Direct PayTabs Checkout Form */}
-                        <form onSubmit={handlePayTabsCheckout} className="space-y-3 bg-white p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/10 shadow-sm">
+                        <form onSubmit={handlePreCheckout} className="space-y-3 bg-white p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/10 shadow-sm">
                             <div className="flex items-center justify-between text-xs font-bold text-[hsl(var(--brand-blue-deep))]">
                                 <span>بيانات العميل والدفع الإلكتروني 💳</span>
                                 <span className="text-[10px] font-normal text-[hsl(var(--brand-ink))]/50">تُحفظ تلقائياً</span>
@@ -399,6 +407,15 @@ export const CartDrawer = ({ open, onOpenChange }) => {
                         </button>
                     </div>
                 )}
+                <PaymentCurrencyNoticeModal
+                    open={showCurrencyNotice}
+                    onClose={() => !payLoading && setShowCurrencyNotice(false)}
+                    onConfirm={handlePayTabsCheckout}
+                    loading={payLoading}
+                    formattedOriginal={format(finalTotal)}
+                    originalCurrency={code || "SAR"}
+                    usdAmount={finalTotal}
+                />
             </SheetContent>
         </Sheet>
     );

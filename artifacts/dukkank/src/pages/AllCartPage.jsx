@@ -9,6 +9,7 @@ import { Footer } from "../components/Footer";
 import { WishlistDrawer } from "../components/WishlistDrawer";
 import { CustomerAuthModal } from "../components/CustomerAuthModal";
 import { PaymentResultModal } from "../components/PaymentResultModal";
+import { PaymentCurrencyNoticeModal } from "../components/PaymentCurrencyNoticeModal";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { SEO } from "../components/SEO";
 import { apiPayTabsCheckout } from "../lib/api";
@@ -104,6 +105,7 @@ export default function AllCartPage() {
     const [customerEmail, setCustomerEmail] = useState(customer?.email || "");
     const [customerInstagram, setCustomerInstagram] = useState("");
     const [payLoading, setPayLoading] = useState(false);
+    const [showCurrencyNotice, setShowCurrencyNotice] = useState(false);
 
     // Feature 3: Progress Bar Goal ($50 threshold)
     const TARGET_DISCOUNT_GOAL = 50;
@@ -138,8 +140,16 @@ export default function AllCartPage() {
         toast.info("تمت إزالة كود الخصم");
     };
 
-    const handlePayTabsCheckout = async (e) => {
+    const handlePreCheckout = (e) => {
         e?.preventDefault?.();
+        if (items.length === 0) {
+            toast.error("السلة فارغة، يرجى إضافة ألعاب أولاً");
+            return;
+        }
+        setShowCurrencyNotice(true);
+    };
+
+    const handleExecuteCheckout = async () => {
         if (items.length === 0) return;
 
         const effectiveName = customerName.trim() || customer?.name || "عميل دُكانك";
@@ -176,10 +186,10 @@ export default function AllCartPage() {
                 window.location.href = res.redirectUrl;
             } else {
                 toast.error(res?.error || "حدث خطأ أثناء فتح بوابة الدفع");
+                setPayLoading(false);
             }
         } catch (err) {
             toast.error(err?.response?.data?.error || err?.message || "تعذر فتح بوابة الدفع، يرجى المحاولة لاحقاً");
-        } finally {
             setPayLoading(false);
         }
     };
@@ -426,7 +436,7 @@ export default function AllCartPage() {
 
                         {/* Order Summary & Checkout Form Sidebar */}
                         <div className="space-y-4">
-                            <form onSubmit={handlePayTabsCheckout} className="bg-white dark:bg-white/[0.04] rounded-3xl border border-[hsl(var(--brand-ink))]/10 p-6 space-y-6 shadow-sm">
+                            <form onSubmit={handlePreCheckout} className="bg-white dark:bg-white/[0.04] rounded-3xl border border-[hsl(var(--brand-ink))]/10 p-6 space-y-6 shadow-sm">
                                 <h3 className="font-extrabold text-base text-[hsl(var(--brand-ink))] flex items-center gap-2">
                                     <CreditCard className="w-5 h-5 text-[hsl(var(--brand-blue-deep))]" />
                                     <span>تفاصيل المشتري وإتمام الدفع</span>
@@ -510,7 +520,7 @@ export default function AllCartPage() {
 
                                 <button
                                     type="submit"
-                                    onClick={handlePayTabsCheckout}
+                                    onClick={handlePreCheckout}
                                     data-testid="checkout-pay-button"
                                     disabled={payLoading}
                                     className="w-full h-13 rounded-2xl bg-gradient-to-r from-[hsl(var(--brand-blue-deep))] to-blue-700 text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
@@ -557,6 +567,15 @@ export default function AllCartPage() {
             <WishlistDrawer open={wishOpen} onOpenChange={setWishOpen} />
             <CustomerAuthModal open={authOpen} onOpenChange={setAuthOpen} />
             <PaymentResultModal />
+            <PaymentCurrencyNoticeModal
+                open={showCurrencyNotice}
+                onClose={() => !payLoading && setShowCurrencyNotice(false)}
+                onConfirm={handleExecuteCheckout}
+                loading={payLoading}
+                formattedOriginal={format(finalTotal)}
+                originalCurrency={code || "SAR"}
+                usdAmount={finalTotal}
+            />
             <MobileBottomNav
                 onOpenCart={() => {}}
                 onOpenWishlist={() => setWishOpen(true)}
