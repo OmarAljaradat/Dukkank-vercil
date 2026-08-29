@@ -16,14 +16,14 @@ const MOOD_OPTIONS = [
 ];
 
 const BUDGET_OPTIONS = [
-    { value: "all", label: "جميع الأسعار" },
+    { value: "all", label: "السعر" },
     { value: "low", label: "💸 أقل من 15$" },
     { value: "mid", label: "💰 15$ - 30$" },
     { value: "high", label: "👑 أكثر من 30$" },
 ];
 
 const SORT_OPTIONS = [
-    { value: "default",        label: "الترتيب الافتراضي" },
+    { value: "default",        label: "الترتيب" },
     { value: "price-asc",      label: "السعر: الأقل أولاً" },
     { value: "price-desc",     label: "السعر: الأعلى أولاً" },
     { value: "name-asc",       label: "الاسم: أبجدي" },
@@ -31,7 +31,7 @@ const SORT_OPTIONS = [
 ];
 
 const PLATFORM_OPTIONS = [
-    { value: "all",  label: "جميع الأجهزة" },
+    { value: "all",  label: "الأجهزة" },
     { value: "five", label: "PS5 فقط" },
     { value: "four", label: "PS4 فقط" },
 ];
@@ -201,7 +201,7 @@ export const GamesGrid = ({ games, isCatalogPage = false }) => {
                             <select
                                 value={platform}
                                 onChange={(e) => setPlatform(e.target.value)}
-                                className="h-11 appearance-none pr-3.5 pl-8 rounded-2xl bg-white dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-xs font-bold text-[hsl(var(--brand-ink))] outline-none cursor-pointer hover:border-[hsl(var(--brand-blue-deep))]/40 transition-colors shadow-xs w-full"
+                                className="h-10 sm:h-11 appearance-none pr-2.5 pl-6 sm:pr-3.5 sm:pl-8 rounded-2xl bg-white dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-[11px] sm:text-xs font-black text-[hsl(var(--brand-ink))] outline-none cursor-pointer hover:border-[hsl(var(--brand-blue-deep))]/40 transition-colors shadow-xs w-full"
                             >
                                 {PLATFORM_OPTIONS.map((p) => (
                                     <option key={p.value} value={p.value} className="bg-white dark:bg-slate-900 text-black dark:text-white">
@@ -217,7 +217,7 @@ export const GamesGrid = ({ games, isCatalogPage = false }) => {
                             <select
                                 value={budget}
                                 onChange={(e) => setBudget(e.target.value)}
-                                className="h-11 appearance-none pr-3.5 pl-8 rounded-2xl bg-white dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-xs font-bold text-[hsl(var(--brand-ink))] outline-none cursor-pointer hover:border-[hsl(var(--brand-blue-deep))]/40 transition-colors shadow-xs w-full"
+                                className="h-10 sm:h-11 appearance-none pr-2.5 pl-6 sm:pr-3.5 sm:pl-8 rounded-2xl bg-white dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-[11px] sm:text-xs font-black text-[hsl(var(--brand-ink))] outline-none cursor-pointer hover:border-[hsl(var(--brand-blue-deep))]/40 transition-colors shadow-xs w-full"
                             >
                                 {BUDGET_OPTIONS.map((b) => (
                                     <option key={b.value} value={b.value} className="bg-white dark:bg-slate-900 text-black dark:text-white">
@@ -233,7 +233,7 @@ export const GamesGrid = ({ games, isCatalogPage = false }) => {
                             <select
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
-                                className="h-11 appearance-none pr-3.5 pl-8 rounded-2xl bg-white dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-xs font-bold text-[hsl(var(--brand-ink))] outline-none cursor-pointer hover:border-[hsl(var(--brand-blue-deep))]/40 transition-colors shadow-xs w-full"
+                                className="h-10 sm:h-11 appearance-none pr-2.5 pl-6 sm:pr-3.5 sm:pl-8 rounded-2xl bg-white dark:bg-white/5 border border-[hsl(var(--brand-ink))]/15 text-[11px] sm:text-xs font-black text-[hsl(var(--brand-ink))] outline-none cursor-pointer hover:border-[hsl(var(--brand-blue-deep))]/40 transition-colors shadow-xs w-full"
                             >
                                 {SORT_OPTIONS.map((s) => (
                                     <option key={s.value} value={s.value} className="bg-white dark:bg-slate-900 text-black dark:text-white">

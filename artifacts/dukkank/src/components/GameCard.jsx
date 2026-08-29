@@ -98,7 +98,7 @@ export const GameCard = ({ game }) => {
             <div className="flex items-stretch gap-0">
                 {/* Square image */}
                 <div
-                    className="relative w-[110px] flex-shrink-0 flex items-center justify-center overflow-hidden"
+                    className="relative w-[95px] sm:w-[110px] flex-shrink-0 flex items-center justify-center overflow-hidden"
                     style={{ background: `linear-gradient(135deg, ${game.gradientFrom} 0%, ${game.gradientTo} 100%)` }}
                 >
                     {showImage ? (
@@ -134,7 +134,7 @@ export const GameCard = ({ game }) => {
                     {/* Title row */}
                     <div className="flex items-start gap-1.5">
                         <div className="flex-1 min-w-0">
-                            <h3 className="latin-tight text-sm font-bold text-[hsl(var(--brand-ink))] leading-tight truncate" dir="ltr">
+                            <h3 className="text-sm font-black text-[hsl(var(--brand-ink))] leading-tight truncate">
                                 {game.name}
                             </h3>
                             {game.sub && (
@@ -149,21 +149,23 @@ export const GameCard = ({ game }) => {
                     </div>
 
                     {/* Tier selector — horizontal chips */}
-                    <div className="flex gap-1.5">
-                        {possibleTiers.map((t) => {
-                            const avail = game[t] != null;
-                            return (
-                                <button key={t} onClick={() => avail && setTier(t)} disabled={!avail}
-                                    className={`text-[11px] font-black px-2.5 h-7 rounded-lg border-2 transition-all disabled:opacity-35 flex-shrink-0 active:scale-95 ${
-                                        tier === t && avail
-                                            ? "bg-[hsl(var(--brand-blue-deep))] text-white border-[hsl(var(--brand-blue-deep))]"
-                                            : "bg-transparent text-[hsl(var(--brand-ink))]/70 border-[hsl(var(--brand-ink))]/20 hover:border-slate-400"
-                                    }`}>
-                                    {TIER_LABEL[t]}
-                                </button>
-                            );
-                        })}
-                        <span className="text-[10px] text-[hsl(var(--brand-ink))]/40 self-center mr-auto">{platformLabel}</span>
+                    <div className="flex items-center gap-2">
+                        <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10">
+                            {possibleTiers.map((t) => {
+                                const avail = game[t] != null;
+                                return (
+                                    <button key={t} onClick={() => avail && setTier(t)} disabled={!avail}
+                                        className={`text-xs font-black px-3.5 h-8 rounded-lg transition-all disabled:opacity-30 flex-shrink-0 active:scale-95 cursor-pointer ${
+                                            tier === t && avail
+                                                ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-sm font-black"
+                                                : "text-[hsl(var(--brand-ink))]/70 hover:bg-white/50"
+                                        }`}>
+                                        {TIER_LABEL[t]}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <span className="text-[10px] font-bold text-[hsl(var(--brand-ink))]/50 mr-auto">{platformLabel}</span>
                     </div>
 
                     {/* Stock Badge */}
