@@ -13,6 +13,19 @@ export class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
+    // If it's a chunk loading failure from a fresh deployment, auto reload once
+    if (error?.message && (
+      error.message.includes("dynamically imported module") ||
+      error.message.includes("Failed to fetch") ||
+      error.message.includes("Loading chunk")
+    )) {
+      const lastReload = sessionStorage.getItem("dukkank_chunk_reload");
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+        sessionStorage.setItem("dukkank_chunk_reload", String(now));
+        window.location.reload();
+      }
+    }
   }
 
   handleHardRefresh = () => {
