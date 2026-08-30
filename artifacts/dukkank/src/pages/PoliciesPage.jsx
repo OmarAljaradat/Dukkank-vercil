@@ -264,35 +264,36 @@ export default function PoliciesPage() {
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
-                                {/* Gold Warranty */}
+                                {/* Gold Warranty for Subscriptions */}
                                 <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30 space-y-3">
                                     <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-extrabold text-sm">
                                         <ShieldCheck className="w-5 h-5 text-amber-500" />
-                                        <span>ضمان النادي كامل (حاملي بطاقة الضمان الذهبي):</span>
+                                        <span>الضمان الذهبي لاشتراكات بلايستيشن بلس 👑:</span>
                                     </div>
                                     <ul className="text-xs text-[hsl(var(--brand-ink))]/80 space-y-2 list-disc list-inside">
-                                        <li>مدة الضمان لباند سوق الانتقالات هي <strong>5 أيام</strong> من آخر شحنة.</li>
-                                        <li>يتم تعويضك بشحن كوينز بقيمة النادي كامل في حال حدوث باند سوق الانتقالات في حسابك.</li>
-                                        <li>مدة الضمان في حال التصفير <strong>48 ساعة</strong> من انتهاء الشحن ويجب استخدام الكمية مباشرة.</li>
+                                        <li>ضمان كامل ومستمر <strong>طوال مدة الاشتراك</strong> (شهر، ٣ شهور، أو سنة كاملة).</li>
+                                        <li>تعويض فوري بحساب بديل في حال حدوث أي خلل تقني بالحساب طوال فترة الضمان.</li>
+                                        <li>دعم فني مباشر ومتابعة خطوة بخطوة حتى التأكد من تفعيل الاشتراك على جهازك بنجاح.</li>
                                     </ul>
                                 </div>
 
-                                {/* Regular Warranty */}
+                                {/* Games Warranty */}
                                 <div className="p-5 rounded-3xl bg-slate-500/5 border border-slate-500/20 space-y-3">
                                     <div className="flex items-center gap-2 text-[hsl(var(--brand-blue-deep))] font-extrabold text-sm">
                                         <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                                        <span>الضمان العادي (لمدة 24 ساعة من آخر شحنة):</span>
+                                        <span>ضمان الألعاب والحسابات الرقمية 🎮:</span>
                                     </div>
                                     <ul className="text-xs text-[hsl(var(--brand-ink))]/80 space-y-2 list-disc list-inside">
-                                        <li>في حال حدوث باند، يتم التعويض بشحن نفس الكمية لآخر طلب بحساب آخر لديك أو إعادة المبلغ.</li>
-                                        <li>في حال التصفير قبل الاستخدام، يتم تعويضك بشحن نفس كمية الطلب بحسابك مرة أخرى.</li>
+                                        <li>ضمان تفعيل اللعبة والتحميل المباشر من الستور الرسمي دون أي عوائق.</li>
+                                        <li>حسابات أصلية ومضمونة 100% وخالية من أي مشاكل أو قفل على جهازك.</li>
+                                        <li>مساعدة فورية من فريق الدعم لضبط التفعيل الرئيسي أو الثانوي لجهازك (PS5 / PS4).</li>
                                     </ul>
                                 </div>
                             </div>
 
                             <div className="p-4 rounded-2xl bg-amber-100/60 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 text-xs font-bold flex items-center gap-2">
                                 <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                                <span>تنويه هام: يصبح الضمان ملغياً في حال الشراء من مصدر غير آمن أو نقل الكوينز لحساب آخر. يرجى تغيير كلمة السر لحساب EA بعد الشحن مباشرة.</span>
+                                <span>شروط استمرار سريان الضمان: الالتزام بتعليمات التفعيل وعدم تغيير بيانات الحساب الممنوحة لك، والتفعيل على جهاز واحد فقط متوافق مع طلبك.</span>
                             </div>
                         </section>
                     )}
