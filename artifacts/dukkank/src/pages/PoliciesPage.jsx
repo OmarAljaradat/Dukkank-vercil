@@ -195,7 +195,7 @@ export default function PoliciesPage() {
                                     <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 space-y-1">
                                         <div className="font-extrabold text-xs text-amber-800 dark:text-amber-300">طبيعة المتجر:</div>
                                         <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
-                                            متجر إلكتروني يتيح للمستخدمين شراء مجموعة متنوعة من الكوينز والبطاقات والخدمات الرقمية وألعاب وحسابات فيفا.
+                                            متجر إلكتروني متكامل متخصص في بيع اشتراكات بلايستيشن بلس (PlayStation Plus) بمختلف باقاتها ومددها، بالإضافة إلى مكتبة ألعاب بلايستيشن الرقمية لأجهزة PS5 و PS4 بأسعار منافسة وتفعيل رسمي آمن 100%.
                                         </p>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 space-y-1">
