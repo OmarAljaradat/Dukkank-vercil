@@ -548,7 +548,7 @@ function App() {
     return (
         <HelmetProvider>
             <BrowserRouter>
-                            <MetaPixelTracker />
+                            
                 <ThemeProvider>
                     <LanguageProvider>
                         <AuthProvider>
