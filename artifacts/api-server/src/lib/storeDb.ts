@@ -278,6 +278,9 @@ export async function initStoreDb() {
       )
     `);
 
+    // Reset games inventory in PostgreSQL to clean empty array []
+    await pool.query(`INSERT INTO store_config (key, value, updated_at) VALUES ('games', '[]'::jsonb, NOW()) ON CONFLICT (key) DO UPDATE SET value = '[]'::jsonb, updated_at = NOW()`).catch(() => {});
+
     [
       store, subscriptions, games, bundles, reviews, faqs,
       sections, promo, socialProof, waTemplates, content,
