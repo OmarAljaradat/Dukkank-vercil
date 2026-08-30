@@ -268,7 +268,7 @@ export const GamesGrid = ({ games, isCatalogPage = false }) => {
             </div>
 
             {/* ── Games Cards Grid ── */}
-            {allGames.length === 0 ? (
+            {(!games || games.length === 0) ? (
                 <div className="rounded-3xl bg-white dark:bg-white/[0.04] p-8 sm:p-14 text-center border border-[hsl(var(--brand-ink))]/10 shadow-xs space-y-4 max-w-2xl mx-auto">
                     <div className="w-16 h-16 rounded-3xl bg-[hsl(var(--brand-blue-deep))]/10 text-[hsl(var(--brand-blue-deep))] flex items-center justify-center mx-auto shadow-inner">
                         <Gamepad2 className="w-8 h-8" />
