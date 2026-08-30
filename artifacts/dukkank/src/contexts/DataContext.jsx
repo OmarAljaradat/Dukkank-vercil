@@ -271,16 +271,26 @@ export function DataProvider({ children }) {
     const [store, setStoreState] = useState(() => loadLocal("dukkank_live_store", FALLBACK_STORE));
     const [subscriptions, setSubscriptionsState] = useState(() => loadLocal("dukkank_live_subscriptions", FALLBACK_SUBS));
     const [games, setGamesState] = useState(() => {
-        const local = loadLocal("dukkank_live_games", null);
-        // Clear old demo games cache (e.g. arc-raiders / ac-mirage) if user requested fresh games list
-        if (local && Array.isArray(local) && local.some(g => g.id === "arc-raiders" || g.id === "ac-mirage")) {
-            saveLocal("dukkank_live_games", []);
-            saveLocal("dukkank_live_admin_games", []);
-            return [];
-        }
-        return local || FALLBACK_GAMES || [];
+        try {
+            const v = localStorage.getItem("dukkank_games_inventory_v3");
+            if (v !== "clean") {
+                localStorage.setItem("dukkank_games_inventory_v3", "clean");
+                saveLocal("dukkank_live_games", []);
+                saveLocal("dukkank_live_admin_games", []);
+                return [];
+            }
+        } catch (_) {}
+        return loadLocal("dukkank_live_games", FALLBACK_GAMES || []);
     });
-    const [adminGames, setAdminGamesState] = useState(() => loadLocal("dukkank_live_admin_games", FALLBACK_GAMES));
+    const [adminGames, setAdminGamesState] = useState(() => {
+        try {
+            const v = localStorage.getItem("dukkank_games_inventory_v3");
+            if (v !== "clean") {
+                return [];
+            }
+        } catch (_) {}
+        return loadLocal("dukkank_live_admin_games", FALLBACK_GAMES || []);
+    });
     const [bundles, setBundlesState] = useState(() => loadLocal("dukkank_live_bundles", FALLBACK_BUNDLES));
     const [sections, setSectionsState] = useState(() => loadLocal("dukkank_live_sections", FALLBACK_SECTIONS));
     const [promo, setPromoState] = useState(() => loadLocal("dukkank_live_promo", FALLBACK_PROMO));
@@ -471,7 +481,7 @@ export function DataProvider({ children }) {
     };
 
     const mergeGames = (fetched) => {
-        if (!Array.isArray(fetched)) return games;
+        if (!Array.isArray(fetched)) return [];
         if (fetched.length === 0) return [];
         const overrides = loadOverrides();
         const localCurrent = loadLocal("dukkank_live_games", games || FALLBACK_GAMES);
