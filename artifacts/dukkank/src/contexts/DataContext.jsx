@@ -272,21 +272,21 @@ export function DataProvider({ children }) {
     const [subscriptions, setSubscriptionsState] = useState(() => loadLocal("dukkank_live_subscriptions", FALLBACK_SUBS));
     const [games, setGamesState] = useState(() => {
         try {
-            const v = localStorage.getItem("dukkank_games_inventory_v3");
-            if (v !== "clean") {
-                localStorage.setItem("dukkank_games_inventory_v3", "clean");
-                saveLocal("dukkank_live_games", []);
-                saveLocal("dukkank_live_admin_games", []);
-                return [];
+            const v = localStorage.getItem("dukkank_games_inventory_v52");
+            if (v !== "loaded_52") {
+                localStorage.setItem("dukkank_games_inventory_v52", "loaded_52");
+                saveLocal("dukkank_live_games", FALLBACK_GAMES);
+                saveLocal("dukkank_live_admin_games", FALLBACK_GAMES);
+                return FALLBACK_GAMES;
             }
         } catch (_) {}
         return loadLocal("dukkank_live_games", FALLBACK_GAMES || []);
     });
     const [adminGames, setAdminGamesState] = useState(() => {
         try {
-            const v = localStorage.getItem("dukkank_games_inventory_v3");
-            if (v !== "clean") {
-                return [];
+            const v = localStorage.getItem("dukkank_games_inventory_v52");
+            if (v !== "loaded_52") {
+                return FALLBACK_GAMES;
             }
         } catch (_) {}
         return loadLocal("dukkank_live_admin_games", FALLBACK_GAMES || []);
@@ -481,8 +481,7 @@ export function DataProvider({ children }) {
     };
 
     const mergeGames = (fetched) => {
-        if (!Array.isArray(fetched)) return [];
-        if (fetched.length === 0) return [];
+        if (!Array.isArray(fetched) || fetched.length === 0) return games && games.length > 0 ? games : FALLBACK_GAMES;
         const overrides = loadOverrides();
         const localCurrent = loadLocal("dukkank_live_games", games || FALLBACK_GAMES);
         const localMap = new Map((localCurrent || []).map(g => [g.id, g]));
