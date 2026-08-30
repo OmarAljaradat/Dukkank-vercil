@@ -4,7 +4,6 @@ import { useCart } from "../contexts/CartContext";
 import { useStoreData } from "../contexts/DataContext";
 import { useCustomer } from "../contexts/CustomerContext";
 import { CurrencySwitcher } from "./CurrencySwitcher";
-import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
     { href: "#essential", label: "أساسي" },
@@ -118,8 +117,7 @@ export const Header = ({ onOpenCart, onOpenCustomerAuth, onOpenWishlist }) => {
                     
                     <div className="flex items-center gap-1.5">
                         <CurrencySwitcher compact />
-                        <ThemeToggle />
-                    </div>
+                                            </div>
 
                     <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 

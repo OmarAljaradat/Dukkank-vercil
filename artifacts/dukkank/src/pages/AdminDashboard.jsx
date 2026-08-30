@@ -5,7 +5,6 @@ import { useStoreData } from "../contexts/DataContext";
 import { useLang } from "../contexts/LanguageContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { LogOut, ExternalLink, Loader2, RotateCcw } from "lucide-react";
-import { ThemeToggle } from "../components/ThemeToggle";
 import { apiResetStoreData, formatApiError } from "../lib/api";
 import { toast } from "sonner";
 import StoreSettingsTab   from "../components/admin/StoreSettingsTab";
@@ -177,8 +176,7 @@ export default function AdminDashboard() {
                     </nav>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        <ThemeToggle variant="light" />
-                        <button
+                                                <button
                             type="button"
                             onClick={() => setShowResetConfirm(true)}
                             title="تصفير شامل لجميع بيانات وإحصائيات المتجر للبدء من الصفر كمتجر جديد"
