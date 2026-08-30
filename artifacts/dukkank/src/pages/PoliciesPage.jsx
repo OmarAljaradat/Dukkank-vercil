@@ -157,9 +157,9 @@ export default function PoliciesPage() {
 
                                 <div className="grid md:grid-cols-2 gap-4 pt-2">
                                     <div className="p-4 rounded-2xl bg-[hsl(var(--brand-cream))]/50 border border-[hsl(var(--brand-ink))]/10 space-y-2">
-                                        <h4 className="font-extrabold text-xs text-[hsl(var(--brand-ink))]">جمع وتعديل المعلومات:</h4>
+                                        <h4 className="font-extrabold text-xs text-[hsl(var(--brand-ink))]">جمع المعلومات:</h4>
                                         <p className="text-xs opacity-80">
-                                            لتمكينك من تقديم طلب على موقعنا، نحتاج إلى المعلومات الأساسية: الاسم، العنوان، المدينة، رقم التواصل، والبريد الإلكتروني. يمكنك تعديل بياناتك الشخصية بالوصول إلى "حسابي" في أي وقت.
+                                            لتمكينك من تقديم طلب على موقعنا، نحتاج إلى المعلومات الأساسية: الاسم، رقم التواصل، والبريد الإلكتروني.
                                         </p>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-[hsl(var(--brand-cream))]/50 border border-[hsl(var(--brand-ink))]/10 space-y-2">
