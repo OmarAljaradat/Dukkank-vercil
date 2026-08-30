@@ -12,6 +12,21 @@ import {
     Percent, DollarSign, Copy, FileText, ChevronDown, ChevronUp
 } from "lucide-react";
 
+const OFFICIAL_STORE_PRICES = {
+    "essential": { "1m": 10.0, "3m": 25.0, "12m": 80.0 },
+    "extra":     { "1m": 15.0, "3m": 40.0, "12m": 135.0 },
+    "deluxe":    { "1m": 18.0, "3m": 50.0, "12m": 160.0 },
+};
+
+const getOfficialStorePrice = (subId, durId) => {
+    const sId = (subId || "").toLowerCase();
+    const dKey = (durId || "").includes("12m") ? "12m" : (durId || "").includes("3m") ? "3m" : "1m";
+    if (sId.includes("essential")) return OFFICIAL_STORE_PRICES.essential[dKey];
+    if (sId.includes("extra")) return OFFICIAL_STORE_PRICES.extra[dKey];
+    if (sId.includes("deluxe")) return OFFICIAL_STORE_PRICES.deluxe[dKey];
+    return null;
+};
+
 const DEFAULT_SUBSCRIPTIONS = [
     {
         id: "essential",
@@ -20,9 +35,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "blue",
         visible: true,
         durations: [
-            { id: "ess-1m", label: "شهر واحد", four: 6.5, five: 10.0, originalFive: 12.0, originalFour: 8.0, costPriceFive: 7.0, costPriceFour: 4.5, costPrice: 7.0, stockStatus: "available" },
-            { id: "ess-3m", label: "٣ شهور", four: 12.0, five: 19.0, originalFive: 24.0, originalFour: 16.0, costPriceFive: 13.0, costPriceFour: 8.0, costPrice: 13.0, stockStatus: "available" },
-            { id: "ess-12m", label: "سنة كاملة", four: 24.0, five: 48.0, originalFive: 59.0, originalFour: 32.0, costPriceFive: 25.0, costPriceFour: 15.0, costPrice: 25.0, stockStatus: "available" },
+            { id: "ess-1m",  label: "شهر واحد", four: 6.5,  five: 10.0, originalFive: 10.0,  originalFour: 10.0,  costPriceFive: 6.5,  costPriceFour: 2.5, costPrice: 6.5, stockStatus: "available" },
+            { id: "ess-3m",  label: "٣ شهور",   four: 14.0, five: 19.0, originalFive: 25.0,  originalFour: 25.0,  costPriceFive: 15.0, costPriceFour: 4.0, costPrice: 15.0, stockStatus: "available" },
+            { id: "ess-12m", label: "سنة كاملة",four: 27.0, five: 47.0, originalFive: 80.0,  originalFour: 80.0,  costPriceFive: 32.0, costPriceFour: 9.0, costPrice: 32.0, stockStatus: "available" },
         ],
     },
     {
@@ -32,9 +47,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "red",
         visible: true,
         durations: [
-            { id: "ext-1m", label: "شهر واحد", four: 9.0, five: 14.0, originalFive: 18.0, originalFour: 12.0, costPriceFive: 9.5, costPriceFour: 6.0, costPrice: 9.5, stockStatus: "available" },
-            { id: "ext-3m", label: "٣ شهور", four: 19.0, five: 28.0, originalFive: 35.0, originalFour: 25.0, costPriceFive: 19.0, costPriceFour: 12.0, costPrice: 19.0, stockStatus: "available" },
-            { id: "ext-12m", label: "سنة كاملة", four: 42.0, five: 59.0, originalFive: 75.0, originalFour: 55.0, costPriceFive: 42.0, costPriceFour: 28.0, costPrice: 42.0, stockStatus: "available" },
+            { id: "ext-1m",  label: "شهر واحد", four: 8.0,  five: 14.0, originalFive: 15.0,  originalFour: 15.0,  costPriceFive: 10.0, costPriceFour: 4.0, costPrice: 10.0, stockStatus: "available" },
+            { id: "ext-3m",  label: "٣ شهور",   four: 19.0, five: 26.0, originalFive: 40.0,  originalFour: 40.0,  costPriceFive: 22.0, costPriceFour: 7.0, costPrice: 22.0, stockStatus: "available" },
+            { id: "ext-12m", label: "سنة كاملة",four: 41.0, five: 59.0, originalFive: 135.0, originalFour: 135.0, costPriceFive: 50.0, costPriceFour: 15.0, costPrice: 50.0, stockStatus: "available" },
         ],
     },
     {
@@ -44,9 +59,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "amber",
         visible: true,
         durations: [
-            { id: "del-1m", label: "شهر واحد", four: 11.0, five: 16.0, originalFive: 20.0, originalFour: 15.0, costPriceFive: 11.0, costPriceFour: 7.5, costPrice: 11.0, stockStatus: "available" },
-            { id: "del-3m", label: "٣ شهور", four: 22.0, five: 33.0, originalFive: 42.0, originalFour: 30.0, costPriceFive: 22.0, costPriceFour: 15.0, costPrice: 22.0, stockStatus: "available" },
-            { id: "del-12m", label: "سنة كاملة", four: 49.0, five: 69.0, originalFive: 89.0, originalFour: 65.0, costPriceFive: 49.0, costPriceFour: 34.0, costPrice: 49.0, stockStatus: "available" },
+            { id: "del-1m",  label: "شهر واحد", four: 11.0, five: 16.0, originalFive: 18.0,  originalFour: 18.0,  costPriceFive: 11.0, costPriceFour: 6.0, costPrice: 11.0, stockStatus: "available" },
+            { id: "del-3m",  label: "٣ شهور",   four: 22.0, five: 33.0, originalFive: 50.0,  originalFour: 50.0,  costPriceFive: 24.0, costPriceFour: 12.0, costPrice: 24.0, stockStatus: "available" },
+            { id: "del-12m", label: "سنة كاملة",four: 49.0, five: 69.0, originalFive: 160.0, originalFour: 160.0, costPriceFive: 55.0, costPriceFour: 22.0, costPrice: 55.0, stockStatus: "available" },
         ],
     },
 ];
@@ -59,17 +74,22 @@ const numOrNull = (v) => {
 
 const toForm = (sub) => ({
     ...sub,
-    durations: (sub.durations || []).map((d) => ({
-        ...d,
-        four: d.four == null ? "" : String(d.four),
-        five: d.five == null ? "" : String(d.five),
-        originalFive: d.originalFive == null ? "" : String(d.originalFive),
-        originalFour: d.originalFour == null ? "" : String(d.originalFour),
-        costPriceFive: d.costPriceFive != null ? String(d.costPriceFive) : d.costPrice != null ? String(d.costPrice) : "",
-        costPriceFour: d.costPriceFour != null ? String(d.costPriceFour) : d.costPrice != null ? String(d.costPrice) : "",
-        costPrice: d.costPrice == null ? "" : String(d.costPrice),
-        stockStatus: d.stockStatus || "available",
-    })),
+    durations: (sub.durations || []).map((d) => {
+        const officialPrice = getOfficialStorePrice(sub?.id, d?.id);
+        const origFiveVal = d.originalFive != null && d.originalFive !== "" ? d.originalFive : (officialPrice != null ? officialPrice : "");
+        const origFourVal = d.originalFour != null && d.originalFour !== "" ? d.originalFour : (officialPrice != null ? officialPrice : "");
+        return {
+            ...d,
+            four: d.four == null ? "" : String(d.four),
+            five: d.five == null ? "" : String(d.five),
+            originalFive: String(origFiveVal),
+            originalFour: String(origFourVal),
+            costPriceFive: d.costPriceFive != null ? String(d.costPriceFive) : d.costPrice != null ? String(d.costPrice) : "",
+            costPriceFour: d.costPriceFour != null ? String(d.costPriceFour) : d.costPrice != null ? String(d.costPrice) : "",
+            costPrice: d.costPrice == null ? "" : String(d.costPrice),
+            stockStatus: d.stockStatus || "available",
+        };
+    }),
 });
 
 const toPayload = (f) => ({

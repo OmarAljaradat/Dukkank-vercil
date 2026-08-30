@@ -119,10 +119,13 @@ export function PsPlusPricingTable() {
                 const rawPrice = d[p];
                 const numP = rawPrice != null && rawPrice !== "" ? Number(rawPrice) : 0;
                 const isZero = numP <= 0;
+                const rawOrig = p === "five" ? (d.originalFive ?? d.originalPrice) : (d.originalFour ?? d.originalPrice);
+                const numOrig = rawOrig != null && rawOrig !== "" ? Number(rawOrig) : null;
                 return {
                     id: d.id,
                     label: d.label,
                     price: numP,
+                    originalPrice: numOrig != null && numOrig > numP ? numOrig : null,
                     isZero: isZero,
                     stockStatus: isZero ? "out" : (d.stockStatus || "available"),
                     badge: d.id.includes("12m") ? "توفير مميز ✨" : null,
@@ -334,6 +337,19 @@ export function PsPlusPricingTable() {
                                 {/* Price Display & Stock Badge */}
                                 <div className={`${tier.bgLight} p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/10 text-center space-y-1`}>
                                     <div className="text-[11px] font-bold text-[hsl(var(--brand-ink))]/60">السعر النهائي للتفعيل:</div>
+                                    
+                                    {/* Official Store Strikethrough Price */}
+                                    {activeDur.originalPrice && activeDur.originalPrice > activeDur.price && !isZeroPrice && (
+                                        <div className="flex items-center justify-center gap-1.5 pb-0.5">
+                                            <span className="line-through text-xs font-bold text-slate-400">
+                                                {format(activeDur.originalPrice)}
+                                            </span>
+                                            <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black shadow-xs">
+                                                وفّر {Math.round(((activeDur.originalPrice - activeDur.price) / activeDur.originalPrice) * 100)}% 🔥
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <div className="text-3xl font-black text-[hsl(var(--brand-ink))]">
                                         {isZeroPrice ? "غير متوفر 🚫" : format(activeDur.price)}
                                     </div>

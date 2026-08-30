@@ -420,8 +420,11 @@ export function DataProvider({ children }) {
         const localCurrent = loadLocal("dukkank_live_subscriptions", subscriptions || FALLBACK_SUBS);
         const localMap = new Map((localCurrent || []).map(s => [s.id, s]));
 
+        const defaultSubsMap = new Map((FALLBACK_SUBS || []).map(s => [s.id, s]));
+
         return fetched.map(item => {
             const localMatch = localMap.get(item.id);
+            const defaultSub = defaultSubsMap.get(item.id);
             const override = overrides.subscriptions?.[item.id];
 
             let visible = item.visible !== false;
@@ -435,9 +438,23 @@ export function DataProvider({ children }) {
                 if (localMatch.hidden !== undefined) hidden = localMatch.hidden;
             }
 
+            // Merge durations to preserve originalFive and originalFour official store prices
+            const mergedDurations = (item.durations || defaultSub?.durations || []).map((d, idx) => {
+                const localDur = localMatch?.durations?.[idx] || {};
+                const defaultDur = defaultSub?.durations?.[idx] || {};
+                return {
+                    ...defaultDur,
+                    ...d,
+                    ...localDur,
+                    originalFour: localDur.originalFour ?? d.originalFour ?? defaultDur.originalFour,
+                    originalFive: localDur.originalFive ?? d.originalFive ?? defaultDur.originalFive,
+                };
+            });
+
             return {
                 ...item,
                 ...(localMatch || {}),
+                durations: mergedDurations,
                 visible,
                 hidden
             };

@@ -41,9 +41,9 @@ export const SUBSCRIPTIONS = [
         tagline: "خطط ألعاب أساسية بسعر مميز",
         accent: "blue",
         durations: [
-            { id: "ess-1m",  label: "شهر واحد",  four: 6.5, five: 10.0 },
-            { id: "ess-3m",  label: "٣ شهور",    four: 12,  five: 19   },
-            { id: "ess-12m", label: "سنة كاملة", four: 24,  five: 48   },
+            { id: "ess-1m",  label: "شهر واحد",  four: 6.5, five: 10.0, originalFour: 10.0,  originalFive: 10.0,  costPriceFour: 2.5, costPriceFive: 6.5 },
+            { id: "ess-3m",  label: "٣ شهور",    four: 14.0, five: 19.0, originalFour: 25.0,  originalFive: 25.0,  costPriceFour: 4.0, costPriceFive: 15.0 },
+            { id: "ess-12m", label: "سنة كاملة", four: 27.0, five: 47.0, originalFour: 80.0,  originalFive: 80.0,  costPriceFour: 9.0, costPriceFive: 32.0 },
         ],
     },
     {
@@ -52,9 +52,9 @@ export const SUBSCRIPTIONS = [
         tagline: "تجربة أوسع مع مكتبة ألعاب أكبر",
         accent: "red",
         durations: [
-            { id: "ext-1m",  label: "شهر واحد",  four: 9,  five: 14.0 },
-            { id: "ext-3m",  label: "٣ شهور",    four: 19, five: 28   },
-            { id: "ext-12m", label: "سنة كاملة", four: 42, five: 59   },
+            { id: "ext-1m",  label: "شهر واحد",  four: 8.0,  five: 14.0, originalFour: 15.0,  originalFive: 15.0,  costPriceFour: 4.0, costPriceFive: 10.0 },
+            { id: "ext-3m",  label: "٣ شهور",    four: 19.0, five: 26.0, originalFour: 40.0,  originalFive: 40.0,  costPriceFour: 7.0, costPriceFive: 22.0 },
+            { id: "ext-12m", label: "سنة كاملة", four: 41.0, five: 59.0, originalFour: 135.0, originalFive: 135.0, costPriceFour: 15.0, costPriceFive: 50.0 },
         ],
     },
     {
@@ -63,9 +63,9 @@ export const SUBSCRIPTIONS = [
         tagline: "الباقة الملكية والشاملة لكافة الألعاب الكلاسيكية والتجريبية",
         accent: "amber",
         durations: [
-            { id: "del-1m",  label: "شهر واحد",  four: 11, five: 16.0 },
-            { id: "del-3m",  label: "٣ شهور",    four: 22, five: 33.0 },
-            { id: "del-12m", label: "سنة كاملة", four: 49, five: 69.0 },
+            { id: "del-1m",  label: "شهر واحد",  four: 11.0, five: 16.0, originalFour: 18.0,  originalFive: 18.0,  costPriceFour: 6.0, costPriceFive: 11.0 },
+            { id: "del-3m",  label: "٣ شهور",    four: 22.0, five: 33.0, originalFour: 50.0,  originalFive: 50.0,  costPriceFour: 12.0, costPriceFive: 24.0 },
+            { id: "del-12m", label: "سنة كاملة", four: 49.0, five: 69.0, originalFour: 160.0, originalFive: 160.0, costPriceFour: 22.0, costPriceFive: 55.0 },
         ],
     },
 ];
