@@ -270,7 +270,16 @@ const saveOverrides = (overrides) => {
 export function DataProvider({ children }) {
     const [store, setStoreState] = useState(() => loadLocal("dukkank_live_store", FALLBACK_STORE));
     const [subscriptions, setSubscriptionsState] = useState(() => loadLocal("dukkank_live_subscriptions", FALLBACK_SUBS));
-    const [games, setGamesState] = useState(() => loadLocal("dukkank_live_games", FALLBACK_GAMES));
+    const [games, setGamesState] = useState(() => {
+        const local = loadLocal("dukkank_live_games", null);
+        // Clear old demo games cache (e.g. arc-raiders / ac-mirage) if user requested fresh games list
+        if (local && Array.isArray(local) && local.some(g => g.id === "arc-raiders" || g.id === "ac-mirage")) {
+            saveLocal("dukkank_live_games", []);
+            saveLocal("dukkank_live_admin_games", []);
+            return [];
+        }
+        return local || FALLBACK_GAMES || [];
+    });
     const [adminGames, setAdminGamesState] = useState(() => loadLocal("dukkank_live_admin_games", FALLBACK_GAMES));
     const [bundles, setBundlesState] = useState(() => loadLocal("dukkank_live_bundles", FALLBACK_BUNDLES));
     const [sections, setSectionsState] = useState(() => loadLocal("dukkank_live_sections", FALLBACK_SECTIONS));
@@ -462,7 +471,8 @@ export function DataProvider({ children }) {
     };
 
     const mergeGames = (fetched) => {
-        if (!Array.isArray(fetched) || fetched.length === 0) return games;
+        if (!Array.isArray(fetched)) return games;
+        if (fetched.length === 0) return [];
         const overrides = loadOverrides();
         const localCurrent = loadLocal("dukkank_live_games", games || FALLBACK_GAMES);
         const localMap = new Map((localCurrent || []).map(g => [g.id, g]));

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, X, SlidersHorizontal, Gamepad2, ChevronDown, RefreshCw, Filter } from "lucide-react";
+import { Search, X, SlidersHorizontal, Gamepad2, ChevronDown, RefreshCw, Filter, Instagram, Sparkles } from "lucide-react";
 import { GameCard } from "./GameCard";
 
 const PAGE_SIZE = 12;
@@ -268,11 +268,37 @@ export const GamesGrid = ({ games, isCatalogPage = false }) => {
             </div>
 
             {/* ── Games Cards Grid ── */}
-            {filtered.length === 0 ? (
+            {allGames.length === 0 ? (
+                <div className="rounded-3xl bg-white dark:bg-white/[0.04] p-8 sm:p-14 text-center border border-[hsl(var(--brand-ink))]/10 shadow-xs space-y-4 max-w-2xl mx-auto">
+                    <div className="w-16 h-16 rounded-3xl bg-[hsl(var(--brand-blue-deep))]/10 text-[hsl(var(--brand-blue-deep))] flex items-center justify-center mx-auto shadow-inner">
+                        <Gamepad2 className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <h3 className="font-black text-lg sm:text-xl text-[hsl(var(--brand-ink))]">
+                            جاري تحديث وتجهيز قائمة الألعاب المتوفرة حالياً 🎮
+                        </h3>
+                        <p className="text-xs sm:text-sm text-[hsl(var(--brand-ink))]/70 font-medium leading-relaxed">
+                            نقوم حالياً بتحديث المخزون وإضافة الألعاب المتوفرة للتسليم الفوري بأفضل الأسعار. إذا كنت تبحث عن لعبة معينة الآن، يمكنك طلبها مباشرة وسنوفرها لك فوراً!
+                        </p>
+                    </div>
+
+                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <a
+                            href="https://ig.me/m/dukkank15"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 rounded-full px-6 h-12 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+                        >
+                            <Instagram className="w-4 h-4" />
+                            <span>طلب أي لعبة مخصصة عبر إنستجرام 💬</span>
+                        </a>
+                    </div>
+                </div>
+            ) : filtered.length === 0 ? (
                 <div className="rounded-3xl bg-white dark:bg-white/[0.04] p-12 text-center border border-[hsl(var(--brand-ink))]/10 space-y-3">
                     <Gamepad2 className="w-12 h-12 text-[hsl(var(--brand-ink))]/30 mx-auto" />
-                    <p className="font-extrabold text-sm text-[hsl(var(--brand-ink))]">لم يتم العثور على ألعاب بهذة الفلاتر</p>
-                    <button onClick={clearAll} className="text-xs text-[hsl(var(--brand-blue-deep))] font-extrabold underline">
+                    <p className="font-extrabold text-sm text-[hsl(var(--brand-ink))]">لم يتم العثور على ألعاب بهذه الفلاتر</p>
+                    <button onClick={clearAll} className="text-xs text-[hsl(var(--brand-blue-deep))] font-extrabold underline cursor-pointer">
                         إعادة عرض جميع الألعاب ↺
                     </button>
                 </div>
