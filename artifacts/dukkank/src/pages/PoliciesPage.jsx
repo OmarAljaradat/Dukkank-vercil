@@ -37,8 +37,7 @@ export default function PoliciesPage() {
         { id: "terms", label: "شروط الاستخدام", icon: FileText },
         { id: "refund", label: "سياسة الاسترجاع والتبديل", icon: RefreshCw },
         { id: "warranty", label: "سياسة الضمان والتعويض", icon: ShieldCheck },
-        { id: "wallet", label: "الكاش باك والمحفظة", icon: Wallet },
-        { id: "cookies", label: "الكوكيز وتأكيد الدفع", icon: Cookie },
+                { id: "cookies", label: "الكوكيز وتأكيد الدفع", icon: Cookie },
     ];
 
     return (
@@ -298,28 +297,7 @@ export default function PoliciesPage() {
                         </section>
                     )}
 
-                    {/* SECTION 5: CASHBACK & WALLET */}
-                    {(activeTab === "all" || activeTab === "wallet") && (
-                        <section className="bg-white dark:bg-white/[0.04] rounded-3xl border border-[hsl(var(--brand-ink))]/10 p-6 sm:p-8 shadow-sm space-y-6 animate-in fade-in duration-300">
-                            <div className="flex items-center gap-3 pb-4 border-b border-[hsl(var(--brand-ink))]/10">
-                                <div className="w-12 h-12 rounded-2xl bg-[hsl(var(--brand-blue-deep))]/10 text-[hsl(var(--brand-blue-deep))] flex items-center justify-center font-bold">
-                                    <Wallet className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-extrabold text-[hsl(var(--brand-ink))]">الشروط والأحكام للكاش باك والمحفظة 💳</h2>
-                                    <p className="text-xs text-[hsl(var(--brand-ink))]/60 font-medium">ضوابط استخدام المحفظة الرقمية ورصيد الكاش باك</p>
-                                </div>
-                            </div>
-
-                            <ul className="list-disc list-inside space-y-2 text-xs sm:text-sm text-[hsl(var(--brand-ink))]/85 leading-relaxed font-medium">
-                                <li>يتم إضافة مبلغ الكاش باك مباشرة إلى رصيد محفظتك الخاصة في الموقع الإلكتروني بعد نجاح الطلب.</li>
-                                <li>صلاحية رصيد الكاش باك هي <strong>3 أشهر</strong> من تاريخ إنشاء الطلب.</li>
-                                <li>يمكنك الاستفادة من عروض الكاش باك عند الدفع بجميع طرق الدفع المتاحة ما عدا الدفع برصيد المحفظة نفسها.</li>
-                                <li>لا يمكن استرداد مبلغ الكاش باك نقداً أو عبر التحويل البنكي بل لشراء المنتجات المتاحة في المتجر فقط.</li>
-                                <li>في حالة الاسترجاع الكلي أو الجزئي للطلب، سيتم خصم قيمة الكاش باك المكتسبة لهذا الطلب من محفظتك.</li>
-                            </ul>
-                        </section>
-                    )}
+                    
 
                     {/* SECTION 6: COOKIES & GENERAL CONFIRMATIONS */}
                     {(activeTab === "all" || activeTab === "cookies") && (
