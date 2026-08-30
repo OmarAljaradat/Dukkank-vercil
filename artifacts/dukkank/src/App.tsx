@@ -45,19 +45,38 @@ import { GoldenGuarantee } from "./components/GoldenGuarantee";
 import { PaymentResultModal } from "./components/PaymentResultModal";
 import { CustomerProvider } from "./contexts/CustomerContext";
 
-// Lazy-loaded heavy sections and pages for bundle optimization & fast loading
-const GTAVISection = lazy(() => import("./components/GTAVISection").then(m => ({ default: m.GTAVISection })));
-const EAFCSection = lazy(() => import("./components/EAFCSection").then(m => ({ default: m.EAFCSection })));
-const CustomerAuthModal = lazy(() => import("./components/CustomerAuthModal").then(m => ({ default: m.CustomerAuthModal })));
+// Bulletproof Lazy-loaded wrapper that auto-reloads smoothly when a new deployment creates new chunk hashes
+function lazyRetry<T extends React.ComponentType<any>>(
+    factory: () => Promise<{ default: T } | any>
+) {
+    return lazy(async () => {
+        try {
+            return await factory();
+        } catch (error: any) {
+            const hasRefreshed = sessionStorage.getItem("dukkank_route_refreshed");
+            const now = Date.now();
+            if (!hasRefreshed || now - parseInt(hasRefreshed, 10) > 10000) {
+                sessionStorage.setItem("dukkank_route_refreshed", String(now));
+                window.location.reload();
+                return new Promise(() => {}); // pause execution while browser reloads
+            }
+            throw error;
+        }
+    });
+}
 
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AllGamesPage = lazy(() => import("./pages/AllGamesPage"));
-const AllReviewsPage = lazy(() => import("./pages/AllReviewsPage"));
-const AllAccountPage = lazy(() => import("./pages/AllAccountPage"));
-const AllCartPage = lazy(() => import("./pages/AllCartPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
-const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
+const GTAVISection = lazyRetry(() => import("./components/GTAVISection").then(m => ({ default: m.GTAVISection })));
+const EAFCSection = lazyRetry(() => import("./components/EAFCSection").then(m => ({ default: m.EAFCSection })));
+const CustomerAuthModal = lazyRetry(() => import("./components/CustomerAuthModal").then(m => ({ default: m.CustomerAuthModal })));
+
+const AdminLogin = lazyRetry(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazyRetry(() => import("./pages/AdminDashboard"));
+const AllGamesPage = lazyRetry(() => import("./pages/AllGamesPage"));
+const AllReviewsPage = lazyRetry(() => import("./pages/AllReviewsPage"));
+const AllAccountPage = lazyRetry(() => import("./pages/AllAccountPage"));
+const AllCartPage = lazyRetry(() => import("./pages/AllCartPage"));
+const LoginPage = lazyRetry(() => import("./pages/LoginPage"));
+const PoliciesPage = lazyRetry(() => import("./pages/PoliciesPage"));
 
 import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { Instagram } from "lucide-react";
