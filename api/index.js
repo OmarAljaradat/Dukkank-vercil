@@ -46806,10 +46806,15 @@ var pool4 = new esm_default.Pool({
 });
 
 // artifacts/api-server/src/lib/telegram.ts
-var DEFAULT_CONFIG = {
+var DEFAULT_ORDERS_BOT = {
   enabled: true,
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "8809778826:AAGImBVxU-E-rez4Ic3Sy_IWlde-jxi-Htw",
-  chatId: process.env.TELEGRAM_CHAT_ID || "1965859902",
+  botToken: process.env.ORDERS_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "",
+  chatId: process.env.ORDERS_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID || "1965859902"
+};
+var DEFAULT_RADAR_BOT = {
+  enabled: true,
+  botToken: process.env.RADAR_TELEGRAM_BOT_TOKEN || "8809778826:AAGImBVxU-E-rez4Ic3Sy_IWlde-jxi-Htw",
+  chatId: process.env.RADAR_TELEGRAM_CHAT_ID || "1965859902",
   notifyCart: true,
   notifyCheckout: true,
   notifyWhatsApp: true,
@@ -46817,88 +46822,100 @@ var DEFAULT_CONFIG = {
   notifySearch: false,
   notifyPageView: false
 };
+var memoryConfig = {
+  ordersBot: { ...DEFAULT_ORDERS_BOT },
+  radarBot: { ...DEFAULT_RADAR_BOT }
+};
 function escapeHtml(str) {
   return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
-var memoryConfig = { ...DEFAULT_CONFIG };
-async function getTelegramConfig() {
+async function getDualTelegramConfig() {
   if (pool4) {
     try {
       const { rows } = await pool4.query(
-        `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
+        `SELECT value FROM store_config WHERE key = 'dual_telegram_config' OR key = 'telegram_config' ORDER BY key DESC LIMIT 1`
       );
       if (rows.length > 0 && rows[0].value) {
         const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
-        memoryConfig = {
-          enabled: cfg.enabled ?? true,
-          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || DEFAULT_CONFIG.botToken,
-          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || DEFAULT_CONFIG.chatId,
-          notifyCart: cfg.notifyCart !== void 0 ? !!cfg.notifyCart : true,
-          notifyCheckout: cfg.notifyCheckout !== void 0 ? !!cfg.notifyCheckout : true,
-          notifyWhatsApp: cfg.notifyWhatsApp !== void 0 ? !!cfg.notifyWhatsApp : true,
-          notifyGameClick: cfg.notifyGameClick !== void 0 ? !!cfg.notifyGameClick : true,
-          notifySearch: cfg.notifySearch !== void 0 ? !!cfg.notifySearch : false,
-          notifyPageView: cfg.notifyPageView !== void 0 ? !!cfg.notifyPageView : false
-        };
-        return memoryConfig;
+        if (cfg.ordersBot || cfg.radarBot) {
+          memoryConfig = {
+            ordersBot: {
+              enabled: cfg.ordersBot?.enabled ?? true,
+              botToken: cfg.ordersBot?.botToken || DEFAULT_ORDERS_BOT.botToken,
+              chatId: cfg.ordersBot?.chatId || DEFAULT_ORDERS_BOT.chatId
+            },
+            radarBot: {
+              enabled: cfg.radarBot?.enabled ?? true,
+              botToken: cfg.radarBot?.botToken || DEFAULT_RADAR_BOT.botToken,
+              chatId: cfg.radarBot?.chatId || DEFAULT_RADAR_BOT.chatId,
+              notifyCart: cfg.radarBot?.notifyCart !== void 0 ? !!cfg.radarBot.notifyCart : true,
+              notifyCheckout: cfg.radarBot?.notifyCheckout !== void 0 ? !!cfg.radarBot.notifyCheckout : true,
+              notifyWhatsApp: cfg.radarBot?.notifyWhatsApp !== void 0 ? !!cfg.radarBot.notifyWhatsApp : true,
+              notifyGameClick: cfg.radarBot?.notifyGameClick !== void 0 ? !!cfg.radarBot.notifyGameClick : true,
+              notifySearch: cfg.radarBot?.notifySearch !== void 0 ? !!cfg.radarBot.notifySearch : false,
+              notifyPageView: cfg.radarBot?.notifyPageView !== void 0 ? !!cfg.radarBot.notifyPageView : false
+            }
+          };
+          return memoryConfig;
+        }
       }
     } catch (e) {
-      console.warn("Could not load telegram_config from DB:", e);
+      console.warn("Could not load dual_telegram_config from DB:", e);
     }
   }
   return memoryConfig;
 }
-async function saveTelegramConfig(cfg) {
-  const current = await getTelegramConfig();
+async function saveDualTelegramConfig(cfg) {
+  const current = await getDualTelegramConfig();
   const updated = {
-    enabled: cfg.enabled !== void 0 ? !!cfg.enabled : current.enabled,
-    botToken: (cfg.botToken !== void 0 && cfg.botToken !== "" ? cfg.botToken : current.botToken || DEFAULT_CONFIG.botToken).trim(),
-    chatId: (cfg.chatId !== void 0 && cfg.chatId !== "" ? cfg.chatId : current.chatId || DEFAULT_CONFIG.chatId).trim(),
-    notifyCart: cfg.notifyCart !== void 0 ? !!cfg.notifyCart : current.notifyCart ?? true,
-    notifyCheckout: cfg.notifyCheckout !== void 0 ? !!cfg.notifyCheckout : current.notifyCheckout ?? true,
-    notifyWhatsApp: cfg.notifyWhatsApp !== void 0 ? !!cfg.notifyWhatsApp : current.notifyWhatsApp ?? true,
-    notifyGameClick: cfg.notifyGameClick !== void 0 ? !!cfg.notifyGameClick : current.notifyGameClick ?? true,
-    notifySearch: cfg.notifySearch !== void 0 ? !!cfg.notifySearch : current.notifySearch ?? false,
-    notifyPageView: cfg.notifyPageView !== void 0 ? !!cfg.notifyPageView : current.notifyPageView ?? false
+    ordersBot: {
+      enabled: cfg.ordersBot?.enabled !== void 0 ? !!cfg.ordersBot.enabled : current.ordersBot.enabled,
+      botToken: (cfg.ordersBot?.botToken !== void 0 ? cfg.ordersBot.botToken : current.ordersBot.botToken).trim(),
+      chatId: (cfg.ordersBot?.chatId !== void 0 ? cfg.ordersBot.chatId : current.ordersBot.chatId).trim()
+    },
+    radarBot: {
+      enabled: cfg.radarBot?.enabled !== void 0 ? !!cfg.radarBot.enabled : current.radarBot.enabled,
+      botToken: (cfg.radarBot?.botToken !== void 0 ? cfg.radarBot.botToken : current.radarBot.botToken).trim(),
+      chatId: (cfg.radarBot?.chatId !== void 0 ? cfg.radarBot.chatId : current.radarBot.chatId).trim(),
+      notifyCart: cfg.radarBot?.notifyCart !== void 0 ? !!cfg.radarBot.notifyCart : current.radarBot.notifyCart,
+      notifyCheckout: cfg.radarBot?.notifyCheckout !== void 0 ? !!cfg.radarBot.notifyCheckout : current.radarBot.notifyCheckout,
+      notifyWhatsApp: cfg.radarBot?.notifyWhatsApp !== void 0 ? !!cfg.radarBot.notifyWhatsApp : current.radarBot.notifyWhatsApp,
+      notifyGameClick: cfg.radarBot?.notifyGameClick !== void 0 ? !!cfg.radarBot.notifyGameClick : current.radarBot.notifyGameClick,
+      notifySearch: cfg.radarBot?.notifySearch !== void 0 ? !!cfg.radarBot.notifySearch : current.radarBot.notifySearch,
+      notifyPageView: cfg.radarBot?.notifyPageView !== void 0 ? !!cfg.radarBot.notifyPageView : current.radarBot.notifyPageView
+    }
   };
   memoryConfig = { ...updated };
   if (pool4) {
     try {
       await pool4.query(
         `INSERT INTO store_config (key, value, updated_at)
-         VALUES ('telegram_config', $1, NOW())
+         VALUES ('dual_telegram_config', $1, NOW())
          ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
         [JSON.stringify(updated)]
       );
     } catch (e) {
-      console.error("Failed to save telegram config:", e);
+      console.error("Failed to save dual_telegram_config:", e);
     }
   }
   return updated;
 }
-async function sendTelegramMessage(text, inlineKeyboard) {
-  const config = await getTelegramConfig();
-  const token = config.botToken || DEFAULT_CONFIG.botToken;
-  const chat = config.chatId || DEFAULT_CONFIG.chatId;
-  if (!config.enabled || !token || !chat) {
-    return { ok: false, reason: "Telegram bot not configured or disabled" };
-  }
+async function postToTelegram(botToken, chatId, text, inlineKeyboard) {
+  if (!botToken || !chatId) return { ok: false, reason: "Missing token or chatId" };
   try {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
     const sanitizedKeyboard = [];
     if (inlineKeyboard && inlineKeyboard.length > 0) {
       inlineKeyboard.forEach((row) => {
         const validRow = row.filter((btn) => {
-          if (btn.url) {
-            return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(btn.url);
-          }
+          if (btn.url) return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(btn.url);
           return !!btn.callback_data;
         });
         if (validRow.length > 0) sanitizedKeyboard.push(validRow);
       });
     }
     const payload = {
-      chat_id: chat,
+      chat_id: chatId,
       text,
       parse_mode: "HTML",
       disable_web_page_preview: false
@@ -46913,34 +46930,78 @@ async function sendTelegramMessage(text, inlineKeyboard) {
     });
     let data = await res.json();
     if (!data.ok) {
-      console.warn("Telegram send failed, retrying plain text:", data.description);
       const plainText = text.replace(/<[^>]+>/g, "");
       res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chat,
-          text: plainText
-        })
+        body: JSON.stringify({ chat_id: chatId, text: plainText })
       });
       data = await res.json();
     }
     return data;
   } catch (err) {
-    console.error("Telegram notification error:", err);
     return { ok: false, error: err.message };
   }
 }
+async function sendTelegramOrderNotification(order) {
+  try {
+    const config = await getDualTelegramConfig();
+    const { enabled, botToken, chatId } = config.ordersBot;
+    if (!enabled || !botToken || !chatId) {
+      return { ok: false, reason: "Orders bot not configured" };
+    }
+    const orderNum = order.order_number || `#${order.id}`;
+    const custName = order.customer_name || "\u0639\u0645\u064A\u0644 \u0627\u0644\u0645\u062A\u062C\u0631";
+    const custPhone = order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F";
+    const custInsta = order.contact_instagram ? `@${order.contact_instagram.replace(/^@/, "")}` : null;
+    const paid = parseFloat(order.customer_paid || "0").toFixed(2);
+    const itemTitle = order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A";
+    const platform = order.platform ? `[${order.platform}]` : "";
+    const pMethod = order.payment_platform ? `${order.payment_platform} \u{1F4B3}` : "\u0628\u0637\u0627\u0642\u0629 \u0628\u0646\u0643\u064A\u0629 \u{1F4B3}";
+    const messageHtml = `
+\u{1F680} <b>\u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062C\u062F\u064A\u062F \u0641\u064A \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643! \u{1F4E6}</b>
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${escapeHtml(orderNum)}</code>
+\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> ${escapeHtml(custName)}
+\u{1F4DE} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${escapeHtml(custPhone)}</code>${custInsta ? `
+\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> ${escapeHtml(custInsta)}` : ""}
+\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> ${escapeHtml(itemTitle)} ${escapeHtml(platform)}
+\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>$${paid}</b> (${escapeHtml(pMethod)})
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u26A1 <i>\u062A\u0645 \u062A\u0623\u0643\u064A\u062F \u0627\u0644\u062F\u0641\u0639 \u0648\u062C\u0627\u0647\u0632 \u0644\u0644\u062A\u0633\u0644\u064A\u0645.</i>
+    `.trim();
+    const inlineButtons = [];
+    const actionRow = [];
+    if (order.contact_whatsapp || order.customer_phone) {
+      const cleanPhone = (order.contact_whatsapp || order.customer_phone).replace(/\D/g, "");
+      if (cleanPhone) {
+        actionRow.push({ text: "\u{1F4AC} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644", url: `https://wa.me/${cleanPhone}` });
+      }
+    }
+    if (order.contact_instagram) {
+      const cleanInsta = order.contact_instagram.replace(/^@/, "").trim();
+      if (cleanInsta) {
+        actionRow.push({ text: "\u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644", url: `https://instagram.com/${cleanInsta}` });
+      }
+    }
+    if (actionRow.length > 0) inlineButtons.push(actionRow);
+    return await postToTelegram(botToken, chatId, messageHtml, inlineButtons);
+  } catch (e) {
+    console.error("Orders Telegram notification failed:", e);
+    return { ok: false, error: e };
+  }
+}
 async function sendTelegramActivityNotification(event) {
-  const config = await getTelegramConfig();
-  if (!config.enabled) return { ok: false, reason: "disabled" };
+  const config = await getDualTelegramConfig();
+  const { enabled, botToken, chatId, notifyCart, notifyCheckout, notifyWhatsApp, notifyGameClick, notifySearch, notifyPageView } = config.radarBot;
+  if (!enabled || !botToken || !chatId) return { ok: false, reason: "Radar bot not configured" };
   const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
-  if (eventType === "add_to_cart" && config.notifyCart === false) return { ok: false };
-  if (eventType === "checkout_start" && config.notifyCheckout === false) return { ok: false };
-  if (eventType === "whatsapp_click" && config.notifyWhatsApp === false) return { ok: false };
-  if (eventType === "game_click" && config.notifyGameClick === false) return { ok: false };
-  if (eventType === "search" && !config.notifySearch) return { ok: false };
-  if (eventType === "page_view" && !config.notifyPageView) return { ok: false };
+  if (eventType === "add_to_cart" && notifyCart === false) return { ok: false };
+  if (eventType === "checkout_start" && notifyCheckout === false) return { ok: false };
+  if (eventType === "whatsapp_click" && notifyWhatsApp === false) return { ok: false };
+  if (eventType === "game_click" && notifyGameClick === false) return { ok: false };
+  if (eventType === "search" && !notifySearch) return { ok: false };
+  if (eventType === "page_view" && !notifyPageView) return { ok: false };
   let icon = "\u{1F440}";
   let actionName = eventTitle || "\u0646\u0634\u0627\u0637 \u062C\u062F\u064A\u062F";
   if (eventType === "add_to_cart") {
@@ -46986,56 +47047,43 @@ async function sendTelegramActivityNotification(event) {
 \u{1F4F1} <b>\u0627\u0644\u062C\u0647\u0627\u0632:</b> ${escapeHtml(deviceInfo || "\u0645\u062A\u0635\u0641\u062D \u0648\u064A\u0628")}
 \u{1F310} <b>\u0627\u0644\u0635\u0641\u062D\u0629:</b> <code>${escapeHtml(pageUrl || "/")}</code>
 \u23F1\uFE0F <b>\u0627\u0644\u062A\u0648\u0642\u064A\u062A:</b> ${timeStr}`;
-  return await sendTelegramMessage(msg);
+  return await postToTelegram(botToken, chatId, msg);
 }
-async function sendTelegramOrderNotification(order) {
-  try {
-    const orderNum = order.order_number || `#${order.id}`;
-    const custName = order.customer_name || "\u0639\u0645\u064A\u0644 \u0627\u0644\u0645\u062A\u062C\u0631";
-    const custPhone = order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F";
-    const custInsta = order.contact_instagram ? `@${order.contact_instagram.replace(/^@/, "")}` : null;
-    const paid = parseFloat(order.customer_paid || "0").toFixed(2);
-    const itemTitle = order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A";
-    const platform = order.platform ? `[${order.platform}]` : "";
-    const pMethod = order.payment_platform ? `${order.payment_platform} \u{1F4B3}` : "\u0628\u0637\u0627\u0642\u0629 \u0628\u0646\u0643\u064A\u0629 \u{1F4B3}";
-    const messageHtml = `
-\u{1F680} <b>\u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0641\u064A \u062F\u064F\u0643\u0627\u0646\u0643!</b>
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${escapeHtml(orderNum)}</code>
-\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> ${escapeHtml(custName)}
-\u{1F4DE} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${escapeHtml(custPhone)}</code>${custInsta ? `
-\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> ${escapeHtml(custInsta)}` : ""}
-\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> ${escapeHtml(itemTitle)} ${escapeHtml(platform)}
-\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>$${paid}</b> (${escapeHtml(pMethod)})
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u26A1 <i>\u062A\u0645 \u0627\u0633\u062A\u0644\u0627\u0645 \u0627\u0644\u0637\u0644\u0628 \u0648\u062A\u0623\u0643\u064A\u062F \u0627\u0644\u062F\u0641\u0639 \u0628\u0646\u062C\u0627\u062D.</i>
-    `.trim();
-    const inlineButtons = [];
-    const actionRow = [];
-    if (order.contact_whatsapp || order.customer_phone) {
-      const cleanPhone = (order.contact_whatsapp || order.customer_phone).replace(/\D/g, "");
-      if (cleanPhone) {
-        actionRow.push({
-          text: "\u{1F4AC} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644",
-          url: `https://wa.me/${cleanPhone}`
-        });
-      }
+async function sendTelegramMessage(text, inlineKeyboard) {
+  const config = await getDualTelegramConfig();
+  const token = config.ordersBot.botToken || config.radarBot.botToken;
+  const chat = config.ordersBot.chatId || config.radarBot.chatId;
+  return await postToTelegram(token, chat, text, inlineKeyboard);
+}
+async function getTelegramConfig() {
+  const dual = await getDualTelegramConfig();
+  return {
+    enabled: dual.ordersBot.enabled,
+    botToken: dual.ordersBot.botToken,
+    chatId: dual.ordersBot.chatId,
+    ...dual.radarBot
+  };
+}
+async function saveTelegramConfig(cfg) {
+  const dual = {
+    ordersBot: {
+      enabled: cfg.ordersEnabled !== void 0 ? !!cfg.ordersEnabled : cfg.enabled ?? true,
+      botToken: cfg.ordersBotToken !== void 0 ? cfg.ordersBotToken : cfg.botToken || "",
+      chatId: cfg.ordersChatId !== void 0 ? cfg.ordersChatId : cfg.chatId || "1965859902"
+    },
+    radarBot: {
+      enabled: cfg.radarEnabled !== void 0 ? !!cfg.radarEnabled : cfg.enabled ?? true,
+      botToken: cfg.radarBotToken !== void 0 ? cfg.radarBotToken : cfg.botToken || DEFAULT_RADAR_BOT.botToken,
+      chatId: cfg.radarChatId !== void 0 ? cfg.radarChatId : cfg.chatId || DEFAULT_RADAR_BOT.chatId,
+      notifyCart: cfg.notifyCart,
+      notifyCheckout: cfg.notifyCheckout,
+      notifyWhatsApp: cfg.notifyWhatsApp,
+      notifyGameClick: cfg.notifyGameClick,
+      notifySearch: cfg.notifySearch,
+      notifyPageView: cfg.notifyPageView
     }
-    if (order.contact_instagram) {
-      const cleanInsta = order.contact_instagram.replace(/^@/, "").trim();
-      if (cleanInsta) {
-        actionRow.push({
-          text: "\u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644",
-          url: `https://instagram.com/${cleanInsta}`
-        });
-      }
-    }
-    if (actionRow.length > 0) inlineButtons.push(actionRow);
-    return await sendTelegramMessage(messageHtml, inlineButtons);
-  } catch (e) {
-    console.error("Failed to format/send Telegram order notification:", e);
-    return { ok: false, error: e };
-  }
+  };
+  return await saveDualTelegramConfig(dual);
 }
 
 // artifacts/api-server/src/routes/visitors.ts
