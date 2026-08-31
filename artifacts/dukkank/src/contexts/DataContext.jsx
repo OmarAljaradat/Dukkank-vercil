@@ -272,9 +272,9 @@ export function DataProvider({ children }) {
     const [subscriptions, setSubscriptionsState] = useState(() => loadLocal("dukkank_live_subscriptions", FALLBACK_SUBS));
     const [games, setGamesState] = useState(() => {
         try {
-            const v = localStorage.getItem("dukkank_games_inventory_v56_pdf_split");
+            const v = localStorage.getItem("dukkank_games_inventory_v57_market_pegged");
             if (v !== "loaded_52") {
-                localStorage.setItem("dukkank_games_inventory_v56_pdf_split", "loaded_52");
+                localStorage.setItem("dukkank_games_inventory_v57_market_pegged", "loaded_52");
                 saveLocal("dukkank_live_games", FALLBACK_GAMES);
                 saveLocal("dukkank_live_admin_games", FALLBACK_GAMES);
                 return FALLBACK_GAMES;
@@ -284,7 +284,7 @@ export function DataProvider({ children }) {
     });
     const [adminGames, setAdminGamesState] = useState(() => {
         try {
-            const v = localStorage.getItem("dukkank_games_inventory_v56_pdf_split");
+            const v = localStorage.getItem("dukkank_games_inventory_v57_market_pegged");
             if (v !== "loaded_52") {
                 return FALLBACK_GAMES;
             }

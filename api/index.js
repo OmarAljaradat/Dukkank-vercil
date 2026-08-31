@@ -46974,9 +46974,9 @@ var DEFAULT_GAMES = [
     "image": "/games/007-first-light.jpg",
     "gradientFrom": "#1a202c",
     "gradientTo": "#0f172a",
-    "five": 29,
-    "four": 20.5,
-    "secondary": 12.5,
+    "five": 38.5,
+    "four": null,
+    "secondary": 26,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -46993,7 +46993,9 @@ var DEFAULT_GAMES = [
       "\u0623\u0643\u0634\u0646"
     ],
     "cost": 47.19,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "crimson-desert-enhanced",
@@ -47002,9 +47004,9 @@ var DEFAULT_GAMES = [
     "image": "/games/crimson-desert-enhanced.jpg",
     "gradientFrom": "#7c2d12",
     "gradientTo": "#1c1917",
-    "five": 29,
-    "four": 20.5,
-    "secondary": 12.5,
+    "five": 38.5,
+    "four": null,
+    "secondary": 26,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47020,7 +47022,9 @@ var DEFAULT_GAMES = [
       "\u0645\u063A\u0627\u0645\u0631\u0627\u062A"
     ],
     "cost": 47.19,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "ufc-6",
@@ -47029,9 +47033,9 @@ var DEFAULT_GAMES = [
     "image": "/games/ufc-6.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#18181b",
-    "five": 33,
-    "four": 23,
-    "secondary": 14,
+    "five": 38.5,
+    "four": null,
+    "secondary": 28,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47047,7 +47051,9 @@ var DEFAULT_GAMES = [
       "\u0631\u064A\u0627\u0636\u0629"
     ],
     "cost": 53.21,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "battlefield-6",
@@ -47056,9 +47062,9 @@ var DEFAULT_GAMES = [
     "image": "/games/battlefield-6.jpg",
     "gradientFrom": "#0369a1",
     "gradientTo": "#0f172a",
-    "five": 22.5,
-    "four": 16,
-    "secondary": 9.5,
+    "five": 32,
+    "four": null,
+    "secondary": 19.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47074,7 +47080,9 @@ var DEFAULT_GAMES = [
       "\u062D\u0631\u0628"
     ],
     "cost": 36.14,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "resident-evil-requiem-deluxe",
@@ -47083,9 +47091,9 @@ var DEFAULT_GAMES = [
     "image": "/games/resident-evil-requiem-deluxe.jpg",
     "gradientFrom": "#450a0a",
     "gradientTo": "#09090b",
-    "five": 33,
-    "four": 23,
-    "secondary": 14,
+    "five": 38.5,
+    "four": null,
+    "secondary": 28,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47101,7 +47109,9 @@ var DEFAULT_GAMES = [
       "\u0631\u064A\u0632\u062F\u0646\u062A \u0627\u064A\u0641\u0644"
     ],
     "cost": 53.21,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "arc-raiders",
@@ -47110,9 +47120,9 @@ var DEFAULT_GAMES = [
     "image": "/games/arc-raiders.jpg",
     "gradientFrom": "#c2410c",
     "gradientTo": "#18181b",
-    "five": 22.5,
-    "four": 10,
-    "secondary": 4.5,
+    "five": 22,
+    "four": null,
+    "secondary": 16,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47128,7 +47138,9 @@ var DEFAULT_GAMES = [
       "\u062A\u0639\u0627\u0648\u0646\u064A"
     ],
     "cost": 28.11,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "split-fiction",
@@ -47137,9 +47149,9 @@ var DEFAULT_GAMES = [
     "image": "/games/split-fiction.jpg",
     "gradientFrom": "#4c1d95",
     "gradientTo": "#0f172a",
-    "five": 23.5,
-    "four": 10.5,
-    "secondary": 4.5,
+    "five": 22,
+    "four": null,
+    "secondary": 16,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47153,7 +47165,9 @@ var DEFAULT_GAMES = [
       "\u0623\u0643\u0634\u0646"
     ],
     "cost": 29.12,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "rdr2",
@@ -47162,9 +47176,9 @@ var DEFAULT_GAMES = [
     "image": "/games/rdr2.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#1c1917",
-    "five": 10.5,
-    "four": 7.5,
-    "secondary": 4.5,
+    "five": 13.5,
+    "four": 9,
+    "secondary": 7,
     "available": true,
     "stockStatus": "available",
     "stockCount": 8,
@@ -47180,7 +47194,9 @@ var DEFAULT_GAMES = [
       "\u0631\u0627\u0639\u064A \u0628\u0642\u0631"
     ],
     "cost": 17.07,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "it-takes-two",
@@ -47189,9 +47205,9 @@ var DEFAULT_GAMES = [
     "image": "/games/it-takes-two.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#1e1b4b",
-    "five": 7.5,
-    "four": 5.5,
-    "secondary": 3.5,
+    "five": 11.5,
+    "four": 7.5,
+    "secondary": 6,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -47208,7 +47224,9 @@ var DEFAULT_GAMES = [
       "\u062C\u0645\u0627\u0639\u064A"
     ],
     "cost": 12.05,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "a-way-out",
@@ -47218,8 +47236,8 @@ var DEFAULT_GAMES = [
     "gradientFrom": "#334155",
     "gradientTo": "#0f172a",
     "five": 8.5,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47234,7 +47252,9 @@ var DEFAULT_GAMES = [
       "\u062A\u0639\u0627\u0648\u0646\u064A"
     ],
     "cost": 10.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "palworld",
@@ -47243,9 +47263,9 @@ var DEFAULT_GAMES = [
     "image": "/games/palworld.jpg",
     "gradientFrom": "#059669",
     "gradientTo": "#064e3b",
-    "five": 10.5,
-    "four": 7.5,
-    "secondary": 4.5,
+    "five": 16.5,
+    "four": null,
+    "secondary": 11,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47261,7 +47281,9 @@ var DEFAULT_GAMES = [
       "\u0628\u0642\u0627\u0621"
     ],
     "cost": 16.57,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "ready-or-not",
@@ -47270,9 +47292,9 @@ var DEFAULT_GAMES = [
     "image": "/games/ready-or-not.jpg",
     "gradientFrom": "#1e293b",
     "gradientTo": "#020617",
-    "five": 20.5,
-    "four": 14.5,
-    "secondary": 9,
+    "five": 27.5,
+    "four": null,
+    "secondary": 18.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47287,7 +47309,9 @@ var DEFAULT_GAMES = [
       "\u062A\u0643\u062A\u064A\u0643\u064A"
     ],
     "cost": 33.13,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "escape-the-backrooms",
@@ -47296,9 +47320,9 @@ var DEFAULT_GAMES = [
     "image": "/games/escape-the-backrooms.jpg",
     "gradientFrom": "#854d0e",
     "gradientTo": "#1c1917",
-    "five": 9,
-    "four": 4,
-    "secondary": 2.5,
+    "five": 7,
+    "four": null,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47313,7 +47337,9 @@ var DEFAULT_GAMES = [
       "\u0645\u062A\u0627\u0647\u0629"
     ],
     "cost": 11.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 9.99,
+    "originalFive": 9.99
   },
   {
     "id": "hitman-world-of-assassination",
@@ -47322,9 +47348,9 @@ var DEFAULT_GAMES = [
     "image": "/games/hitman-world-of-assassination.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#09090b",
-    "five": 22,
-    "four": 9.5,
-    "secondary": 4.5,
+    "five": 19.5,
+    "four": 13,
+    "secondary": 10.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47340,7 +47366,9 @@ var DEFAULT_GAMES = [
       "\u062A\u0633\u0644\u0644"
     ],
     "cost": 27.11,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "clair-obscur-expedition-33",
@@ -47349,9 +47377,9 @@ var DEFAULT_GAMES = [
     "image": "/games/clair-obscur-expedition-33.jpg",
     "gradientFrom": "#701a75",
     "gradientTo": "#18181b",
-    "five": 28.5,
-    "four": 12.5,
-    "secondary": 5.5,
+    "five": 27.5,
+    "four": null,
+    "secondary": 19.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47365,7 +47393,9 @@ var DEFAULT_GAMES = [
       "\u0645\u063A\u0627\u0645\u0631\u0627\u062A"
     ],
     "cost": 35.14,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "wwe-2k26-king-of-kings",
@@ -47374,9 +47404,9 @@ var DEFAULT_GAMES = [
     "image": "/games/wwe-2k26-king-of-kings.jpg",
     "gradientFrom": "#b45309",
     "gradientTo": "#1e1b4b",
-    "five": 29,
-    "four": 20.5,
-    "secondary": 12.5,
+    "five": 42,
+    "four": null,
+    "secondary": 26,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47390,7 +47420,9 @@ var DEFAULT_GAMES = [
       "\u062F\u0628\u0644\u064A\u0648 \u062F\u0628\u0644\u064A\u0648 \u0627\u064A"
     ],
     "cost": 47.19,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 99.99,
+    "originalFive": 99.99
   },
   {
     "id": "wwe-2k26-attitude-era",
@@ -47399,9 +47431,9 @@ var DEFAULT_GAMES = [
     "image": "/games/wwe-2k26-attitude-era.jpg",
     "gradientFrom": "#1e1b4b",
     "gradientTo": "#09090b",
-    "five": 37,
-    "four": 26,
-    "secondary": 16,
+    "five": 50,
+    "four": null,
+    "secondary": 30.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47415,7 +47447,9 @@ var DEFAULT_GAMES = [
       "\u0645\u0635\u0627\u0631\u0639\u0629 \u0623\u0633\u0627\u0637\u064A\u0631"
     ],
     "cost": 60.24,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 119.99,
+    "originalFive": 119.99
   },
   {
     "id": "mafia-the-old-country",
@@ -47424,9 +47458,9 @@ var DEFAULT_GAMES = [
     "image": "/games/mafia-the-old-country.jpg",
     "gradientFrom": "#78350f",
     "gradientTo": "#0f172a",
-    "five": 17.5,
-    "four": 12.5,
-    "secondary": 7.5,
+    "five": 27,
+    "four": null,
+    "secondary": 16.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47441,7 +47475,9 @@ var DEFAULT_GAMES = [
       "\u062C\u0631\u064A\u0645\u0629"
     ],
     "cost": 28.11,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "star-wars-jedi-survivor",
@@ -47450,9 +47486,9 @@ var DEFAULT_GAMES = [
     "image": "/games/star-wars-jedi-survivor.jpg",
     "gradientFrom": "#1e3a8a",
     "gradientTo": "#09090b",
-    "five": 6.5,
-    "four": 4.5,
-    "secondary": 3,
+    "five": 8.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47467,7 +47503,9 @@ var DEFAULT_GAMES = [
       "\u0641\u0636\u0627\u0621"
     ],
     "cost": 10.04,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "borderlands-4",
@@ -47476,9 +47514,9 @@ var DEFAULT_GAMES = [
     "image": "/games/borderlands-4.jpg",
     "gradientFrom": "#eab308",
     "gradientTo": "#18181b",
-    "five": 19.5,
-    "four": 13.5,
-    "secondary": 8.5,
+    "five": 29,
+    "four": null,
+    "secondary": 18,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47492,7 +47530,9 @@ var DEFAULT_GAMES = [
       "\u0634\u0648\u062A\u0631"
     ],
     "cost": 31.12,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "warhammer-space-marine-2",
@@ -47501,9 +47541,9 @@ var DEFAULT_GAMES = [
     "image": "/games/warhammer-space-marine-2.jpg",
     "gradientFrom": "#1d4ed8",
     "gradientTo": "#0f172a",
-    "five": 11.5,
-    "four": 8,
-    "secondary": 5,
+    "five": 19,
+    "four": null,
+    "secondary": 11.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -47518,7 +47558,9 @@ var DEFAULT_GAMES = [
       "\u0623\u0643\u0634\u0646"
     ],
     "cost": 18.07,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "resident-evil-4-gold",
@@ -47527,9 +47569,9 @@ var DEFAULT_GAMES = [
     "image": "/games/resident-evil-4-gold.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#18181b",
-    "five": 9,
-    "four": 6.5,
-    "secondary": 4,
+    "five": 12,
+    "four": 8,
+    "secondary": 6.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 7,
@@ -47543,7 +47585,9 @@ var DEFAULT_GAMES = [
       "\u0631\u0639\u0628"
     ],
     "cost": 14.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "the-last-of-us-remastered-ps4",
@@ -47552,9 +47596,9 @@ var DEFAULT_GAMES = [
     "image": "/games/the-last-of-us-remastered-ps4.jpg",
     "gradientFrom": "#065f46",
     "gradientTo": "#0f172a",
-    "five": 4.5,
-    "four": 3.5,
-    "secondary": 2,
+    "five": 7,
+    "four": 5,
+    "secondary": 4,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -47570,7 +47614,9 @@ var DEFAULT_GAMES = [
       "\u0627\u064A\u0644\u064A"
     ],
     "cost": 7.03,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "gta-the-trilogy",
@@ -47579,9 +47625,9 @@ var DEFAULT_GAMES = [
     "image": "/games/gta-the-trilogy.jpg",
     "gradientFrom": "#e11d48",
     "gradientTo": "#0f172a",
-    "five": 11.5,
-    "four": 8,
-    "secondary": 5,
+    "five": 14,
+    "four": 9.5,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 8,
@@ -47597,7 +47643,9 @@ var DEFAULT_GAMES = [
       "\u0641\u0627\u064A\u0633 \u0633\u064A\u062A\u064A"
     ],
     "cost": 18.07,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "god-of-war-ragnarok",
@@ -47606,9 +47654,9 @@ var DEFAULT_GAMES = [
     "image": "/games/god-of-war-ragnarok.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#0369a1",
-    "five": 20.5,
+    "five": 22.5,
     "four": 14.5,
-    "secondary": 9,
+    "secondary": 12,
     "available": true,
     "stockStatus": "available",
     "stockCount": 7,
@@ -47623,7 +47671,9 @@ var DEFAULT_GAMES = [
       "\u0643\u0631\u064A\u062A\u0648\u0633"
     ],
     "cost": 33.13,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "horizon-forbidden-west",
@@ -47632,9 +47682,9 @@ var DEFAULT_GAMES = [
     "image": "/games/horizon-forbidden-west.jpg",
     "gradientFrom": "#d97706",
     "gradientTo": "#0f172a",
-    "five": 20.5,
+    "five": 22.5,
     "four": 14.5,
-    "secondary": 9,
+    "secondary": 12,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -47648,7 +47698,9 @@ var DEFAULT_GAMES = [
       "\u0627\u064A\u0644\u0648\u064A"
     ],
     "cost": 33.13,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "red-dead-redemption-1",
@@ -47657,9 +47709,9 @@ var DEFAULT_GAMES = [
     "image": "/games/red-dead-redemption-1.jpg",
     "gradientFrom": "#b91c1c",
     "gradientTo": "#1c1917",
-    "five": 13.5,
-    "four": 9.5,
-    "secondary": 6,
+    "five": 16,
+    "four": 10.5,
+    "secondary": 8.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47673,7 +47725,9 @@ var DEFAULT_GAMES = [
       "\u062C\u0648\u0646 \u0645\u0627\u0631\u0633\u062A\u0648\u0646"
     ],
     "cost": 22.09,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "mortal-kombat-1",
@@ -47682,9 +47736,9 @@ var DEFAULT_GAMES = [
     "image": "/games/mortal-kombat-1.jpg",
     "gradientFrom": "#dc2626",
     "gradientTo": "#09090b",
-    "five": 9.5,
-    "four": 6.5,
-    "secondary": 4,
+    "five": 17,
+    "four": null,
+    "secondary": 10.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -47699,7 +47753,9 @@ var DEFAULT_GAMES = [
       "\u0642\u062A\u0627\u0644"
     ],
     "cost": 15.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "mortal-kombat-elder-god",
@@ -47708,9 +47764,9 @@ var DEFAULT_GAMES = [
     "image": "/games/mortal-kombat-elder-god.jpg",
     "gradientFrom": "#ea580c",
     "gradientTo": "#0f172a",
-    "five": 15.5,
-    "four": 11,
-    "secondary": 7,
+    "five": 25,
+    "four": null,
+    "secondary": 15.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47722,7 +47778,9 @@ var DEFAULT_GAMES = [
       "\u0645\u0648\u0631\u062A\u0627\u0644 \u0643\u0648\u0645\u0628\u0627\u062A \u0628\u0627\u0642\u0629 \u0627\u0644\u0622\u0644\u0647\u0629"
     ],
     "cost": 25.1,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 89.99,
+    "originalFive": 89.99
   },
   {
     "id": "sackboy-a-big-adventure",
@@ -47731,9 +47789,9 @@ var DEFAULT_GAMES = [
     "image": "/games/sackboy-a-big-adventure.jpg",
     "gradientFrom": "#ca8a04",
     "gradientTo": "#1e1b4b",
-    "five": 15.5,
-    "four": 7,
-    "secondary": 3,
+    "five": 14.5,
+    "four": 9.5,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47747,7 +47805,9 @@ var DEFAULT_GAMES = [
       "\u0645\u063A\u0627\u0645\u0631\u0627\u062A \u0639\u0627\u0626\u0644\u064A\u0629"
     ],
     "cost": 19.08,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "god-of-war-2018",
@@ -47756,9 +47816,9 @@ var DEFAULT_GAMES = [
     "image": "/games/god-of-war-2018.jpg",
     "gradientFrom": "#1e293b",
     "gradientTo": "#0f172a",
-    "five": 7,
-    "four": 5,
-    "secondary": 3,
+    "five": 9,
+    "four": 6,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47770,7 +47830,9 @@ var DEFAULT_GAMES = [
       "\u0642\u0648\u062F \u0627\u0648\u0641 \u0648\u0627\u0631 2018"
     ],
     "cost": 11.04,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "dragon-ball-xenoverse-2",
@@ -47779,9 +47841,9 @@ var DEFAULT_GAMES = [
     "image": "/games/dragon-ball-xenoverse-2.jpg",
     "gradientFrom": "#f97316",
     "gradientTo": "#1e1b4b",
-    "five": 5,
-    "four": 2.5,
-    "secondary": 2.5,
+    "five": 6.5,
+    "four": 4.5,
+    "secondary": 3.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47795,7 +47857,9 @@ var DEFAULT_GAMES = [
       "\u063A\u0648\u0643\u0648"
     ],
     "cost": 6.02,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "mafia-trilogy",
@@ -47804,9 +47868,9 @@ var DEFAULT_GAMES = [
     "image": "/games/mafia-trilogy.jpg",
     "gradientFrom": "#451a03",
     "gradientTo": "#0f172a",
-    "five": 6,
-    "four": 2.5,
-    "secondary": 2.5,
+    "five": 7,
+    "four": 5,
+    "secondary": 4,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47819,7 +47883,9 @@ var DEFAULT_GAMES = [
       "\u0639\u0635\u0627\u0628\u0627\u062A"
     ],
     "cost": 7.03,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "detroit-become-human-deluxe",
@@ -47828,9 +47894,9 @@ var DEFAULT_GAMES = [
     "image": "/games/detroit-become-human-deluxe.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#0f172a",
-    "five": 14.5,
-    "four": 6.5,
-    "secondary": 3,
+    "five": 14,
+    "four": 9.5,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47844,7 +47910,9 @@ var DEFAULT_GAMES = [
       "\u0642\u0635\u0635\u064A\u0629"
     ],
     "cost": 18.07,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "need-for-speed-unbound",
@@ -47853,9 +47921,9 @@ var DEFAULT_GAMES = [
     "image": "/games/need-for-speed-unbound.jpg",
     "gradientFrom": "#84cc16",
     "gradientTo": "#0f172a",
-    "five": 9,
-    "four": 4,
-    "secondary": 2.5,
+    "five": 12,
+    "four": null,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47869,7 +47937,9 @@ var DEFAULT_GAMES = [
       "\u0633\u0628\u0627\u0642 \u0633\u064A\u0627\u0631\u0627\u062A"
     ],
     "cost": 11.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "street-fighter-6",
@@ -47878,9 +47948,9 @@ var DEFAULT_GAMES = [
     "image": "/games/street-fighter-6.jpg",
     "gradientFrom": "#e11d48",
     "gradientTo": "#1e1b4b",
-    "five": 10,
-    "four": 7,
-    "secondary": 4.5,
+    "five": 13,
+    "four": 8.5,
+    "secondary": 7,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47894,7 +47964,9 @@ var DEFAULT_GAMES = [
       "\u0642\u062A\u0627\u0644"
     ],
     "cost": 16.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "batman-arkham-collection",
@@ -47903,9 +47975,9 @@ var DEFAULT_GAMES = [
     "image": "/games/batman-arkham-collection.jpg",
     "gradientFrom": "#1e293b",
     "gradientTo": "#020617",
-    "five": 7.5,
-    "four": 3.5,
-    "secondary": 2.5,
+    "five": 8,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -47920,7 +47992,9 @@ var DEFAULT_GAMES = [
       "\u062B\u0644\u0627\u062B\u064A\u0629"
     ],
     "cost": 9.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "tekken-7",
@@ -47930,8 +48004,8 @@ var DEFAULT_GAMES = [
     "gradientFrom": "#dc2626",
     "gradientTo": "#09090b",
     "five": 9,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 6,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47945,7 +48019,9 @@ var DEFAULT_GAMES = [
       "\u0642\u062A\u0627\u0644"
     ],
     "cost": 11.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "resident-evil-village-gold",
@@ -47954,9 +48030,9 @@ var DEFAULT_GAMES = [
     "image": "/games/resident-evil-village-gold.jpg",
     "gradientFrom": "#ca8a04",
     "gradientTo": "#0f172a",
-    "five": 9,
-    "four": 6.5,
-    "secondary": 4,
+    "five": 12,
+    "four": 8,
+    "secondary": 6.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47970,7 +48046,9 @@ var DEFAULT_GAMES = [
       "\u0631\u0639\u0628"
     ],
     "cost": 14.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "lies-of-p",
@@ -47979,9 +48057,9 @@ var DEFAULT_GAMES = [
     "image": "/games/lies-of-p.jpg",
     "gradientFrom": "#1e1b4b",
     "gradientTo": "#020617",
-    "five": 15,
-    "four": 10.5,
-    "secondary": 6.5,
+    "five": 17,
+    "four": 11,
+    "secondary": 9,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -47995,7 +48073,9 @@ var DEFAULT_GAMES = [
       "\u0633\u0648\u0644\u0632"
     ],
     "cost": 24.1,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "resident-evil-7-biohazard-gold",
@@ -48004,9 +48084,9 @@ var DEFAULT_GAMES = [
     "image": "/games/resident-evil-7-biohazard-gold.jpg",
     "gradientFrom": "#14532d",
     "gradientTo": "#0f172a",
-    "five": 7,
-    "four": 5,
-    "secondary": 3,
+    "five": 9,
+    "four": 6,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48019,7 +48099,9 @@ var DEFAULT_GAMES = [
       "\u0631\u0639\u0628"
     ],
     "cost": 11.04,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "the-last-of-us-part-1-deluxe",
@@ -48028,9 +48110,9 @@ var DEFAULT_GAMES = [
     "image": "/games/the-last-of-us-part-1-deluxe.jpg",
     "gradientFrom": "#15803d",
     "gradientTo": "#0f172a",
-    "five": 24.5,
-    "four": 17.5,
-    "secondary": 10.5,
+    "five": 34,
+    "four": null,
+    "secondary": 21,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -48042,7 +48124,9 @@ var DEFAULT_GAMES = [
       "\u0630\u0627 \u0644\u0627\u0633\u062A \u0627\u0648\u0641 \u0627\u0633 \u0631\u064A\u0645\u064A\u0643"
     ],
     "cost": 39.66,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 79.99,
+    "originalFive": 79.99
   },
   {
     "id": "the-last-of-us-part-2-deluxe",
@@ -48051,9 +48135,9 @@ var DEFAULT_GAMES = [
     "image": "/games/the-last-of-us-part-2-deluxe.jpg",
     "gradientFrom": "#b91c1c",
     "gradientTo": "#0f172a",
-    "five": 15,
-    "four": 10.5,
-    "secondary": 6.5,
+    "five": 17,
+    "four": 11,
+    "secondary": 9,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -48065,7 +48149,9 @@ var DEFAULT_GAMES = [
       "\u0630\u0627 \u0644\u0627\u0633\u062A \u0627\u0648\u0641 \u0627\u0633 2"
     ],
     "cost": 24.1,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "trail-out",
@@ -48074,9 +48160,9 @@ var DEFAULT_GAMES = [
     "image": "/games/trail-out.jpg",
     "gradientFrom": "#c2410c",
     "gradientTo": "#0f172a",
-    "five": 14,
-    "four": 6,
-    "secondary": 3,
+    "five": 11,
+    "four": null,
+    "secondary": 8,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48090,7 +48176,9 @@ var DEFAULT_GAMES = [
       "\u0633\u0628\u0627\u0642 \u0648\u062A\u062F\u0645\u064A\u0631"
     ],
     "cost": 17.07,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "sifu",
@@ -48099,9 +48187,9 @@ var DEFAULT_GAMES = [
     "image": "/games/sifu.jpg",
     "gradientFrom": "#b91c1c",
     "gradientTo": "#09090b",
-    "five": 7.5,
-    "four": 3.5,
-    "secondary": 2.5,
+    "five": 8,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48116,7 +48204,9 @@ var DEFAULT_GAMES = [
       "\u0642\u062A\u0627\u0644"
     ],
     "cost": 9.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "life-is-strange-double-exposure",
@@ -48125,9 +48215,9 @@ var DEFAULT_GAMES = [
     "image": "/games/life-is-strange-double-exposure.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#1e1b4b",
-    "five": 15.5,
-    "four": 7,
-    "secondary": 3,
+    "five": 19.5,
+    "four": null,
+    "secondary": 12,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48141,7 +48231,9 @@ var DEFAULT_GAMES = [
       "\u0642\u0635\u0635\u064A\u0629"
     ],
     "cost": 19.08,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "sonic-x-shadow-generations",
@@ -48151,8 +48243,8 @@ var DEFAULT_GAMES = [
     "gradientFrom": "#1e3a8a",
     "gradientTo": "#991b1b",
     "five": 12.5,
-    "four": 5.5,
-    "secondary": 2.5,
+    "four": 8.5,
+    "secondary": 6.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48166,7 +48258,9 @@ var DEFAULT_GAMES = [
       "\u0634\u0627\u062F\u0648"
     ],
     "cost": 15.06,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "sonic-frontiers",
@@ -48175,9 +48269,9 @@ var DEFAULT_GAMES = [
     "image": "/games/sonic-frontiers.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#0f172a",
-    "five": 10,
-    "four": 4.5,
-    "secondary": 2.5,
+    "five": 11.5,
+    "four": 7.5,
+    "secondary": 6,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48189,7 +48283,9 @@ var DEFAULT_GAMES = [
       "\u0633\u0648\u0646\u064A\u0643 \u0641\u0631\u0648\u0646\u062A\u064A\u0631\u0632"
     ],
     "cost": 12.05,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "assassins-creed-syndicate",
@@ -48198,9 +48294,9 @@ var DEFAULT_GAMES = [
     "image": "/games/assassins-creed-syndicate.jpg",
     "gradientFrom": "#334155",
     "gradientTo": "#0f172a",
-    "five": 6.5,
-    "four": 3,
-    "secondary": 2.5,
+    "five": 7.5,
+    "four": 5,
+    "secondary": 4,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48213,7 +48309,9 @@ var DEFAULT_GAMES = [
       "\u0644\u0646\u062F\u0646"
     ],
     "cost": 8.03,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "dragon-ball-fighterz",
@@ -48223,8 +48321,8 @@ var DEFAULT_GAMES = [
     "gradientFrom": "#ea580c",
     "gradientTo": "#1e1b4b",
     "five": 8.5,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48238,7 +48336,9 @@ var DEFAULT_GAMES = [
       "\u0642\u062A\u0627\u0644 \u0623\u0646\u0645\u064A"
     ],
     "cost": 10.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "marvels-guardians-of-the-galaxy",
@@ -48248,8 +48348,8 @@ var DEFAULT_GAMES = [
     "gradientFrom": "#7c3aed",
     "gradientTo": "#0f172a",
     "five": 8.5,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48263,7 +48363,9 @@ var DEFAULT_GAMES = [
       "\u0645\u0627\u0631\u0641\u0644"
     ],
     "cost": 10.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "ghost-recon-breakpoint-gold",
@@ -48272,9 +48374,9 @@ var DEFAULT_GAMES = [
     "image": "/games/ghost-recon-breakpoint-gold.jpg",
     "gradientFrom": "#15803d",
     "gradientTo": "#09090b",
-    "five": 7.5,
-    "four": 3.5,
-    "secondary": 2.5,
+    "five": 8,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -48289,7 +48391,9 @@ var DEFAULT_GAMES = [
       "\u0642\u0648\u0627\u062A \u062E\u0627\u0635\u0629"
     ],
     "cost": 9.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 99.99,
+    "originalFive": 99.99
   }
 ];
 var DEFAULT_BUNDLES = [

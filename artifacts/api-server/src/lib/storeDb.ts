@@ -126,9 +126,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/007-first-light.jpg",
     "gradientFrom": "#1a202c",
     "gradientTo": "#0f172a",
-    "five": 29,
-    "four": 20.5,
-    "secondary": 12.5,
+    "five": 38.5,
+    "four": null,
+    "secondary": 26,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -145,7 +145,9 @@ export const DEFAULT_GAMES = [
       "أكشن"
     ],
     "cost": 47.19,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "crimson-desert-enhanced",
@@ -154,9 +156,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/crimson-desert-enhanced.jpg",
     "gradientFrom": "#7c2d12",
     "gradientTo": "#1c1917",
-    "five": 29,
-    "four": 20.5,
-    "secondary": 12.5,
+    "five": 38.5,
+    "four": null,
+    "secondary": 26,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -172,7 +174,9 @@ export const DEFAULT_GAMES = [
       "مغامرات"
     ],
     "cost": 47.19,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "ufc-6",
@@ -181,9 +185,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/ufc-6.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#18181b",
-    "five": 33,
-    "four": 23,
-    "secondary": 14,
+    "five": 38.5,
+    "four": null,
+    "secondary": 28,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -199,7 +203,9 @@ export const DEFAULT_GAMES = [
       "رياضة"
     ],
     "cost": 53.21,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "battlefield-6",
@@ -208,9 +214,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/battlefield-6.jpg",
     "gradientFrom": "#0369a1",
     "gradientTo": "#0f172a",
-    "five": 22.5,
-    "four": 16,
-    "secondary": 9.5,
+    "five": 32,
+    "four": null,
+    "secondary": 19.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -226,7 +232,9 @@ export const DEFAULT_GAMES = [
       "حرب"
     ],
     "cost": 36.14,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "resident-evil-requiem-deluxe",
@@ -235,9 +243,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/resident-evil-requiem-deluxe.jpg",
     "gradientFrom": "#450a0a",
     "gradientTo": "#09090b",
-    "five": 33,
-    "four": 23,
-    "secondary": 14,
+    "five": 38.5,
+    "four": null,
+    "secondary": 28,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -253,7 +261,9 @@ export const DEFAULT_GAMES = [
       "ريزدنت ايفل"
     ],
     "cost": 53.21,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "arc-raiders",
@@ -262,9 +272,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/arc-raiders.jpg",
     "gradientFrom": "#c2410c",
     "gradientTo": "#18181b",
-    "five": 22.5,
-    "four": 10,
-    "secondary": 4.5,
+    "five": 22,
+    "four": null,
+    "secondary": 16,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -280,7 +290,9 @@ export const DEFAULT_GAMES = [
       "تعاوني"
     ],
     "cost": 28.11,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "split-fiction",
@@ -289,9 +301,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/split-fiction.jpg",
     "gradientFrom": "#4c1d95",
     "gradientTo": "#0f172a",
-    "five": 23.5,
-    "four": 10.5,
-    "secondary": 4.5,
+    "five": 22,
+    "four": null,
+    "secondary": 16,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -305,7 +317,9 @@ export const DEFAULT_GAMES = [
       "أكشن"
     ],
     "cost": 29.12,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "rdr2",
@@ -314,9 +328,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/rdr2.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#1c1917",
-    "five": 10.5,
-    "four": 7.5,
-    "secondary": 4.5,
+    "five": 13.5,
+    "four": 9,
+    "secondary": 7,
     "available": true,
     "stockStatus": "available",
     "stockCount": 8,
@@ -332,7 +346,9 @@ export const DEFAULT_GAMES = [
       "راعي بقر"
     ],
     "cost": 17.07,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "it-takes-two",
@@ -341,9 +357,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/it-takes-two.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#1e1b4b",
-    "five": 7.5,
-    "four": 5.5,
-    "secondary": 3.5,
+    "five": 11.5,
+    "four": 7.5,
+    "secondary": 6,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -360,7 +376,9 @@ export const DEFAULT_GAMES = [
       "جماعي"
     ],
     "cost": 12.05,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "a-way-out",
@@ -370,8 +388,8 @@ export const DEFAULT_GAMES = [
     "gradientFrom": "#334155",
     "gradientTo": "#0f172a",
     "five": 8.5,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -386,7 +404,9 @@ export const DEFAULT_GAMES = [
       "تعاوني"
     ],
     "cost": 10.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "palworld",
@@ -395,9 +415,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/palworld.jpg",
     "gradientFrom": "#059669",
     "gradientTo": "#064e3b",
-    "five": 10.5,
-    "four": 7.5,
-    "secondary": 4.5,
+    "five": 16.5,
+    "four": null,
+    "secondary": 11,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -413,7 +433,9 @@ export const DEFAULT_GAMES = [
       "بقاء"
     ],
     "cost": 16.57,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "ready-or-not",
@@ -422,9 +444,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/ready-or-not.jpg",
     "gradientFrom": "#1e293b",
     "gradientTo": "#020617",
-    "five": 20.5,
-    "four": 14.5,
-    "secondary": 9,
+    "five": 27.5,
+    "four": null,
+    "secondary": 18.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -439,7 +461,9 @@ export const DEFAULT_GAMES = [
       "تكتيكي"
     ],
     "cost": 33.13,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "escape-the-backrooms",
@@ -448,9 +472,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/escape-the-backrooms.jpg",
     "gradientFrom": "#854d0e",
     "gradientTo": "#1c1917",
-    "five": 9,
-    "four": 4,
-    "secondary": 2.5,
+    "five": 7,
+    "four": null,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -465,7 +489,9 @@ export const DEFAULT_GAMES = [
       "متاهة"
     ],
     "cost": 11.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 9.99,
+    "originalFive": 9.99
   },
   {
     "id": "hitman-world-of-assassination",
@@ -474,9 +500,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/hitman-world-of-assassination.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#09090b",
-    "five": 22,
-    "four": 9.5,
-    "secondary": 4.5,
+    "five": 19.5,
+    "four": 13,
+    "secondary": 10.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -492,7 +518,9 @@ export const DEFAULT_GAMES = [
       "تسلل"
     ],
     "cost": 27.11,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "clair-obscur-expedition-33",
@@ -501,9 +529,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/clair-obscur-expedition-33.jpg",
     "gradientFrom": "#701a75",
     "gradientTo": "#18181b",
-    "five": 28.5,
-    "four": 12.5,
-    "secondary": 5.5,
+    "five": 27.5,
+    "four": null,
+    "secondary": 19.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -517,7 +545,9 @@ export const DEFAULT_GAMES = [
       "مغامرات"
     ],
     "cost": 35.14,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "wwe-2k26-king-of-kings",
@@ -526,9 +556,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/wwe-2k26-king-of-kings.jpg",
     "gradientFrom": "#b45309",
     "gradientTo": "#1e1b4b",
-    "five": 29,
-    "four": 20.5,
-    "secondary": 12.5,
+    "five": 42,
+    "four": null,
+    "secondary": 26,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -542,7 +572,9 @@ export const DEFAULT_GAMES = [
       "دبليو دبليو اي"
     ],
     "cost": 47.19,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 99.99,
+    "originalFive": 99.99
   },
   {
     "id": "wwe-2k26-attitude-era",
@@ -551,9 +583,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/wwe-2k26-attitude-era.jpg",
     "gradientFrom": "#1e1b4b",
     "gradientTo": "#09090b",
-    "five": 37,
-    "four": 26,
-    "secondary": 16,
+    "five": 50,
+    "four": null,
+    "secondary": 30.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -567,7 +599,9 @@ export const DEFAULT_GAMES = [
       "مصارعة أساطير"
     ],
     "cost": 60.24,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 119.99,
+    "originalFive": 119.99
   },
   {
     "id": "mafia-the-old-country",
@@ -576,9 +610,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/mafia-the-old-country.jpg",
     "gradientFrom": "#78350f",
     "gradientTo": "#0f172a",
-    "five": 17.5,
-    "four": 12.5,
-    "secondary": 7.5,
+    "five": 27,
+    "four": null,
+    "secondary": 16.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -593,7 +627,9 @@ export const DEFAULT_GAMES = [
       "جريمة"
     ],
     "cost": 28.11,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "star-wars-jedi-survivor",
@@ -602,9 +638,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/star-wars-jedi-survivor.jpg",
     "gradientFrom": "#1e3a8a",
     "gradientTo": "#09090b",
-    "five": 6.5,
-    "four": 4.5,
-    "secondary": 3,
+    "five": 8.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -619,7 +655,9 @@ export const DEFAULT_GAMES = [
       "فضاء"
     ],
     "cost": 10.04,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "borderlands-4",
@@ -628,9 +666,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/borderlands-4.jpg",
     "gradientFrom": "#eab308",
     "gradientTo": "#18181b",
-    "five": 19.5,
-    "four": 13.5,
-    "secondary": 8.5,
+    "five": 29,
+    "four": null,
+    "secondary": 18,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -644,7 +682,9 @@ export const DEFAULT_GAMES = [
       "شوتر"
     ],
     "cost": 31.12,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "warhammer-space-marine-2",
@@ -653,9 +693,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/warhammer-space-marine-2.jpg",
     "gradientFrom": "#1d4ed8",
     "gradientTo": "#0f172a",
-    "five": 11.5,
-    "four": 8,
-    "secondary": 5,
+    "five": 19,
+    "four": null,
+    "secondary": 11.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -670,7 +710,9 @@ export const DEFAULT_GAMES = [
       "أكشن"
     ],
     "cost": 18.07,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "resident-evil-4-gold",
@@ -679,9 +721,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/resident-evil-4-gold.jpg",
     "gradientFrom": "#991b1b",
     "gradientTo": "#18181b",
-    "five": 9,
-    "four": 6.5,
-    "secondary": 4,
+    "five": 12,
+    "four": 8,
+    "secondary": 6.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 7,
@@ -695,7 +737,9 @@ export const DEFAULT_GAMES = [
       "رعب"
     ],
     "cost": 14.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "the-last-of-us-remastered-ps4",
@@ -704,9 +748,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/the-last-of-us-remastered-ps4.jpg",
     "gradientFrom": "#065f46",
     "gradientTo": "#0f172a",
-    "five": 4.5,
-    "four": 3.5,
-    "secondary": 2,
+    "five": 7,
+    "four": 5,
+    "secondary": 4,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -722,7 +766,9 @@ export const DEFAULT_GAMES = [
       "ايلي"
     ],
     "cost": 7.03,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "gta-the-trilogy",
@@ -731,9 +777,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/gta-the-trilogy.jpg",
     "gradientFrom": "#e11d48",
     "gradientTo": "#0f172a",
-    "five": 11.5,
-    "four": 8,
-    "secondary": 5,
+    "five": 14,
+    "four": 9.5,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 8,
@@ -749,7 +795,9 @@ export const DEFAULT_GAMES = [
       "فايس سيتي"
     ],
     "cost": 18.07,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "god-of-war-ragnarok",
@@ -758,9 +806,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/god-of-war-ragnarok.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#0369a1",
-    "five": 20.5,
+    "five": 22.5,
     "four": 14.5,
-    "secondary": 9,
+    "secondary": 12,
     "available": true,
     "stockStatus": "available",
     "stockCount": 7,
@@ -775,7 +823,9 @@ export const DEFAULT_GAMES = [
       "كريتوس"
     ],
     "cost": 33.13,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "horizon-forbidden-west",
@@ -784,9 +834,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/horizon-forbidden-west.jpg",
     "gradientFrom": "#d97706",
     "gradientTo": "#0f172a",
-    "five": 20.5,
+    "five": 22.5,
     "four": 14.5,
-    "secondary": 9,
+    "secondary": 12,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -800,7 +850,9 @@ export const DEFAULT_GAMES = [
       "ايلوي"
     ],
     "cost": 33.13,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "red-dead-redemption-1",
@@ -809,9 +861,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/red-dead-redemption-1.jpg",
     "gradientFrom": "#b91c1c",
     "gradientTo": "#1c1917",
-    "five": 13.5,
-    "four": 9.5,
-    "secondary": 6,
+    "five": 16,
+    "four": 10.5,
+    "secondary": 8.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -825,7 +877,9 @@ export const DEFAULT_GAMES = [
       "جون مارستون"
     ],
     "cost": 22.09,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "mortal-kombat-1",
@@ -834,9 +888,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/mortal-kombat-1.jpg",
     "gradientFrom": "#dc2626",
     "gradientTo": "#09090b",
-    "five": 9.5,
-    "four": 6.5,
-    "secondary": 4,
+    "five": 17,
+    "four": null,
+    "secondary": 10.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -851,7 +905,9 @@ export const DEFAULT_GAMES = [
       "قتال"
     ],
     "cost": 15.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "mortal-kombat-elder-god",
@@ -860,9 +916,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/mortal-kombat-elder-god.jpg",
     "gradientFrom": "#ea580c",
     "gradientTo": "#0f172a",
-    "five": 15.5,
-    "four": 11,
-    "secondary": 7,
+    "five": 25,
+    "four": null,
+    "secondary": 15.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -874,7 +930,9 @@ export const DEFAULT_GAMES = [
       "مورتال كومبات باقة الآلهة"
     ],
     "cost": 25.1,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 89.99,
+    "originalFive": 89.99
   },
   {
     "id": "sackboy-a-big-adventure",
@@ -883,9 +941,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/sackboy-a-big-adventure.jpg",
     "gradientFrom": "#ca8a04",
     "gradientTo": "#1e1b4b",
-    "five": 15.5,
-    "four": 7,
-    "secondary": 3,
+    "five": 14.5,
+    "four": 9.5,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -899,7 +957,9 @@ export const DEFAULT_GAMES = [
       "مغامرات عائلية"
     ],
     "cost": 19.08,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "god-of-war-2018",
@@ -908,9 +968,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/god-of-war-2018.jpg",
     "gradientFrom": "#1e293b",
     "gradientTo": "#0f172a",
-    "five": 7,
-    "four": 5,
-    "secondary": 3,
+    "five": 9,
+    "four": 6,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -922,7 +982,9 @@ export const DEFAULT_GAMES = [
       "قود اوف وار 2018"
     ],
     "cost": 11.04,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "dragon-ball-xenoverse-2",
@@ -931,9 +993,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/dragon-ball-xenoverse-2.jpg",
     "gradientFrom": "#f97316",
     "gradientTo": "#1e1b4b",
-    "five": 5,
-    "four": 2.5,
-    "secondary": 2.5,
+    "five": 6.5,
+    "four": 4.5,
+    "secondary": 3.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -947,7 +1009,9 @@ export const DEFAULT_GAMES = [
       "غوكو"
     ],
     "cost": 6.02,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "mafia-trilogy",
@@ -956,9 +1020,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/mafia-trilogy.jpg",
     "gradientFrom": "#451a03",
     "gradientTo": "#0f172a",
-    "five": 6,
-    "four": 2.5,
-    "secondary": 2.5,
+    "five": 7,
+    "four": 5,
+    "secondary": 4,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -971,7 +1035,9 @@ export const DEFAULT_GAMES = [
       "عصابات"
     ],
     "cost": 7.03,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "detroit-become-human-deluxe",
@@ -980,9 +1046,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/detroit-become-human-deluxe.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#0f172a",
-    "five": 14.5,
-    "four": 6.5,
-    "secondary": 3,
+    "five": 14,
+    "four": 9.5,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -996,7 +1062,9 @@ export const DEFAULT_GAMES = [
       "قصصية"
     ],
     "cost": 18.07,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "need-for-speed-unbound",
@@ -1005,9 +1073,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/need-for-speed-unbound.jpg",
     "gradientFrom": "#84cc16",
     "gradientTo": "#0f172a",
-    "five": 9,
-    "four": 4,
-    "secondary": 2.5,
+    "five": 12,
+    "four": null,
+    "secondary": 7.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1021,7 +1089,9 @@ export const DEFAULT_GAMES = [
       "سباق سيارات"
     ],
     "cost": 11.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 69.99,
+    "originalFive": 69.99
   },
   {
     "id": "street-fighter-6",
@@ -1030,9 +1100,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/street-fighter-6.jpg",
     "gradientFrom": "#e11d48",
     "gradientTo": "#1e1b4b",
-    "five": 10,
-    "four": 7,
-    "secondary": 4.5,
+    "five": 13,
+    "four": 8.5,
+    "secondary": 7,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1046,7 +1116,9 @@ export const DEFAULT_GAMES = [
       "قتال"
     ],
     "cost": 16.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "batman-arkham-collection",
@@ -1055,9 +1127,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/batman-arkham-collection.jpg",
     "gradientFrom": "#1e293b",
     "gradientTo": "#020617",
-    "five": 7.5,
-    "four": 3.5,
-    "secondary": 2.5,
+    "five": 8,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -1072,7 +1144,9 @@ export const DEFAULT_GAMES = [
       "ثلاثية"
     ],
     "cost": 9.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "tekken-7",
@@ -1082,8 +1156,8 @@ export const DEFAULT_GAMES = [
     "gradientFrom": "#dc2626",
     "gradientTo": "#09090b",
     "five": 9,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 6,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1097,7 +1171,9 @@ export const DEFAULT_GAMES = [
       "قتال"
     ],
     "cost": 11.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "resident-evil-village-gold",
@@ -1106,9 +1182,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/resident-evil-village-gold.jpg",
     "gradientFrom": "#ca8a04",
     "gradientTo": "#0f172a",
-    "five": 9,
-    "four": 6.5,
-    "secondary": 4,
+    "five": 12,
+    "four": 8,
+    "secondary": 6.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1122,7 +1198,9 @@ export const DEFAULT_GAMES = [
       "رعب"
     ],
     "cost": 14.06,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "lies-of-p",
@@ -1131,9 +1209,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/lies-of-p.jpg",
     "gradientFrom": "#1e1b4b",
     "gradientTo": "#020617",
-    "five": 15,
-    "four": 10.5,
-    "secondary": 6.5,
+    "five": 17,
+    "four": 11,
+    "secondary": 9,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1147,7 +1225,9 @@ export const DEFAULT_GAMES = [
       "سولز"
     ],
     "cost": 24.1,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "resident-evil-7-biohazard-gold",
@@ -1156,9 +1236,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/resident-evil-7-biohazard-gold.jpg",
     "gradientFrom": "#14532d",
     "gradientTo": "#0f172a",
-    "five": 7,
-    "four": 5,
-    "secondary": 3,
+    "five": 9,
+    "four": 6,
+    "secondary": 5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1171,7 +1251,9 @@ export const DEFAULT_GAMES = [
       "رعب"
     ],
     "cost": 11.04,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "the-last-of-us-part-1-deluxe",
@@ -1180,9 +1262,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/the-last-of-us-part-1-deluxe.jpg",
     "gradientFrom": "#15803d",
     "gradientTo": "#0f172a",
-    "five": 24.5,
-    "four": 17.5,
-    "secondary": 10.5,
+    "five": 34,
+    "four": null,
+    "secondary": 21,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -1194,7 +1276,9 @@ export const DEFAULT_GAMES = [
       "ذا لاست اوف اس ريميك"
     ],
     "cost": 39.66,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 79.99,
+    "originalFive": 79.99
   },
   {
     "id": "the-last-of-us-part-2-deluxe",
@@ -1203,9 +1287,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/the-last-of-us-part-2-deluxe.jpg",
     "gradientFrom": "#b91c1c",
     "gradientTo": "#0f172a",
-    "five": 15,
-    "four": 10.5,
-    "secondary": 6.5,
+    "five": 17,
+    "four": 11,
+    "secondary": 9,
     "available": true,
     "stockStatus": "available",
     "stockCount": 6,
@@ -1217,7 +1301,9 @@ export const DEFAULT_GAMES = [
       "ذا لاست اوف اس 2"
     ],
     "cost": 24.1,
-    "category": "High Demand"
+    "category": "High Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "trail-out",
@@ -1226,9 +1312,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/trail-out.jpg",
     "gradientFrom": "#c2410c",
     "gradientTo": "#0f172a",
-    "five": 14,
-    "four": 6,
-    "secondary": 3,
+    "five": 11,
+    "four": null,
+    "secondary": 8,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1242,7 +1328,9 @@ export const DEFAULT_GAMES = [
       "سباق وتدمير"
     ],
     "cost": 17.07,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 19.99,
+    "originalFive": 19.99
   },
   {
     "id": "sifu",
@@ -1251,9 +1339,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/sifu.jpg",
     "gradientFrom": "#b91c1c",
     "gradientTo": "#09090b",
-    "five": 7.5,
-    "four": 3.5,
-    "secondary": 2.5,
+    "five": 8,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1268,7 +1356,9 @@ export const DEFAULT_GAMES = [
       "قتال"
     ],
     "cost": 9.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 39.99,
+    "originalFive": 39.99
   },
   {
     "id": "life-is-strange-double-exposure",
@@ -1277,9 +1367,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/life-is-strange-double-exposure.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#1e1b4b",
-    "five": 15.5,
-    "four": 7,
-    "secondary": 3,
+    "five": 19.5,
+    "four": null,
+    "secondary": 12,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1293,7 +1383,9 @@ export const DEFAULT_GAMES = [
       "قصصية"
     ],
     "cost": 19.08,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "sonic-x-shadow-generations",
@@ -1303,8 +1395,8 @@ export const DEFAULT_GAMES = [
     "gradientFrom": "#1e3a8a",
     "gradientTo": "#991b1b",
     "five": 12.5,
-    "four": 5.5,
-    "secondary": 2.5,
+    "four": 8.5,
+    "secondary": 6.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1318,7 +1410,9 @@ export const DEFAULT_GAMES = [
       "شادو"
     ],
     "cost": 15.06,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 49.99,
+    "originalFive": 49.99
   },
   {
     "id": "sonic-frontiers",
@@ -1327,9 +1421,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/sonic-frontiers.jpg",
     "gradientFrom": "#0284c7",
     "gradientTo": "#0f172a",
-    "five": 10,
-    "four": 4.5,
-    "secondary": 2.5,
+    "five": 11.5,
+    "four": 7.5,
+    "secondary": 6,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1341,7 +1435,9 @@ export const DEFAULT_GAMES = [
       "سونيك فرونتيرز"
     ],
     "cost": 12.05,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "assassins-creed-syndicate",
@@ -1350,9 +1446,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/assassins-creed-syndicate.jpg",
     "gradientFrom": "#334155",
     "gradientTo": "#0f172a",
-    "five": 6.5,
-    "four": 3,
-    "secondary": 2.5,
+    "five": 7.5,
+    "four": 5,
+    "secondary": 4,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1365,7 +1461,9 @@ export const DEFAULT_GAMES = [
       "لندن"
     ],
     "cost": 8.03,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 29.99,
+    "originalFive": 29.99
   },
   {
     "id": "dragon-ball-fighterz",
@@ -1375,8 +1473,8 @@ export const DEFAULT_GAMES = [
     "gradientFrom": "#ea580c",
     "gradientTo": "#1e1b4b",
     "five": 8.5,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1390,7 +1488,9 @@ export const DEFAULT_GAMES = [
       "قتال أنمي"
     ],
     "cost": 10.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "marvels-guardians-of-the-galaxy",
@@ -1400,8 +1500,8 @@ export const DEFAULT_GAMES = [
     "gradientFrom": "#7c3aed",
     "gradientTo": "#0f172a",
     "five": 8.5,
-    "four": 4,
-    "secondary": 2.5,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1415,7 +1515,9 @@ export const DEFAULT_GAMES = [
       "مارفل"
     ],
     "cost": 10.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 59.99,
+    "originalFive": 59.99
   },
   {
     "id": "ghost-recon-breakpoint-gold",
@@ -1424,9 +1526,9 @@ export const DEFAULT_GAMES = [
     "image": "/games/ghost-recon-breakpoint-gold.jpg",
     "gradientFrom": "#15803d",
     "gradientTo": "#09090b",
-    "five": 7.5,
-    "four": 3.5,
-    "secondary": 2.5,
+    "five": 8,
+    "four": 5.5,
+    "secondary": 4.5,
     "available": true,
     "stockStatus": "available",
     "stockCount": 5,
@@ -1441,7 +1543,9 @@ export const DEFAULT_GAMES = [
       "قوات خاصة"
     ],
     "cost": 9.04,
-    "category": "Low Demand"
+    "category": "Low Demand",
+    "originalPrice": 99.99,
+    "originalFive": 99.99
   }
 ];
 export const DEFAULT_BUNDLES = [
