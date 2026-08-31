@@ -34,10 +34,11 @@ const PLATFORM_OPTIONS = [
     { value: "all",  label: "الأجهزة" },
     { value: "five", label: "PS5 فقط" },
     { value: "four", label: "PS4 فقط" },
+    { value: "secondary", label: "سكندري فقط" },
 ];
 
 const lowestPrice = (g) => {
-    const prices = ["five", "four"].map((t) => g[t]).filter((v) => v != null);
+    const prices = ["five", "four", "secondary"].map((t) => g[t]).filter((v) => v != null);
     return prices.length ? Math.min(...prices) : Infinity;
 };
 
@@ -122,6 +123,7 @@ export const GamesGrid = ({ games, isCatalogPage = false }) => {
             if (!matchSmartSearch(g, query)) return false;
             if (platform === "five" && g.five == null) return false;
             if (platform === "four" && g.four == null) return false;
+            if (platform === "secondary" && g.secondary == null) return false;
 
             // Mood filter
             if (mood !== "all") {

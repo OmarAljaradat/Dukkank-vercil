@@ -12,13 +12,15 @@ import { apiRecordCartAdd } from "../lib/api";
 import { toast } from "sonner";
 
 const TIER_LABEL = {
-    four: "PS4",
     five: "PS5",
+    four: "PS4",
+    secondary: "سكندري",
 };
 
 const TIER_LABEL_FULL = {
-    four: "PS4 (Four)",
-    five: "PS5 (Five)",
+    five: "PS5",
+    four: "PS4",
+    secondary: "سكندري",
 };
 
 export const GameCard = ({ game }) => {
@@ -29,10 +31,10 @@ export const GameCard = ({ game }) => {
     const { store } = useStoreData();
     const navigate = useNavigate();
     const isAvailable   = game.available !== false;
-    const availableTiers = ["five", "four"].filter((tier) => game[tier] != null);
+    const availableTiers = ["five", "four", "secondary"].filter((tier) => game[tier] != null);
     const hasPrice       = availableTiers.length > 0;
     const canBuy         = isAvailable && hasPrice;
-    const possibleTiers  = availableTiers.length ? availableTiers : ["five", "four"];
+    const possibleTiers  = availableTiers.length ? availableTiers : ["five", "four", "secondary"];
     const [tier, setTier]       = useState(possibleTiers[0]);
     const [adding, setAdding]   = useState(false);
     const [copied, setCopied]   = useState(false);
@@ -84,9 +86,11 @@ export const GameCard = ({ game }) => {
 
     const platformLabel = !hasPrice
         ? t("card.comingSoon")
-        : availableTiers.length === 2
-            ? "PS4 / PS5"
-            : availableTiers[0] === "five" ? t("card.ps5Only") : t("card.ps4Only");
+        : availableTiers.length === 3
+            ? "PS4 / PS5 / سكندري"
+            : availableTiers.length === 2
+                ? `${TIER_LABEL[availableTiers[0]]} / ${TIER_LABEL[availableTiers[1]]}`
+                : TIER_LABEL[availableTiers[0]] || "";
 
     // ── Mobile horizontal layout (< md) ────────────────────────────────────────
     const mobileCard = (
@@ -283,7 +287,8 @@ export const GameCard = ({ game }) => {
                     </div>
                 )}
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className={`mt-4 grid gap-2 ${possibleTiers.length >= 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+
                     {possibleTiers.map((t) => {
                         const avail = game[t] != null;
                         return (

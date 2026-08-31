@@ -7,8 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const TIER_LABEL_FULL = {
-    four: "PS4 (Four)",
-    five: "PS5 (Five)",
+    five: "PS5",
+    four: "PS4",
+    secondary: "سكندري",
 };
 
 export function QuickViewModal({ open, onClose, game }) {
@@ -19,8 +20,8 @@ export function QuickViewModal({ open, onClose, game }) {
     const { has: isFav, toggle: toggleFav } = useWishlist();
     const navigate = useNavigate();
 
-    const availableTiers = ["five", "four"].filter((tier) => game[tier] != null);
-    const possibleTiers  = availableTiers.length ? availableTiers : ["five", "four"];
+    const availableTiers = ["five", "four", "secondary"].filter((tier) => game[tier] != null);
+    const possibleTiers  = availableTiers.length ? availableTiers : ["five", "four", "secondary"];
     const [tier, setTier] = useState(possibleTiers[0]);
     const [adding, setAdding] = useState(false);
 
@@ -110,7 +111,8 @@ export function QuickViewModal({ open, onClose, game }) {
                         {/* Platform Selector */}
                         <div className="space-y-1.5 pt-2">
                             <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300">اختر الجهاز:</label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className={`grid gap-2 ${possibleTiers.length >= 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+
                                 {possibleTiers.map((t) => (
                                     <button
                                         key={t}
