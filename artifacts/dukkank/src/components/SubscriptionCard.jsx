@@ -82,6 +82,20 @@ export const SubscriptionCard = ({ sub }) => {
                 </div>
 
                 {/* Tier selector */}
+                {tier === "secondary" && (
+                    <div className="mb-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs font-extrabold text-amber-800 dark:text-amber-200 flex items-center justify-between gap-2 animate-in fade-in">
+                        <span className="flex items-center gap-1.5">
+                            <span>💡 سكندري: اللعب مباشرة من داخل الحساب</span>
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setExplainerOpen(true)}
+                            className="text-[11px] underline text-amber-900 dark:text-amber-100 cursor-pointer font-black"
+                        >
+                            تفاصيل أكثر ℹ️
+                        </button>
+                    </div>
+                )}
                 <div className="mb-4">
                     <div className="text-xs font-semibold text-[hsl(var(--brand-ink))]/60 mb-2">{t("card.device")}</div>
                     {(() => {
