@@ -35,9 +35,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "blue",
         visible: true,
         durations: [
-            { id: "ess-1m",  label: "شهر واحد", four: 6.5,  five: 10.0, originalFive: 10.0,  originalFour: 10.0,  costPriceFive: 6.5,  costPriceFour: 2.5, costPrice: 6.5, stockStatus: "available" },
-            { id: "ess-3m",  label: "٣ شهور",   four: 14.0, five: 19.0, originalFive: 25.0,  originalFour: 25.0,  costPriceFive: 15.0, costPriceFour: 4.0, costPrice: 15.0, stockStatus: "available" },
-            { id: "ess-12m", label: "سنة كاملة",four: 27.0, five: 47.0, originalFive: 80.0,  originalFour: 80.0,  costPriceFive: 32.0, costPriceFour: 9.0, costPrice: 32.0, stockStatus: "available" },
+            { id: "ess-1m",  label: "شهر واحد", four: 6.5,  five: 10.0, secondary: 4.5, originalFive: 10.0,  originalFour: 10.0,  originalSecondary: 10.0, costPriceFive: 6.5,  costPriceFour: 2.5, costPriceSecondary: 2.0, costPrice: 6.5, stockStatus: "available" },
+            { id: "ess-3m",  label: "٣ شهور",   four: 14.0, five: 19.0, secondary: 9.0, originalFive: 25.0,  originalFour: 25.0,  originalSecondary: 25.0, costPriceFive: 15.0, costPriceFour: 4.0, costPriceSecondary: 3.5, costPrice: 15.0, stockStatus: "available" },
+            { id: "ess-12m", label: "سنة كاملة",four: 27.0, five: 47.0, secondary: 19.0, originalFive: 80.0,  originalFour: 80.0,  originalSecondary: 80.0, costPriceFive: 32.0, costPriceFour: 9.0, costPriceSecondary: 7.0, costPrice: 32.0, stockStatus: "available" },
         ],
     },
     {
@@ -47,9 +47,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "red",
         visible: true,
         durations: [
-            { id: "ext-1m",  label: "شهر واحد", four: 8.0,  five: 14.0, originalFive: 15.0,  originalFour: 15.0,  costPriceFive: 10.0, costPriceFour: 4.0, costPrice: 10.0, stockStatus: "available" },
-            { id: "ext-3m",  label: "٣ شهور",   four: 19.0, five: 26.0, originalFive: 40.0,  originalFour: 40.0,  costPriceFive: 22.0, costPriceFour: 7.0, costPrice: 22.0, stockStatus: "available" },
-            { id: "ext-12m", label: "سنة كاملة",four: 41.0, five: 59.0, originalFive: 135.0, originalFour: 135.0, costPriceFive: 50.0, costPriceFour: 15.0, costPrice: 50.0, stockStatus: "available" },
+            { id: "ext-1m",  label: "شهر واحد", four: 8.0,  five: 14.0, secondary: 6.5, originalFive: 15.0,  originalFour: 15.0,  originalSecondary: 15.0, costPriceFive: 10.0, costPriceFour: 4.0, costPriceSecondary: 3.0, costPrice: 10.0, stockStatus: "available" },
+            { id: "ext-3m",  label: "٣ شهور",   four: 19.0, five: 26.0, secondary: 15.0, originalFive: 40.0,  originalFour: 40.0,  originalSecondary: 25.0, costPriceFive: 22.0, costPriceFour: 7.0, costPriceSecondary: 5.5, costPrice: 22.0, stockStatus: "available" },
+            { id: "ext-12m", label: "سنة كاملة",four: 41.0, five: 59.0, secondary: 33.0, originalFive: 135.0, originalFour: 135.0, originalSecondary: 80.0,  costPriceFive: 50.0, costPriceFour: 15.0, costPriceSecondary: 12.0, costPrice: 50.0, stockStatus: "available" },
         ],
     },
     {
@@ -59,9 +59,9 @@ const DEFAULT_SUBSCRIPTIONS = [
         accent: "amber",
         visible: true,
         durations: [
-            { id: "del-1m",  label: "شهر واحد", four: 11.0, five: 16.0, originalFive: 18.0,  originalFour: 18.0,  costPriceFive: 11.0, costPriceFour: 6.0, costPrice: 11.0, stockStatus: "available" },
-            { id: "del-3m",  label: "٣ شهور",   four: 22.0, five: 33.0, originalFive: 50.0,  originalFour: 50.0,  costPriceFive: 24.0, costPriceFour: 12.0, costPrice: 24.0, stockStatus: "available" },
-            { id: "del-12m", label: "سنة كاملة",four: 49.0, five: 69.0, originalFive: 160.0, originalFour: 160.0, costPriceFive: 55.0, costPriceFour: 22.0, costPrice: 55.0, stockStatus: "available" },
+            { id: "del-1m",  label: "شهر واحد", four: 11.0, five: 16.0, secondary: 7.5, originalFive: 18.0,  originalFour: 18.0,  originalSecondary: 18.0, costPriceFive: 11.0, costPriceFour: 6.0, costPriceSecondary: 4.0, costPrice: 11.0, stockStatus: "available" },
+            { id: "del-3m",  label: "٣ شهور",   four: 22.0, five: 33.0, secondary: 16.0, originalFive: 50.0,  originalFour: 50.0,  originalSecondary: 50.0, costPriceFive: 24.0, costPriceFour: 12.0, costPriceSecondary: 7.0, costPrice: 24.0, stockStatus: "available" },
+            { id: "del-12m", label: "سنة كاملة",four: 49.0, five: 69.0, secondary: 35.0, originalFive: 160.0, originalFour: 160.0, originalSecondary: 160.0, costPriceFive: 55.0, costPriceFour: 22.0, costPriceSecondary: 16.0, costPrice: 55.0, stockStatus: "available" },
         ],
     },
 ];
@@ -78,14 +78,18 @@ const toForm = (sub) => ({
         const officialPrice = getOfficialStorePrice(sub?.id, d?.id);
         const origFiveVal = d.originalFive != null && d.originalFive !== "" ? d.originalFive : (officialPrice != null ? officialPrice : "");
         const origFourVal = d.originalFour != null && d.originalFour !== "" ? d.originalFour : (officialPrice != null ? officialPrice : "");
+        const origSecVal = d.originalSecondary != null && d.originalSecondary !== "" ? d.originalSecondary : (officialPrice != null ? officialPrice : "");
         return {
             ...d,
             four: d.four == null ? "" : String(d.four),
             five: d.five == null ? "" : String(d.five),
+            secondary: d.secondary == null ? "" : String(d.secondary),
             originalFive: String(origFiveVal),
             originalFour: String(origFourVal),
+            originalSecondary: String(origSecVal),
             costPriceFive: d.costPriceFive != null ? String(d.costPriceFive) : d.costPrice != null ? String(d.costPrice) : "",
             costPriceFour: d.costPriceFour != null ? String(d.costPriceFour) : d.costPrice != null ? String(d.costPrice) : "",
+            costPriceSecondary: d.costPriceSecondary != null ? String(d.costPriceSecondary) : "",
             costPrice: d.costPrice == null ? "" : String(d.costPrice),
             stockStatus: d.stockStatus || "available",
         };
@@ -106,10 +110,13 @@ const toPayload = (f) => ({
         label_en: d.label_en || "",
         four: numOrNull(d.four),
         five: numOrNull(d.five),
+        secondary: numOrNull(d.secondary),
         originalFive: numOrNull(d.originalFive),
         originalFour: numOrNull(d.originalFour),
+        originalSecondary: numOrNull(d.originalSecondary),
         costPriceFive: numOrNull(d.costPriceFive ?? d.costPrice),
         costPriceFour: numOrNull(d.costPriceFour ?? d.costPrice),
+        costPriceSecondary: numOrNull(d.costPriceSecondary),
         costPrice: numOrNull(d.costPriceFive ?? d.costPrice),
         stockStatus: d.stockStatus || "available",
     })),
@@ -161,7 +168,7 @@ export default function SubscriptionsTab({ onChanged }) {
 
     // Instant UI Cell Field Change Handler (0ms response time)
     const handleCellFieldChange = async (sub, durIndex, field, value) => {
-        const isNumeric = field === "five" || field === "four" || field === "costPrice" || field === "costPriceFive" || field === "costPriceFour" || field === "originalFive" || field === "originalFour";
+        const isNumeric = field === "five" || field === "four" || field === "secondary" || field === "costPrice" || field === "costPriceFive" || field === "costPriceFour" || field === "costPriceSecondary" || field === "originalFive" || field === "originalFour" || field === "originalSecondary";
         const parsedVal = isNumeric ? (value === "" ? null : parseFloat(value)) : value;
 
         const updatedDurations = sub.durations.map((d, idx) =>
@@ -759,6 +766,50 @@ export default function SubscriptionsTab({ onChanged }) {
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {/* Secondary Box */}
+                                                    <div className="p-3 rounded-xl bg-slate-900/90 border border-purple-500/30 space-y-2 md:col-span-2">
+                                                        <div className="text-xs font-black text-purple-400 flex items-center gap-1.5">
+                                                            <span>🎮 حساب سكندري (Secondary)</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2">
+                                                            <div>
+                                                                <label className="block text-[10px] text-slate-400 font-bold mb-1">سعر البيع ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.secondary}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-secondary`}
+                                                                    onChange={(e) => setDur(idx, "secondary", e.target.value)}
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-purple-500/40 px-2 text-xs text-emerald-400 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] text-red-400 font-bold mb-1">قبل الخصم ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.originalSecondary}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-originalSecondary`}
+                                                                    onChange={(e) => setDur(idx, "originalSecondary", e.target.value)}
+                                                                    placeholder="اختياري"
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-red-500/40 px-2 text-xs text-red-300 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] text-amber-400 font-bold mb-1">تكلفة المورد ($)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.5"
+                                                                    value={d.costPriceSecondary}
+                                                                    data-testid={`sub-input-${form.id}-${idx}-costPriceSecondary`}
+                                                                    onChange={(e) => setDur(idx, "costPriceSecondary", e.target.value)}
+                                                                    placeholder="0.00"
+                                                                    className="w-full h-9 rounded-lg bg-slate-950 border border-amber-500/50 px-2 text-xs text-amber-300 font-bold text-center"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -787,7 +838,7 @@ export default function SubscriptionsTab({ onChanged }) {
                         ) : (
                             /* Live Instant Edit Table View */
                             <div className="p-4 sm:p-6 overflow-x-auto">
-                                <table className="w-full text-right text-xs min-w-[950px]">
+                                <table className="w-full text-right text-xs min-w-[1250px]">
                                     <thead>
                                         {/* Multi-tier Group Header */}
                                         <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
@@ -801,6 +852,11 @@ export default function SubscriptionsTab({ onChanged }) {
                                             {/* PS4 Header Group */}
                                             <th colSpan={4} className="py-2.5 px-3 text-center bg-slate-500/10 border-l border-slate-500/20 rounded-t-2xl font-black text-slate-700 dark:text-slate-300">
                                                 🎮 أسعار وتكاليف وأرباح PlayStation 4 (PS4)
+                                            </th>
+
+                                            {/* Secondary Header Group */}
+                                            <th colSpan={4} className="py-2.5 px-3 text-center bg-purple-500/10 border-l border-purple-500/20 rounded-t-2xl font-black text-purple-600 dark:text-purple-400">
+                                                🎮 أسعار وتكاليف وأرباح سكندري (Secondary)
                                             </th>
 
                                             <th className="py-2.5 px-3 font-bold text-center">حالة التوفر ⚡</th>
@@ -823,6 +879,12 @@ export default function SubscriptionsTab({ onChanged }) {
                                             <th className="py-2 px-2 text-center bg-slate-500/[0.04] text-amber-600 font-extrabold">تكلفة المورد 💵</th>
                                             <th className="py-2 px-2 text-center bg-slate-500/[0.04] border-l border-slate-500/20 text-emerald-600 font-extrabold">صافي الربح 📈</th>
 
+                                            {/* Secondary Sub Columns */}
+                                            <th className="py-2 px-2 text-center bg-purple-500/[0.04] text-emerald-600 font-extrabold">سعر البيع 🎮</th>
+                                            <th className="py-2 px-2 text-center bg-purple-500/[0.04] text-red-500 font-extrabold">قبل الخصم 🏷️</th>
+                                            <th className="py-2 px-2 text-center bg-purple-500/[0.04] text-amber-600 font-extrabold">تكلفة المورد 💵</th>
+                                            <th className="py-2 px-2 text-center bg-purple-500/[0.04] border-l border-purple-500/20 text-emerald-600 font-extrabold">صافي الربح 📈</th>
+
                                             <th className="py-2 px-3 font-bold text-center">المخزون والطلب</th>
                                             <th className="py-2 px-3 font-bold text-center">الرسالة</th>
                                         </tr>
@@ -843,6 +905,14 @@ export default function SubscriptionsTab({ onChanged }) {
                                             let netProfitFour = null;
                                             if (sellFour != null && costFour != null && Number(sellFour) > 0 && Number(costFour) > 0) {
                                                 netProfitFour = (Number(sellFour) - Number(costFour)).toFixed(2);
+                                            }
+
+                                            // Secondary Profit
+                                            const sellSecondary = d.secondary;
+                                            const costSecondary = d.costPriceSecondary;
+                                            let netProfitSecondary = null;
+                                            if (sellSecondary != null && costSecondary != null && Number(sellSecondary) > 0 && Number(costSecondary) > 0) {
+                                                netProfitSecondary = (Number(sellSecondary) - Number(costSecondary)).toFixed(2);
                                             }
 
                                             return (
@@ -942,7 +1012,56 @@ export default function SubscriptionsTab({ onChanged }) {
                                                             <span className={`px-2 py-1 rounded-lg font-black text-[11px] inline-block ${
                                                                 Number(netProfitFour) >= 0 ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300" : "bg-red-100 text-red-700"
                                                             }`}>
-                                                                {Number(netProfitFour) >= 0 ? `+$${netProfitFour}` : `-$${Math.abs(Number(netProfitFour))}`}
+                                                                {Number(netProfitFour) >= 0 ? `+${netProfitFour}` : `-${Math.abs(Number(netProfitFour))}`}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs">—</span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* Secondary Price */}
+                                                    <td className="py-3 px-1.5 text-center bg-purple-500/[0.02]">
+                                                        <input
+                                                            type="number"
+                                                            step="0.5"
+                                                            value={d.secondary ?? ""}
+                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "secondary", e.target.value)}
+                                                            placeholder="فارغ"
+                                                            className="w-16 h-9 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/50 px-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center"
+                                                        />
+                                                    </td>
+
+                                                    {/* Secondary Strikethrough (Original) */}
+                                                    <td className="py-3 px-1.5 text-center bg-purple-500/[0.02]">
+                                                        <input
+                                                            type="number"
+                                                            step="0.5"
+                                                            value={d.originalSecondary ?? ""}
+                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "originalSecondary", e.target.value)}
+                                                            placeholder="مشطوب"
+                                                            className="w-16 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 px-1 text-xs font-bold text-red-500 text-center"
+                                                        />
+                                                    </td>
+
+                                                    {/* Secondary Cost */}
+                                                    <td className="py-3 px-1.5 text-center bg-purple-500/[0.02]">
+                                                        <input
+                                                            type="number"
+                                                            step="0.5"
+                                                            value={d.costPriceSecondary ?? ""}
+                                                            onChange={(e) => handleCellFieldChange(sub, dIdx, "costPriceSecondary", e.target.value)}
+                                                            placeholder="0.00"
+                                                            className="w-16 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 px-1 text-xs font-bold text-amber-600 dark:text-amber-300 text-center"
+                                                        />
+                                                    </td>
+
+                                                    {/* Secondary Net Profit */}
+                                                    <td className="py-3 px-1.5 text-center bg-purple-500/[0.02] border-l border-purple-500/20">
+                                                        {netProfitSecondary != null ? (
+                                                            <span className={`px-2 py-1 rounded-lg font-black text-[11px] inline-block ${
+                                                                Number(netProfitSecondary) >= 0 ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300" : "bg-red-100 text-red-700"
+                                                            }`}>
+                                                                {Number(netProfitSecondary) >= 0 ? `+${netProfitSecondary}` : `-${Math.abs(Number(netProfitSecondary))}`}
                                                             </span>
                                                         ) : (
                                                             <span className="text-slate-400 text-xs">—</span>

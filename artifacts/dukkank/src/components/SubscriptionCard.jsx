@@ -99,8 +99,8 @@ export const SubscriptionCard = ({ sub }) => {
                 <div className="mb-4">
                     <div className="text-xs font-semibold text-[hsl(var(--brand-ink))]/60 mb-2">{t("card.device")}</div>
                     {(() => {
-                        const isExtra = sub.id === "extra";
-                        const availablePlatformTiers = isExtra ? ["five", "four", "secondary"] : ["five", "four"];
+                        const hasSecondary = (sub.durations || []).some(d => d.secondary != null && Number(d.secondary) > 0);
+                        const availablePlatformTiers = hasSecondary || sub.id === "extra" ? ["five", "four", "secondary"] : ["five", "four"];
                         return (
                             <div className={`grid gap-2 ${availablePlatformTiers.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
                                 {availablePlatformTiers.map((tt) => (
