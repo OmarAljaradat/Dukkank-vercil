@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, HelpCircle } from "lucide-react";
+import { SecondaryExplainerModal } from "./SecondaryExplainerModal";
 import { useCart } from "../contexts/CartContext";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useLang, pickLocalized } from "../contexts/LanguageContext";
@@ -8,8 +9,9 @@ import { apiRecordCartAdd } from "../lib/api";
 import { toast } from "sonner";
 
 const TIER_LABEL = {
-    four: "PS4 (Four)",
-    five: "PS5 (Five)",
+    five: "PS5",
+    four: "PS4",
+    secondary: "سكندري",
 };
 
 export const SubscriptionCard = ({ sub }) => {
@@ -22,6 +24,7 @@ export const SubscriptionCard = ({ sub }) => {
     const availableDurations = useMemo(() => (sub.durations || []).filter((d) => d[tier] != null && Number(d[tier]) > 0), [sub.durations, tier]);
     const [duration, setDuration] = useState(availableDurations[0]?.id);
     const [adding, setAdding] = useState(false);
+    const [explainerOpen, setExplainerOpen] = useState(false);
 
     useEffect(() => {
         if (!availableDurations.find((d) => d.id === duration)) {
@@ -81,14 +84,31 @@ export const SubscriptionCard = ({ sub }) => {
                 {/* Tier selector */}
                 <div className="mb-4">
                     <div className="text-xs font-semibold text-[hsl(var(--brand-ink))]/60 mb-2">{t("card.device")}</div>
-                    <div className="grid grid-cols-2 gap-2">
-                        {["five", "four"].map((tt) => (
-                            <button key={tt} onClick={() => setTier(tt)} data-testid={`sub-${sub.id}-tier-${tt}`} data-selected={tier === tt}
-                                className={`tier-pill text-sm font-semibold rounded-xl border-2 border-[hsl(var(--brand-ink))]/15 h-11 sm:h-12 transition-all active:scale-95 cursor-pointer`}>
-                                {TIER_LABEL[tt]}
-                            </button>
-                        ))}
-                    </div>
+                    {(() => {
+                        const isExtra = sub.id === "extra";
+                        const availablePlatformTiers = isExtra ? ["five", "four", "secondary"] : ["five", "four"];
+                        return (
+                            <div className={`grid gap-2 ${availablePlatformTiers.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+                                {availablePlatformTiers.map((tt) => (
+                                    <button
+                                        key={tt}
+                                        onClick={() => {
+                                            setTier(tt);
+                                            if (tt === "secondary") setExplainerOpen(true);
+                                        }}
+                                        data-testid={`sub-${sub.id}-tier-${tt}`}
+                                        data-selected={tier === tt}
+                                        className="tier-pill text-xs sm:text-sm font-semibold rounded-xl border-2 border-[hsl(var(--brand-ink))]/15 h-11 sm:h-12 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1"
+                                    >
+                                        <span>{TIER_LABEL[tt]}</span>
+                                        {tt === "secondary" && (
+                                            <span className="text-[10px] text-amber-500 font-bold">ℹ️</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Duration selector */}
@@ -200,6 +220,7 @@ export const SubscriptionCard = ({ sub }) => {
                     </div>
                 </div>
             </div>
+            <SecondaryExplainerModal open={explainerOpen} onClose={() => setExplainerOpen(false)} />
         </article>
     );
 };

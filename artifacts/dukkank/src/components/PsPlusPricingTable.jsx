@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Check, Zap, Sparkles, Crown, Gamepad2, ShieldCheck, Plus, AlertTriangle, Clock } from "lucide-react";
+import { SecondaryExplainerModal } from "./SecondaryExplainerModal";
+import { Check, HelpCircle, Zap, Sparkles, Crown, Gamepad2, ShieldCheck, Plus, AlertTriangle, Clock } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useStoreData } from "../contexts/DataContext";
@@ -59,6 +60,11 @@ const PS_PLUS_TIERS_CONFIG = [
                 { id: "ext-3m", label: "3 أشهر", price: 19.0, stockStatus: "available" },
                 { id: "ext-12m", label: "12 شهر (سنة)", price: 42.0, badge: "توفير 35%", stockStatus: "available" },
             ],
+            secondary: [
+                { id: "ext-1m", label: "شهر واحد", price: 6.5, stockStatus: "available" },
+                { id: "ext-3m", label: "3 أشهر", price: 15.0, stockStatus: "available" },
+                { id: "ext-12m", label: "12 شهر (سنة)", price: 33.0, badge: "اقتصادي 🔥", stockStatus: "available" },
+            ],
         },
         features: [
             "جميع مميزات باقة Essential بالكامل",
@@ -102,6 +108,7 @@ const PS_PLUS_TIERS_CONFIG = [
 export function PsPlusPricingTable() {
     const [platform, setPlatform] = useState("five"); // "five" | "four"
     const [selectedDurations, setSelectedDurations] = useState({});
+    const [explainerOpen, setExplainerOpen] = useState(false);
 
     const { add } = useCart();
     const { format } = useCurrency();
@@ -230,26 +237,39 @@ export function PsPlusPricingTable() {
                     <span>اختر نوع جهاز بلايستيشن الخاص بك:</span>
                 </div>
 
-                <div className="w-full max-w-sm grid grid-cols-2 p-1.5 rounded-2xl bg-white dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/15 shadow-sm">
+                <div className="w-full max-w-md grid grid-cols-3 p-1.5 rounded-2xl bg-white dark:bg-white/[0.06] border border-[hsl(var(--brand-ink))]/15 shadow-sm">
                     <button
                         onClick={() => setPlatform("five")}
-                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
+                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
                             platform === "five"
                                 ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md"
                                 : "text-[hsl(var(--brand-ink))]/70 hover:bg-[hsl(var(--brand-ink))]/5"
                         }`}
                     >
-                        <span>🎮 سوني 5 (PS5)</span>
+                        <span>🎮 PS5</span>
                     </button>
                     <button
                         onClick={() => setPlatform("four")}
-                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
+                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
                             platform === "four"
                                 ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-md"
                                 : "text-[hsl(var(--brand-ink))]/70 hover:bg-[hsl(var(--brand-ink))]/5"
                         }`}
                     >
-                        <span>🎮 سوني 4 (PS4)</span>
+                        <span>🎮 PS4</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setPlatform("secondary");
+                            setExplainerOpen(true);
+                        }}
+                        className={`h-12 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
+                            platform === "secondary"
+                                ? "bg-amber-600 text-white shadow-md"
+                                : "text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20"
+                        }`}
+                    >
+                        <span>💡 سكندري</span>
                     </button>
                 </div>
             </div>
@@ -407,6 +427,7 @@ export function PsPlusPricingTable() {
                     );
                 })}
             </div>
+            <SecondaryExplainerModal open={explainerOpen} onClose={() => setExplainerOpen(false)} />
         </div>
     );
 }

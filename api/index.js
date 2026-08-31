@@ -46948,9 +46948,9 @@ var DEFAULT_SUBSCRIPTIONS = [
     accent: "red",
     visible: true,
     durations: [
-      { id: "ext-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 8, five: 14, originalFour: 15, originalFive: 15, costPriceFour: 4, costPriceFive: 10, stockStatus: "available" },
-      { id: "ext-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 19, five: 26, originalFour: 40, originalFive: 40, costPriceFour: 7, costPriceFive: 22, stockStatus: "available" },
-      { id: "ext-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 41, five: 59, originalFour: 135, originalFive: 135, costPriceFour: 15, costPriceFive: 50, stockStatus: "available" }
+      { id: "ext-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 8, five: 14, secondary: 6.5, originalFour: 15, originalFive: 15, originalSecondary: 10, costPriceFour: 4, costPriceFive: 10, stockStatus: "available" },
+      { id: "ext-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 19, five: 26, secondary: 15, originalFour: 40, originalFive: 40, originalSecondary: 25, costPriceFour: 7, costPriceFive: 22, stockStatus: "available" },
+      { id: "ext-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 41, five: 59, secondary: 33, originalFour: 135, originalFive: 135, originalSecondary: 80, costPriceFour: 15, costPriceFive: 50, stockStatus: "available" }
     ]
   },
   {

@@ -99,9 +99,9 @@ export const DEFAULT_SUBSCRIPTIONS = [
     accent: "red",
     visible: true,
     durations: [
-      { id: "ext-1m",  label: "شهر واحد",  four: 8.0,  five: 14.0, originalFour: 15.0,  originalFive: 15.0,  costPriceFour: 4.0, costPriceFive: 10.0, stockStatus: "available" },
-      { id: "ext-3m",  label: "٣ شهور",    four: 19.0, five: 26.0, originalFour: 40.0,  originalFive: 40.0,  costPriceFour: 7.0, costPriceFive: 22.0, stockStatus: "available" },
-      { id: "ext-12m", label: "سنة كاملة", four: 41.0, five: 59.0, originalFour: 135.0, originalFive: 135.0, costPriceFour: 15.0, costPriceFive: 50.0, stockStatus: "available" },
+      { id: "ext-1m",  label: "شهر واحد",  four: 8.0,  five: 14.0, secondary: 6.5, originalFour: 15.0,  originalFive: 15.0, originalSecondary: 10.0,  costPriceFour: 4.0, costPriceFive: 10.0, stockStatus: "available" },
+      { id: "ext-3m",  label: "٣ شهور",    four: 19.0, five: 26.0, secondary: 15.0, originalFour: 40.0,  originalFive: 40.0, originalSecondary: 25.0,  costPriceFour: 7.0, costPriceFive: 22.0, stockStatus: "available" },
+      { id: "ext-12m", label: "سنة كاملة", four: 41.0, five: 59.0, secondary: 33.0, originalFour: 135.0, originalFive: 135.0, originalSecondary: 80.0, costPriceFour: 15.0, costPriceFive: 50.0, stockStatus: "available" },
     ],
   },
   {

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { X, ShieldCheck, Zap, Plus, Check, Gamepad2, Heart, Share2, AlertCircle } from "lucide-react";
+import { SecondaryExplainerModal } from "./SecondaryExplainerModal";
+import { X, HelpCircle, ShieldCheck, Zap, Plus, Check, Gamepad2, Heart, Share2, AlertCircle } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { useWishlist } from "../contexts/WishlistContext";
@@ -24,6 +25,7 @@ export function QuickViewModal({ open, onClose, game }) {
     const possibleTiers  = availableTiers.length ? availableTiers : ["five", "four", "secondary"];
     const [tier, setTier] = useState(possibleTiers[0]);
     const [adding, setAdding] = useState(false);
+    const [explainerOpen, setExplainerOpen] = useState(false);
 
     const price = game[tier];
     const originalPrice = game.originalPrice || (price ? Math.round(price * 1.25) : null);
@@ -116,7 +118,7 @@ export function QuickViewModal({ open, onClose, game }) {
                                 {possibleTiers.map((t) => (
                                     <button
                                         key={t}
-                                        onClick={() => setTier(t)}
+                                        onClick={() => { setTier(t); if (t === "secondary") setExplainerOpen(true); }}
                                         className={`py-2.5 px-3 rounded-xl text-xs font-extrabold border-2 transition-all ${
                                             tier === t
                                                 ? "border-[hsl(var(--brand-blue-deep))] bg-[hsl(var(--brand-blue-deep))]/10 text-[hsl(var(--brand-blue-deep))]"
@@ -164,6 +166,7 @@ export function QuickViewModal({ open, onClose, game }) {
 
                 </div>
             </div>
+            <SecondaryExplainerModal open={explainerOpen} onClose={() => setExplainerOpen(false)} />
         </div>
     );
 }

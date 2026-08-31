@@ -8,6 +8,8 @@ import { useWishlist } from "../contexts/WishlistContext";
 import { useStoreData } from "../contexts/DataContext";
 import { NotifyMeDialog } from "./NotifyMeDialog";
 import { QuickViewModal } from "./QuickViewModal";
+import { SecondaryExplainerModal } from "./SecondaryExplainerModal";
+import { HelpCircle } from "lucide-react";
 import { apiRecordCartAdd } from "../lib/api";
 import { toast } from "sonner";
 
@@ -41,9 +43,21 @@ export const GameCard = ({ game }) => {
     const [imgError, setImgError] = useState(false);
     const [notifyOpen, setNotifyOpen] = useState(false);
     const [quickViewOpen, setQuickViewOpen] = useState(false);
+    const [explainerOpen, setExplainerOpen] = useState(false);
 
     const price  = game[tier];
     const favored = isFav(game.id);
+
+    const handleTierSelect = (t) => {
+        setTier(t);
+        if (t === "secondary") {
+            const seen = sessionStorage.getItem("dukkank_seen_secondary_tip");
+            if (!seen) {
+                setExplainerOpen(true);
+                sessionStorage.setItem("dukkank_seen_secondary_tip", "true");
+            }
+        }
+    };
 
     const handleAdd = () => {
         if (!canBuy || price == null) return;
@@ -158,7 +172,7 @@ export const GameCard = ({ game }) => {
                             {possibleTiers.map((t) => {
                                 const avail = game[t] != null;
                                 return (
-                                    <button key={t} onClick={() => avail && setTier(t)} disabled={!avail}
+                                    <button key={t} onClick={() => avail && handleTierSelect(t)} disabled={!avail}
                                         className={`text-xs font-black px-3.5 h-8 rounded-lg transition-all disabled:opacity-30 flex-shrink-0 active:scale-95 cursor-pointer ${
                                             tier === t && avail
                                                 ? "bg-[hsl(var(--brand-blue-deep))] text-white shadow-sm font-black"
@@ -224,6 +238,7 @@ export const GameCard = ({ game }) => {
             </div>
 
             <NotifyMeDialog open={notifyOpen} onOpenChange={setNotifyOpen} game={game} />
+            <SecondaryExplainerModal open={explainerOpen} onClose={() => setExplainerOpen(false)} />
         </article>
     );
 
@@ -292,7 +307,7 @@ export const GameCard = ({ game }) => {
                     {possibleTiers.map((t) => {
                         const avail = game[t] != null;
                         return (
-                            <button key={t} onClick={() => avail ? setTier(t) : null} disabled={!avail} data-testid={`game-${game.id}-tier-${t}`} data-selected={tier === t && avail}
+                            <button key={t} onClick={() => avail ? handleTierSelect(t) : null} disabled={!avail} data-testid={`game-${game.id}-tier-${t}`} data-selected={tier === t && avail}
                                 className="tier-pill text-xs sm:text-sm font-semibold rounded-lg border-2 border-[hsl(var(--brand-ink))]/15 h-11 transition-all disabled:opacity-35 disabled:cursor-not-allowed">
                                 {TIER_LABEL_FULL[t]}
                             </button>
