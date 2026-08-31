@@ -25,6 +25,8 @@ const blank = () => ({
     gradientTo: "#000000",
     four: "",
     five: "",
+    secondary: "",
+    cost: "",
     available: true,
     stockStatus: "available", // 'available' | 'low' | 'out'
     stockCount: 3,
@@ -37,6 +39,8 @@ const toForm = (g) => ({
     ...g,
     four: g.four == null ? "" : String(g.four),
     five: g.five == null ? "" : String(g.five),
+    secondary: g.secondary == null ? "" : String(g.secondary),
+    cost: g.cost == null ? "" : String(g.cost),
     hidden: !!g.hidden,
     stockStatus: g.available ? (g.stockStatus || "available") : "out",
     stockCount: g.stockCount != null ? Number(g.stockCount) : 3,
@@ -52,6 +56,8 @@ const toPayload = (f) => ({
     gradientTo: f.gradientTo || "#000000",
     four: numOrNull(f.four),
     five: numOrNull(f.five),
+    secondary: numOrNull(f.secondary),
+    cost: numOrNull(f.cost),
     available: f.stockStatus !== "out",
     stockStatus: f.stockStatus || (f.available ? "available" : "out"),
     stockCount: f.stockCount ? Number(f.stockCount) : 3,
@@ -725,6 +731,21 @@ Rules:
                                                 </div>
                                             </td>
 
+                                            {/* Column 4.5: Secondary Price Direct Input */}
+                                            <td className="p-3 text-center align-middle">
+                                                <div className="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded-xl border border-slate-200 dark:border-white/10">
+                                                    <span className="text-[11px] font-black text-amber-500">$</span>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        defaultValue={g.secondary ?? ""}
+                                                        onBlur={(e) => handleCellPriceChange(g, "secondary", e.target.value)}
+                                                        className="w-16 bg-transparent text-center font-black text-amber-600 dark:text-amber-400 text-xs focus:outline-none"
+                                                        placeholder="—"
+                                                    />
+                                                </div>
+                                            </td>
+
                                             {/* Column 5: Stock Selector & Custom Stock Count Input */}
                                             <td className="p-3 text-center align-middle">
                                                 <div className="flex flex-col items-center gap-1 justify-center">
@@ -963,7 +984,7 @@ Rules:
                                     <span>💰 أسعار حسابات بلايستيشن ($)</span>
                                 </h4>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div className="space-y-1 text-right">
                                         <label className="block text-xs font-bold text-blue-400">سعر حساب PS5 ($)</label>
                                         <input
@@ -971,8 +992,8 @@ Rules:
                                             step="0.01"
                                             value={editing.five ?? ""}
                                             onChange={(e) => setEditing({ ...editing, five: e.target.value })}
-                                            placeholder="52.00"
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-black text-emerald-400 focus:border-blue-500 focus:outline-none"
+                                            placeholder="38.50"
+                                            className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-black text-blue-400 focus:border-blue-500 focus:outline-none"
                                         />
                                     </div>
 
@@ -983,8 +1004,20 @@ Rules:
                                             step="0.01"
                                             value={editing.four ?? ""}
                                             onChange={(e) => setEditing({ ...editing, four: e.target.value })}
-                                            placeholder="38.00"
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-black text-emerald-400 focus:border-cyan-500 focus:outline-none"
+                                            placeholder="20.50 (أو فارغ إذا لا يوجد)"
+                                            className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-black text-cyan-400 focus:border-cyan-500 focus:outline-none"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1 text-right">
+                                        <label className="block text-xs font-bold text-amber-400">سعر حساب سكندري ($)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={editing.secondary ?? ""}
+                                            onChange={(e) => setEditing({ ...editing, secondary: e.target.value })}
+                                            placeholder="12.50"
+                                            className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-black text-amber-400 focus:border-amber-500 focus:outline-none"
                                         />
                                     </div>
                                 </div>

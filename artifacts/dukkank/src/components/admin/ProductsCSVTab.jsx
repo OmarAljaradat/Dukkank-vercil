@@ -8,8 +8,8 @@ const OVERRIDE_KEY = "product_overrides";
 
 function exportGamesCSV() {
     const rows = [
-        ["id", "name", "sub", "four", "five", "available", "bestSeller"],
-        ...GAMES.map((g) => [g.id, g.name, g.sub || "", g.four ?? "", g.five ?? "", g.available ? "true" : "false", g.bestSeller ? "true" : "false"]),
+        ["id", "name", "sub", "four", "five", "secondary", "cost", "available", "bestSeller"],
+        ...GAMES.map((g) => [g.id, g.name, g.sub || "", g.four ?? "", g.five ?? "", g.secondary ?? "", g.cost ?? "", g.available ? "true" : "false", g.bestSeller ? "true" : "false"]),
     ];
     const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
     const a   = document.createElement("a");
