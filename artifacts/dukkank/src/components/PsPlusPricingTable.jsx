@@ -213,7 +213,7 @@ export function PsPlusPricingTable() {
             return;
         }
 
-        const platformLabel = platform === "five" ? "PS5" : "PS4";
+        const platformLabel = platform === "five" ? "PS5" : platform === "four" ? "PS4" : "سكندري";
 
         add({
             key: `sub-${tier.id}-${platform}-${durObj.id}`,

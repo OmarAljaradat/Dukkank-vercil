@@ -51,11 +51,7 @@ export const GameCard = ({ game }) => {
     const handleTierSelect = (t) => {
         setTier(t);
         if (t === "secondary") {
-            const seen = sessionStorage.getItem("dukkank_seen_secondary_tip");
-            if (!seen) {
-                setExplainerOpen(true);
-                sessionStorage.setItem("dukkank_seen_secondary_tip", "true");
-            }
+            setExplainerOpen(true);
         }
     };
 
