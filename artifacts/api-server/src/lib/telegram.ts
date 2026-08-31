@@ -4,12 +4,24 @@ export interface TelegramConfig {
   enabled: boolean;
   botToken: string;
   chatId: string;
+  notifyCart?: boolean;
+  notifyCheckout?: boolean;
+  notifyWhatsApp?: boolean;
+  notifyGameClick?: boolean;
+  notifySearch?: boolean;
+  notifyPageView?: boolean;
 }
 
 const DEFAULT_CONFIG: TelegramConfig = {
   enabled: true,
   botToken: process.env.TELEGRAM_BOT_TOKEN || "",
   chatId: process.env.TELEGRAM_CHAT_ID || "",
+  notifyCart: true,
+  notifyCheckout: true,
+  notifyWhatsApp: true,
+  notifyGameClick: true,
+  notifySearch: false,
+  notifyPageView: false,
 };
 
 function escapeHtml(str: string): string {
@@ -19,11 +31,7 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
-let memoryConfig: TelegramConfig = {
-  enabled: true,
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  chatId: process.env.TELEGRAM_CHAT_ID || "",
-};
+let memoryConfig: TelegramConfig = { ...DEFAULT_CONFIG };
 
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   if (pool) {
@@ -37,6 +45,12 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
           enabled: cfg.enabled ?? true,
           botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
           chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || "",
+          notifyCart: cfg.notifyCart !== undefined ? !!cfg.notifyCart : true,
+          notifyCheckout: cfg.notifyCheckout !== undefined ? !!cfg.notifyCheckout : true,
+          notifyWhatsApp: cfg.notifyWhatsApp !== undefined ? !!cfg.notifyWhatsApp : true,
+          notifyGameClick: cfg.notifyGameClick !== undefined ? !!cfg.notifyGameClick : true,
+          notifySearch: cfg.notifySearch !== undefined ? !!cfg.notifySearch : false,
+          notifyPageView: cfg.notifyPageView !== undefined ? !!cfg.notifyPageView : false,
         };
         return memoryConfig;
       }
@@ -53,6 +67,12 @@ export async function saveTelegramConfig(cfg: Partial<TelegramConfig>): Promise<
     enabled: cfg.enabled !== undefined ? !!cfg.enabled : current.enabled,
     botToken: (cfg.botToken !== undefined ? cfg.botToken : current.botToken).trim(),
     chatId: (cfg.chatId !== undefined ? cfg.chatId : current.chatId).trim(),
+    notifyCart: cfg.notifyCart !== undefined ? !!cfg.notifyCart : (current.notifyCart ?? true),
+    notifyCheckout: cfg.notifyCheckout !== undefined ? !!cfg.notifyCheckout : (current.notifyCheckout ?? true),
+    notifyWhatsApp: cfg.notifyWhatsApp !== undefined ? !!cfg.notifyWhatsApp : (current.notifyWhatsApp ?? true),
+    notifyGameClick: cfg.notifyGameClick !== undefined ? !!cfg.notifyGameClick : (current.notifyGameClick ?? true),
+    notifySearch: cfg.notifySearch !== undefined ? !!cfg.notifySearch : (current.notifySearch ?? false),
+    notifyPageView: cfg.notifyPageView !== undefined ? !!cfg.notifyPageView : (current.notifyPageView ?? false),
   };
 
   memoryConfig = { ...updated };
@@ -112,7 +132,7 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
       body: JSON.stringify(payload),
     });
 
-    let data = await res.json();
+    let data: any = await res.json();
 
     if (!data.ok) {
       console.warn("Telegram send failed, retrying plain text:", data.description);
@@ -135,126 +155,109 @@ export async function sendTelegramMessage(text: string, inlineKeyboard?: Array<A
   }
 }
 
+export async function sendTelegramActivityNotification(event: {
+  sessionId: string;
+  eventType: string;
+  eventTitle: string;
+  eventData?: any;
+  pageUrl?: string;
+  deviceInfo?: string;
+  ipAddress?: string;
+}) {
+  const config = await getTelegramConfig();
+  if (!config.enabled || !config.botToken || !config.chatId) return { ok: false, reason: "disabled" };
+
+  const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
+
+  // Filter check based on admin config preferences
+  if (eventType === "add_to_cart" && config.notifyCart === false) return { ok: false };
+  if (eventType === "checkout_start" && config.notifyCheckout === false) return { ok: false };
+  if (eventType === "whatsapp_click" && config.notifyWhatsApp === false) return { ok: false };
+  if (eventType === "game_click" && config.notifyGameClick === false) return { ok: false };
+  if (eventType === "search" && !config.notifySearch) return { ok: false };
+  if (eventType === "page_view" && !config.notifyPageView) return { ok: false };
+
+  let icon = "👀";
+  let actionName = eventTitle || "نشاط جديد";
+  if (eventType === "add_to_cart") { icon = "🛒"; actionName = "إضافة منتج إلى السلة"; }
+  else if (eventType === "checkout_start") { icon = "💳"; actionName = "بدء تعبئة بيانات الشراء والدفع"; }
+  else if (eventType === "whatsapp_click") { icon = "💬"; actionName = "نقرة على زر الواتساب / الدعم الفني"; }
+  else if (eventType === "game_click") { icon = "🎮"; actionName = "تصفح واختيار لعبة"; }
+  else if (eventType === "search") { icon = "🔍"; actionName = "بحث في المتجر"; }
+  else if (eventType === "secondary_explainer") { icon = "ℹ️"; actionName = "استعراض شرح حساب السكندري"; }
+
+  const timeStr = new Date().toLocaleTimeString("ar-JO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  let dataLines = "";
+  if (eventData) {
+    if (eventData.gameName) dataLines += `\n🎮 <b>اللعبة:</b> ${escapeHtml(eventData.gameName)}`;
+    if (eventData.tier) dataLines += `\n🏷️ <b>الفئة:</b> ${escapeHtml(eventData.tier)}`;
+    if (eventData.price) dataLines += `\n💰 <b>السعر:</b> $${eventData.price}`;
+    if (eventData.cartTotal) dataLines += `\n💵 <b>مجموع السلة:</b> $${eventData.cartTotal}`;
+    if (eventData.itemsCount) dataLines += `\n📦 <b>عدد المنتجات:</b> ${eventData.itemsCount}`;
+    if (eventData.query) dataLines += `\n🔎 <b>عبارة البحث:</b> <code>${escapeHtml(eventData.query)}</code>`;
+    if (eventData.source) dataLines += `\n📍 <b>المصدر:</b> ${escapeHtml(eventData.source)}`;
+  }
+
+  const msg = `${icon} <b>رادار زوار متجر دُكانك 📡</b>
+━━━━━━━━━━━━━━━━━
+📍 <b>الحدث:</b> ${escapeHtml(actionName)}${dataLines}
+📱 <b>الجهاز:</b> ${escapeHtml(deviceInfo || "متصفح ويب")}
+🌐 <b>الصفحة:</b> <code>${escapeHtml(pageUrl || "/")}</code>
+⏱️ <b>التوقيت:</b> ${timeStr}`;
+
+  return await sendTelegramMessage(msg);
+}
+
 export async function sendTelegramOrderNotification(order: any) {
   try {
     const orderNum = order.order_number || `#${order.id}`;
-    const customerName = escapeHtml(order.customer_name || "عميل دُكانك");
-    const cleanPhone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
-    const rawPhone = escapeHtml(order.customer_phone || order.contact_whatsapp || "غير محدد");
-    const igRaw = (order.contact_instagram || "").replace(/^@/, "").trim();
-    const game = escapeHtml(order.game_name || order.subscription_type || order.product_type || "منتج رقمي");
-    const platform = order.platform ? escapeHtml(`(${order.platform})`) : "";
-    const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "—";
-    const payment = escapeHtml(order.payment_platform || "دفع إلكتروني");
+    const custName = order.customer_name || "عميل المتجر";
+    const custPhone = order.customer_phone || order.contact_whatsapp || "غير محدد";
+    const custInsta = order.contact_instagram ? `@${order.contact_instagram.replace(/^@/, "")}` : null;
+    const paid = parseFloat(order.customer_paid || "0").toFixed(2);
+    const itemTitle = order.game_name || order.subscription_type || order.product_type || "منتج رقمي";
+    const platform = order.platform ? `[${order.platform}]` : "";
+    const pMethod = order.payment_platform ? `${order.payment_platform} 💳` : "بطاقة بنكية 💳";
 
-    let suppliers: Array<{ id: number; name: string; phone: string }> = [];
-    if (pool) {
-      try {
-        const { rows } = await pool.query(
-          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 3"
-        );
-        suppliers = rows;
-      } catch (_) {}
-    }
+    const messageHtml = `
+🚀 <b>طلب جديد في دُكانك!</b>
+━━━━━━━━━━━━━━━━━
+📦 <b>رقم الطلب:</b> <code>${escapeHtml(orderNum)}</code>
+👤 <b>العميل:</b> ${escapeHtml(custName)}
+📞 <b>الهاتف:</b> <code>${escapeHtml(custPhone)}</code>${custInsta ? `\n📸 <b>إنستغرام:</b> ${escapeHtml(custInsta)}` : ""}
+🎮 <b>المنتج:</b> ${escapeHtml(itemTitle)} ${escapeHtml(platform)}
+💰 <b>المبلغ المدفوع:</b> <b>$${paid}</b> (${escapeHtml(pMethod)})
+━━━━━━━━━━━━━━━━━
+⚡ <i>تم استلام الطلب وتأكيد الدفع بنجاح.</i>
+    `.trim();
 
-    if (suppliers.length === 0) {
-      suppliers = [{ id: 1, name: "المورد المعتمد", phone: "962775585112" }];
-    }
+    const inlineButtons: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [];
 
-    let customTemplate = `السلام عليكم أخي {supplier_name} 👋
-طلب حساب جديد من متجر دُكانك 🎮:
-
-🏷️ اللعبة / المنتج: *{game_name}* ({platform})
-📦 رقم الطلب: *#{order_number}*
-
-يرجى تجهيز بيانات الحساب (الإيميل، الباسوورد، أكواد الأمان) والتكلفة وإرسالها أول ما يجهز ⚡`;
-
-    if (pool) {
-      try {
-        const { rows: tRows } = await pool.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
-        if (tRows.length > 0 && tRows[0].value) {
-          const val = typeof tRows[0].value === "string" ? JSON.parse(tRows[0].value) : tRows[0].value;
-          if (val.template) customTemplate = val.template;
-        }
-      } catch (_) {}
-    }
-
-    const formatSupplierMessage = (supName: string) => {
-      const t = customTemplate
-        .replace(/\{supplier_name\}/g, supName)
-        .replace(/\{game_name\}/g, order.game_name || order.product_type || "منتج")
-        .replace(/\{platform\}/g, order.platform || "PS5")
-        .replace(/\{order_number\}/g, String(orderNum).replace(/^#/, ""))
-        .replace(/\{customer_name\}/g, order.customer_name || "عميل")
-        .replace(/\{paid\}/g, paid);
-      return encodeURIComponent(t);
-    };
-
-    const qrRequestText = encodeURIComponent(
-      `مرحباً أخي ${order.customer_name || "العميل"} 🎮\nشكراً لشرائك من متجر دُكانك ⚡\n\nلتسليم وتفعيل طلبك (${order.game_name || "الطلب"}) فوراً:\nيرجى فتح شاشة السوني واختيار (تسجيل الدخول عبر كود QR) وتصوير الكود وإرساله لنا هنا 📸`
-    );
-
-    const messageHtml = `🔥 <b>طلب شراء جديد #${escapeHtml(orderNum)}</b>
-
-🎮 <b>المنتج:</b> <b>${game}</b> ${platform}
-👤 <b>العميل:</b> <b>${customerName}</b>
-📱 <b>الهاتف:</b> <code>${rawPhone}</code>
-${igRaw ? `📸 <b>إنستغرام:</b> @${escapeHtml(igRaw)}\n` : ""}💰 <b>المبلغ المدفوع:</b> <b>${paid}</b> (${payment})
-
-──────────────────
-<b>📋 مراحل تنفيذ الطلب بالترتيب:</b>
-
-<b>1️⃣ المرحلة الأولى: إرسال الطلب للمورد</b>
-إرسال بيانات اللعبة للمورد على الواتساب لمعرفة التكلفة وتجهيز الحساب.
-
-<b>2️⃣ المرحلة الثانية: استلام وتسجيل بيانات الحساب</b>
-تسجيل إيميل وباسوورد الحساب وأكواد الأمان والتكلفة بالموقع.
-
-<b>3️⃣ المرحلة الثالثة: تسليم العميل وإكمال الطلب</b>
-طلب كود الدخول (QR) عبر واتساب أو إنستغرام وتسليم الحساب للعميل.`;
-
-    const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
-
-    // 1️⃣ STEP 1: Suppliers Forwarding
-    suppliers.forEach((sup) => {
-      const supClean = (sup.phone || "").replace(/\D/g, "");
-      if (supClean && supClean.length >= 8) {
-        inlineButtons.push([
-          {
-            text: `1️⃣ 🚚 إرسال للمورد: ${sup.name} (واتساب)`,
-            url: `https://wa.me/${supClean}?text=${formatSupplierMessage(sup.name)}`,
-          },
-        ]);
+    const actionRow: Array<{ text: string; url?: string; callback_data?: string }> = [];
+    if (order.contact_whatsapp || order.customer_phone) {
+      const cleanPhone = (order.contact_whatsapp || order.customer_phone).replace(/\D/g, "");
+      if (cleanPhone) {
+        actionRow.push({
+          text: "💬 واتساب العميل",
+          url: `https://wa.me/${cleanPhone}`,
+        });
       }
-    });
-
-    // 2️⃣ STEP 2: Enter Account Credentials in Website
-    inlineButtons.push([
-      {
-        text: `2️⃣ 📝 تسجيل بيانات الحساب والتكلفة بالموقع`,
-        url: `https://www.dukkank.store/admin/orders`,
-      },
-    ]);
-
-    // 3️⃣ STEP 3: Customer Communication & Delivery
-    const customerButtons: Array<{ text: string; url: string }> = [];
-    if (igRaw) {
-      customerButtons.push({
-        text: `3️⃣ 📸 إنستغرام العميل`,
-        url: `https://instagram.com/${igRaw}`,
-      });
     }
-    if (cleanPhone && cleanPhone.length >= 8) {
-      customerButtons.push({
-        text: `3️⃣ 📲 واتساب العميل (طلب QR)`,
-        url: `https://wa.me/${cleanPhone}?text=${qrRequestText}`,
-      });
+    if (order.contact_instagram) {
+      const cleanInsta = order.contact_instagram.replace(/^@/, "").trim();
+      if (cleanInsta) {
+        actionRow.push({
+          text: "📸 إنستغرام العميل",
+          url: `https://instagram.com/${cleanInsta}`,
+        });
+      }
     }
-    if (customerButtons.length > 0) inlineButtons.push(customerButtons);
+    if (actionRow.length > 0) inlineButtons.push(actionRow);
 
     return await sendTelegramMessage(messageHtml, inlineButtons);
-  } catch (e: any) {
+  } catch (e) {
     console.error("Failed to format/send Telegram order notification:", e);
-    return { ok: false, error: e.message };
+    return { ok: false, error: e };
   }
 }

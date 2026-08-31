@@ -46790,37 +46790,336 @@ router4.get("/admin/insights", async (req, res) => {
 });
 var insights_default = router4;
 
-// artifacts/api-server/src/routes/visitors.ts
-var pool4 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
-var router5 = (0, import_express5.Router)();
-var TTL_MS = 2 * 60 * 1e3;
-var sessions = /* @__PURE__ */ new Map();
-async function initSessions() {
+// artifacts/api-server/src/lib/db.ts
+var FALLBACK_B64 = "cG9zdGdyZXNxbDovL25lb25kYl9vd25lcjpucGdfd0NNQThXZEJTYzVzQGVwLXJlc3RsZXNzLXRyZWUtYjIwaXQyNGgtcG9vbGVyLmMtNi5ldS1jZW50cmFsLTEuYXdzLm5lb24udGVjaC9uZW9uZGI/c3NsbW9kZT1yZXF1aXJl";
+function getDatabaseUrl() {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  if (process.env.POSTGRES_URL) return process.env.POSTGRES_URL;
   try {
-    await pool4.query(`CREATE TABLE IF NOT EXISTS visitor_sessions (
+    return Buffer.from(FALLBACK_B64, "base64").toString("utf-8");
+  } catch {
+    return "";
+  }
+}
+var pool4 = new esm_default.Pool({
+  connectionString: getDatabaseUrl()
+});
+
+// artifacts/api-server/src/lib/telegram.ts
+var DEFAULT_CONFIG = {
+  enabled: true,
+  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+  chatId: process.env.TELEGRAM_CHAT_ID || "",
+  notifyCart: true,
+  notifyCheckout: true,
+  notifyWhatsApp: true,
+  notifyGameClick: true,
+  notifySearch: false,
+  notifyPageView: false
+};
+function escapeHtml(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+var memoryConfig = { ...DEFAULT_CONFIG };
+async function getTelegramConfig() {
+  if (pool4) {
+    try {
+      const { rows } = await pool4.query(
+        `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
+      );
+      if (rows.length > 0 && rows[0].value) {
+        const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
+        memoryConfig = {
+          enabled: cfg.enabled ?? true,
+          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
+          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || "",
+          notifyCart: cfg.notifyCart !== void 0 ? !!cfg.notifyCart : true,
+          notifyCheckout: cfg.notifyCheckout !== void 0 ? !!cfg.notifyCheckout : true,
+          notifyWhatsApp: cfg.notifyWhatsApp !== void 0 ? !!cfg.notifyWhatsApp : true,
+          notifyGameClick: cfg.notifyGameClick !== void 0 ? !!cfg.notifyGameClick : true,
+          notifySearch: cfg.notifySearch !== void 0 ? !!cfg.notifySearch : false,
+          notifyPageView: cfg.notifyPageView !== void 0 ? !!cfg.notifyPageView : false
+        };
+        return memoryConfig;
+      }
+    } catch (e) {
+      console.warn("Could not load telegram_config from DB:", e);
+    }
+  }
+  return memoryConfig;
+}
+async function saveTelegramConfig(cfg) {
+  const current = await getTelegramConfig();
+  const updated = {
+    enabled: cfg.enabled !== void 0 ? !!cfg.enabled : current.enabled,
+    botToken: (cfg.botToken !== void 0 ? cfg.botToken : current.botToken).trim(),
+    chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim(),
+    notifyCart: cfg.notifyCart !== void 0 ? !!cfg.notifyCart : current.notifyCart ?? true,
+    notifyCheckout: cfg.notifyCheckout !== void 0 ? !!cfg.notifyCheckout : current.notifyCheckout ?? true,
+    notifyWhatsApp: cfg.notifyWhatsApp !== void 0 ? !!cfg.notifyWhatsApp : current.notifyWhatsApp ?? true,
+    notifyGameClick: cfg.notifyGameClick !== void 0 ? !!cfg.notifyGameClick : current.notifyGameClick ?? true,
+    notifySearch: cfg.notifySearch !== void 0 ? !!cfg.notifySearch : current.notifySearch ?? false,
+    notifyPageView: cfg.notifyPageView !== void 0 ? !!cfg.notifyPageView : current.notifyPageView ?? false
+  };
+  memoryConfig = { ...updated };
+  if (pool4) {
+    try {
+      await pool4.query(
+        `INSERT INTO store_config (key, value, updated_at)
+         VALUES ('telegram_config', $1, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+        [JSON.stringify(updated)]
+      );
+    } catch (e) {
+      console.error("Failed to save telegram config:", e);
+    }
+  }
+  return updated;
+}
+async function sendTelegramMessage(text, inlineKeyboard) {
+  const config = await getTelegramConfig();
+  if (!config.enabled || !config.botToken || !config.chatId) {
+    return { ok: false, reason: "Telegram bot not configured or disabled" };
+  }
+  try {
+    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    const sanitizedKeyboard = [];
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      inlineKeyboard.forEach((row) => {
+        const validRow = row.filter((btn) => {
+          if (btn.url) {
+            return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(btn.url);
+          }
+          return !!btn.callback_data;
+        });
+        if (validRow.length > 0) sanitizedKeyboard.push(validRow);
+      });
+    }
+    const payload = {
+      chat_id: config.chatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: false
+    };
+    if (sanitizedKeyboard.length > 0) {
+      payload.reply_markup = { inline_keyboard: sanitizedKeyboard };
+    }
+    let res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    let data = await res.json();
+    if (!data.ok) {
+      console.warn("Telegram send failed, retrying plain text:", data.description);
+      const plainText = text.replace(/<[^>]+>/g, "");
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: config.chatId,
+          text: plainText
+        })
+      });
+      data = await res.json();
+    }
+    return data;
+  } catch (err) {
+    console.error("Telegram notification error:", err);
+    return { ok: false, error: err.message };
+  }
+}
+async function sendTelegramActivityNotification(event) {
+  const config = await getTelegramConfig();
+  if (!config.enabled || !config.botToken || !config.chatId) return { ok: false, reason: "disabled" };
+  const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
+  if (eventType === "add_to_cart" && config.notifyCart === false) return { ok: false };
+  if (eventType === "checkout_start" && config.notifyCheckout === false) return { ok: false };
+  if (eventType === "whatsapp_click" && config.notifyWhatsApp === false) return { ok: false };
+  if (eventType === "game_click" && config.notifyGameClick === false) return { ok: false };
+  if (eventType === "search" && !config.notifySearch) return { ok: false };
+  if (eventType === "page_view" && !config.notifyPageView) return { ok: false };
+  let icon = "\u{1F440}";
+  let actionName = eventTitle || "\u0646\u0634\u0627\u0637 \u062C\u062F\u064A\u062F";
+  if (eventType === "add_to_cart") {
+    icon = "\u{1F6D2}";
+    actionName = "\u0625\u0636\u0627\u0641\u0629 \u0645\u0646\u062A\u062C \u0625\u0644\u0649 \u0627\u0644\u0633\u0644\u0629";
+  } else if (eventType === "checkout_start") {
+    icon = "\u{1F4B3}";
+    actionName = "\u0628\u062F\u0621 \u062A\u0639\u0628\u0626\u0629 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0634\u0631\u0627\u0621 \u0648\u0627\u0644\u062F\u0641\u0639";
+  } else if (eventType === "whatsapp_click") {
+    icon = "\u{1F4AC}";
+    actionName = "\u0646\u0642\u0631\u0629 \u0639\u0644\u0649 \u0632\u0631 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628 / \u0627\u0644\u062F\u0639\u0645 \u0627\u0644\u0641\u0646\u064A";
+  } else if (eventType === "game_click") {
+    icon = "\u{1F3AE}";
+    actionName = "\u062A\u0635\u0641\u062D \u0648\u0627\u062E\u062A\u064A\u0627\u0631 \u0644\u0639\u0628\u0629";
+  } else if (eventType === "search") {
+    icon = "\u{1F50D}";
+    actionName = "\u0628\u062D\u062B \u0641\u064A \u0627\u0644\u0645\u062A\u062C\u0631";
+  } else if (eventType === "secondary_explainer") {
+    icon = "\u2139\uFE0F";
+    actionName = "\u0627\u0633\u062A\u0639\u0631\u0627\u0636 \u0634\u0631\u062D \u062D\u0633\u0627\u0628 \u0627\u0644\u0633\u0643\u0646\u062F\u0631\u064A";
+  }
+  const timeStr = (/* @__PURE__ */ new Date()).toLocaleTimeString("ar-JO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  let dataLines = "";
+  if (eventData) {
+    if (eventData.gameName) dataLines += `
+\u{1F3AE} <b>\u0627\u0644\u0644\u0639\u0628\u0629:</b> ${escapeHtml(eventData.gameName)}`;
+    if (eventData.tier) dataLines += `
+\u{1F3F7}\uFE0F <b>\u0627\u0644\u0641\u0626\u0629:</b> ${escapeHtml(eventData.tier)}`;
+    if (eventData.price) dataLines += `
+\u{1F4B0} <b>\u0627\u0644\u0633\u0639\u0631:</b> $${eventData.price}`;
+    if (eventData.cartTotal) dataLines += `
+\u{1F4B5} <b>\u0645\u062C\u0645\u0648\u0639 \u0627\u0644\u0633\u0644\u0629:</b> $${eventData.cartTotal}`;
+    if (eventData.itemsCount) dataLines += `
+\u{1F4E6} <b>\u0639\u062F\u062F \u0627\u0644\u0645\u0646\u062A\u062C\u0627\u062A:</b> ${eventData.itemsCount}`;
+    if (eventData.query) dataLines += `
+\u{1F50E} <b>\u0639\u0628\u0627\u0631\u0629 \u0627\u0644\u0628\u062D\u062B:</b> <code>${escapeHtml(eventData.query)}</code>`;
+    if (eventData.source) dataLines += `
+\u{1F4CD} <b>\u0627\u0644\u0645\u0635\u062F\u0631:</b> ${escapeHtml(eventData.source)}`;
+  }
+  const msg = `${icon} <b>\u0631\u0627\u062F\u0627\u0631 \u0632\u0648\u0627\u0631 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F4E1}</b>
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u{1F4CD} <b>\u0627\u0644\u062D\u062F\u062B:</b> ${escapeHtml(actionName)}${dataLines}
+\u{1F4F1} <b>\u0627\u0644\u062C\u0647\u0627\u0632:</b> ${escapeHtml(deviceInfo || "\u0645\u062A\u0635\u0641\u062D \u0648\u064A\u0628")}
+\u{1F310} <b>\u0627\u0644\u0635\u0641\u062D\u0629:</b> <code>${escapeHtml(pageUrl || "/")}</code>
+\u23F1\uFE0F <b>\u0627\u0644\u062A\u0648\u0642\u064A\u062A:</b> ${timeStr}`;
+  return await sendTelegramMessage(msg);
+}
+async function sendTelegramOrderNotification(order) {
+  try {
+    const orderNum = order.order_number || `#${order.id}`;
+    const custName = order.customer_name || "\u0639\u0645\u064A\u0644 \u0627\u0644\u0645\u062A\u062C\u0631";
+    const custPhone = order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F";
+    const custInsta = order.contact_instagram ? `@${order.contact_instagram.replace(/^@/, "")}` : null;
+    const paid = parseFloat(order.customer_paid || "0").toFixed(2);
+    const itemTitle = order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A";
+    const platform = order.platform ? `[${order.platform}]` : "";
+    const pMethod = order.payment_platform ? `${order.payment_platform} \u{1F4B3}` : "\u0628\u0637\u0627\u0642\u0629 \u0628\u0646\u0643\u064A\u0629 \u{1F4B3}";
+    const messageHtml = `
+\u{1F680} <b>\u0637\u0644\u0628 \u062C\u062F\u064A\u062F \u0641\u064A \u062F\u064F\u0643\u0627\u0646\u0643!</b>
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u{1F4E6} <b>\u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628:</b> <code>${escapeHtml(orderNum)}</code>
+\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> ${escapeHtml(custName)}
+\u{1F4DE} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${escapeHtml(custPhone)}</code>${custInsta ? `
+\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> ${escapeHtml(custInsta)}` : ""}
+\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> ${escapeHtml(itemTitle)} ${escapeHtml(platform)}
+\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>$${paid}</b> (${escapeHtml(pMethod)})
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\u26A1 <i>\u062A\u0645 \u0627\u0633\u062A\u0644\u0627\u0645 \u0627\u0644\u0637\u0644\u0628 \u0648\u062A\u0623\u0643\u064A\u062F \u0627\u0644\u062F\u0641\u0639 \u0628\u0646\u062C\u0627\u062D.</i>
+    `.trim();
+    const inlineButtons = [];
+    const actionRow = [];
+    if (order.contact_whatsapp || order.customer_phone) {
+      const cleanPhone = (order.contact_whatsapp || order.customer_phone).replace(/\D/g, "");
+      if (cleanPhone) {
+        actionRow.push({
+          text: "\u{1F4AC} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644",
+          url: `https://wa.me/${cleanPhone}`
+        });
+      }
+    }
+    if (order.contact_instagram) {
+      const cleanInsta = order.contact_instagram.replace(/^@/, "").trim();
+      if (cleanInsta) {
+        actionRow.push({
+          text: "\u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644",
+          url: `https://instagram.com/${cleanInsta}`
+        });
+      }
+    }
+    if (actionRow.length > 0) inlineButtons.push(actionRow);
+    return await sendTelegramMessage(messageHtml, inlineButtons);
+  } catch (e) {
+    console.error("Failed to format/send Telegram order notification:", e);
+    return { ok: false, error: e };
+  }
+}
+
+// artifacts/api-server/src/routes/visitors.ts
+var pool5 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var router5 = (0, import_express5.Router)();
+var TTL_MS = 3 * 60 * 1e3;
+var sessions = /* @__PURE__ */ new Map();
+var memoryEvents = [];
+var MAX_MEMORY_EVENTS = 500;
+function pushMemoryEvent(event) {
+  memoryEvents.unshift(event);
+  if (memoryEvents.length > MAX_MEMORY_EVENTS) {
+    memoryEvents.pop();
+  }
+}
+async function initSessionsAndEvents() {
+  try {
+    await pool5.query(`CREATE TABLE IF NOT EXISTS visitor_sessions (
       session_id TEXT PRIMARY KEY,
       last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       source     TEXT DEFAULT 'direct',
-      ip         TEXT DEFAULT ''
+      ip         TEXT DEFAULT '',
+      device_info TEXT DEFAULT ''
     )`);
+    await pool5.query(`CREATE TABLE IF NOT EXISTS visitor_events (
+      id BIGSERIAL PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      event_title TEXT NOT NULL,
+      event_data JSONB,
+      page_url TEXT,
+      device_info TEXT,
+      ip TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    await pool5.query(`CREATE INDEX IF NOT EXISTS idx_visitor_events_created ON visitor_events (created_at DESC)`);
     const cutoff = new Date(Date.now() - TTL_MS).toISOString();
-    const { rows } = await pool4.query(
-      "SELECT session_id, EXTRACT(EPOCH FROM last_seen)*1000 AS ts FROM visitor_sessions WHERE last_seen > $1",
+    const { rows } = await pool5.query(
+      "SELECT session_id, EXTRACT(EPOCH FROM last_seen)*1000 AS ts, source, ip, device_info FROM visitor_sessions WHERE last_seen > $1",
       [cutoff]
     );
-    for (const r of rows) sessions.set(r.session_id, Number(r.ts));
-  } catch (_) {
+    for (const r of rows) {
+      sessions.set(r.session_id, {
+        lastSeen: Number(r.ts),
+        source: r.source || "direct",
+        ip: r.ip || "",
+        deviceInfo: r.device_info || ""
+      });
+    }
+    const { rows: dbEvents } = await pool5.query(
+      "SELECT id, session_id, event_type, event_title, event_data, page_url, device_info, ip, created_at FROM visitor_events ORDER BY created_at DESC LIMIT 100"
+    );
+    for (const d of dbEvents) {
+      memoryEvents.push({
+        id: String(d.id),
+        sessionId: d.session_id,
+        eventType: d.event_type,
+        eventTitle: d.event_title,
+        eventData: d.event_data,
+        pageUrl: d.page_url,
+        deviceInfo: d.device_info,
+        ip: d.ip,
+        createdAt: d.created_at ? new Date(d.created_at).toISOString() : (/* @__PURE__ */ new Date()).toISOString()
+      });
+    }
+  } catch (e) {
+    console.warn("Visitors DB init notice:", e);
   }
 }
-initSessions();
+initSessionsAndEvents();
 function prune() {
   const now = Date.now();
-  for (const [id, ts] of sessions) {
-    if (now - ts > TTL_MS) sessions.delete(id);
+  for (const [id, s] of sessions) {
+    if (now - s.lastSeen > TTL_MS) sessions.delete(id);
   }
 }
 function getClientIP(req) {
   return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "";
+}
+function requireAdmin(req, res) {
+  const email = verifyToken(req.headers.authorization);
+  if (!email) {
+    res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D - \u064A\u0631\u062C\u0649 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0643\u0645\u0633\u0624\u0648\u0644" });
+    return false;
+  }
+  return true;
 }
 router5.post("/visitors/heartbeat", (req, res) => {
   const ip = getClientIP(req);
@@ -46834,14 +47133,20 @@ router5.post("/visitors/heartbeat", (req, res) => {
     return;
   }
   const isNew = !sessions.has(sid);
-  sessions.set(sid, Date.now());
-  prune();
   const source = String(req.body?.source || "direct").slice(0, 64);
-  pool4.query(
-    `INSERT INTO visitor_sessions (session_id, last_seen, source, ip)
-     VALUES ($1, NOW(), $2, $3)
-     ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()`,
-    [sid, source, ip]
+  const deviceInfo = String(req.body?.deviceInfo || "").slice(0, 100);
+  sessions.set(sid, {
+    lastSeen: Date.now(),
+    source,
+    ip,
+    deviceInfo
+  });
+  prune();
+  pool5.query(
+    `INSERT INTO visitor_sessions (session_id, last_seen, source, ip, device_info)
+     VALUES ($1, NOW(), $2, $3, $4)
+     ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW(), device_info = COALESCE(NULLIF($4, ''), visitor_sessions.device_info)`,
+    [sid, source, ip, deviceInfo]
   ).catch(() => {
   });
   if (isNew) {
@@ -46854,13 +47159,214 @@ router5.get("/visitors/count", (_req, res) => {
   prune();
   res.json({ online: sessions.size });
 });
+async function handleTrack(req, res) {
+  try {
+    const ip = getClientIP(req);
+    if (ip && isBlocked(ip)) {
+      res.status(403).json({ blocked: true });
+      return;
+    }
+    const {
+      sessionId = `v_${Date.now()}`,
+      eventType = "general",
+      eventTitle = "\u0646\u0634\u0627\u0637",
+      eventData = {},
+      pageUrl = "/",
+      deviceInfo = "\u0645\u062A\u0635\u0641\u062D \u0648\u064A\u0628"
+    } = req.body || {};
+    const sid = String(sessionId).slice(0, 128);
+    const type = String(eventType).slice(0, 50);
+    const title = String(eventTitle).slice(0, 200);
+    const url = String(pageUrl).slice(0, 255);
+    const device = String(deviceInfo).slice(0, 150);
+    sessions.set(sid, {
+      lastSeen: Date.now(),
+      source: eventData?.source || "direct",
+      ip,
+      deviceInfo: device
+    });
+    prune();
+    const newEvent = {
+      id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      sessionId: sid,
+      eventType: type,
+      eventTitle: title,
+      eventData,
+      pageUrl: url,
+      deviceInfo: device,
+      ip,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    pushMemoryEvent(newEvent);
+    pool5.query(
+      `INSERT INTO visitor_events (session_id, event_type, event_title, event_data, page_url, device_info, ip)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [sid, type, title, JSON.stringify(eventData), url, device, ip]
+    ).catch(() => {
+    });
+    sendTelegramActivityNotification({
+      sessionId: sid,
+      eventType: type,
+      eventTitle: title,
+      eventData,
+      pageUrl: url,
+      deviceInfo: device,
+      ipAddress: ip
+    }).catch((err) => console.warn("Telegram activity notify error:", err));
+    res.json({ ok: true, online: sessions.size });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+router5.post("/track", handleTrack);
+router5.post("/visitors/track", handleTrack);
+router5.get("/admin/visitor-events", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 100, 200);
+    const filterType = req.query.type;
+    try {
+      let query = "SELECT id, session_id, event_type, event_title, event_data, page_url, device_info, ip, created_at FROM visitor_events";
+      const params = [];
+      if (filterType && filterType !== "all") {
+        query += " WHERE event_type = $1";
+        params.push(filterType);
+      }
+      query += ` ORDER BY created_at DESC LIMIT $${params.length + 1}`;
+      params.push(limit);
+      const { rows } = await pool5.query(query, params);
+      const events = rows.map((d) => ({
+        id: String(d.id),
+        sessionId: d.session_id,
+        eventType: d.event_type,
+        eventTitle: d.event_title,
+        eventData: d.event_data,
+        pageUrl: d.page_url,
+        deviceInfo: d.device_info,
+        ip: d.ip,
+        createdAt: d.created_at
+      }));
+      prune();
+      res.json({
+        events,
+        onlineCount: sessions.size,
+        activeSessions: Array.from(sessions.entries()).map(([id, data]) => ({
+          sessionId: id,
+          ...data
+        }))
+      });
+      return;
+    } catch (_) {
+      let events = memoryEvents;
+      if (filterType && filterType !== "all") {
+        events = events.filter((e) => e.eventType === filterType);
+      }
+      prune();
+      res.json({
+        events: events.slice(0, limit),
+        onlineCount: sessions.size,
+        activeSessions: Array.from(sessions.entries()).map(([id, data]) => ({
+          sessionId: id,
+          ...data
+        }))
+      });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+router5.get("/admin/visitor-stats", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    prune();
+    const online = sessions.size;
+    let totalToday = 0;
+    let typeBreakdown = {};
+    try {
+      const { rows: todayRows } = await pool5.query(
+        "SELECT event_type, COUNT(*) as count FROM visitor_events WHERE created_at > NOW() - INTERVAL '24 hours' GROUP BY event_type"
+      );
+      for (const r of todayRows) {
+        typeBreakdown[r.event_type] = parseInt(r.count);
+        totalToday += parseInt(r.count);
+      }
+    } catch (_) {
+      memoryEvents.forEach((e) => {
+        typeBreakdown[e.eventType] = (typeBreakdown[e.eventType] || 0) + 1;
+        totalToday++;
+      });
+    }
+    res.json({
+      online,
+      totalToday,
+      typeBreakdown
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+router5.delete("/admin/visitor-events", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    memoryEvents.length = 0;
+    await pool5.query("TRUNCATE TABLE visitor_events").catch(() => {
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+router5.get("/admin/telegram/tracking-config", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const cfg = await getTelegramConfig();
+    res.json(cfg);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+router5.put("/admin/telegram/tracking-config", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const updated = await saveTelegramConfig(req.body || {});
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+router5.post("/admin/telegram/test-activity", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const result = await sendTelegramActivityNotification({
+      sessionId: "test_admin_session",
+      eventType: "add_to_cart",
+      eventTitle: "\u0625\u0636\u0627\u0641\u0629 \u0644\u0639\u0628\u0629 \u0625\u0644\u0649 \u0627\u0644\u0633\u0644\u0629 (\u0641\u062D\u0635 \u062A\u062C\u0631\u064A\u0628\u064A)",
+      eventData: {
+        gameName: "Grand Theft Auto VI (GTA 6)",
+        tier: "\u0633\u0643\u0646\u062F\u0631\u064A (\u0627\u0644\u0644\u0639\u0628 \u0645\u0646 \u0627\u0644\u062D\u0633\u0627\u0628 \u0646\u0641\u0633\u0647)",
+        price: "26.00",
+        cartTotal: "26.00",
+        itemsCount: 1
+      },
+      pageUrl: "/",
+      deviceInfo: "\u0647\u0627\u062A\u0641 iPhone 16 Pro (Safari)"
+    });
+    if (result.ok) {
+      res.json({ ok: true, message: "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0625\u0634\u0639\u0627\u0631 \u0627\u0644\u0631\u0627\u062F\u0627\u0631 \u0627\u0644\u062A\u062C\u0631\u064A\u0628\u064A \u0625\u0644\u0649 \u0627\u0644\u062A\u064A\u0644\u064A\u062C\u0631\u0627\u0645 \u0628\u0646\u062C\u0627\u062D! \u{1F4F2}" });
+    } else {
+      res.status(400).json({ error: result.reason || result.error || "\u0641\u0634\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 - \u062A\u062D\u0642\u0642 \u0645\u0646 \u0627\u0644\u062A\u0648\u0643\u0646 \u0648\u0627\u0644\u0634\u0627\u062A \u0622\u064A \u062F\u064A" });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 var visitors_default = router5;
 
 // artifacts/api-server/src/routes/analytics.ts
 var import_express6 = __toESM(require_express2(), 1);
 
 // artifacts/api-server/src/lib/storeDb.ts
-var pool5 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool6 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var memSuppliers = [
   { id: 1, name: "\u0623\u0628\u0648 \u062E\u0627\u0644\u062F (\u0645\u0648\u0631\u062F \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629)", phone: "962775585112", notes: "\u062A\u0648\u0641\u064A\u0631 \u0641\u0648\u0631\u064A \u062E\u0644\u0627\u0644 15 \u062F\u0642\u064A\u0642\u0629", is_active: true, created_at: new Date(Date.now() - 864e5 * 10).toISOString() },
   { id: 2, name: "\u0634\u0631\u0643\u0629 \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A\u0629 (\u0645\u0648\u0631\u062F \u0627\u0644\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A)", phone: "962791234567", notes: "\u0645\u062A\u062E\u0635\u0635 \u0628\u0627\u0634\u062A\u0631\u0627\u0643\u0627\u062A \u0628\u0644\u0633 \u0625\u0643\u0633\u062A\u0631\u0627 \u0648\u0641\u0627\u062E\u0631", is_active: true, created_at: new Date(Date.now() - 864e5 * 5).toISOString() }
@@ -46892,7 +47398,7 @@ var memOrders = [
 var memStoreConfig = /* @__PURE__ */ new Map();
 async function dbLoad(key, defaultVal) {
   try {
-    const { rows } = await pool5.query("SELECT value FROM store_config WHERE key = $1", [key]);
+    const { rows } = await pool6.query("SELECT value FROM store_config WHERE key = $1", [key]);
     if (rows.length > 0) {
       memStoreConfig.set(key, rows[0].value);
       return rows[0].value;
@@ -46904,7 +47410,7 @@ async function dbLoad(key, defaultVal) {
 async function dbSave(key, value) {
   memStoreConfig.set(key, value);
   try {
-    await pool5.query(
+    await pool6.query(
       `INSERT INTO store_config (key, value, updated_at)
        VALUES ($1, $2::jsonb, NOW())
        ON CONFLICT (key) DO UPDATE SET value = $2::jsonb, updated_at = NOW()`,
@@ -46913,7 +47419,7 @@ async function dbSave(key, value) {
   } catch (_) {
   }
 }
-function requireAdmin(req, res) {
+function requireAdmin2(req, res) {
   const email = verifyToken(req.headers.authorization);
   if (!email) {
     res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D \u2014 \u064A\u0631\u062C\u0649 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0643\u0640 \u0623\u062F\u0645\u0646" });
@@ -48533,14 +49039,14 @@ var launchAnnouncement = { ...DEFAULT_LAUNCH_ANNOUNCEMENT };
 var coupons = [...DEFAULT_COUPONS];
 async function initStoreDb() {
   try {
-    await pool5.query(`
+    await pool6.query(`
       CREATE TABLE IF NOT EXISTS store_config (
         key        VARCHAR(100) PRIMARY KEY,
         value      JSONB NOT NULL,
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
-    await pool5.query(`INSERT INTO store_config (key, value, updated_at) VALUES ('games', $1::jsonb, NOW()) ON CONFLICT (key) DO UPDATE SET value = $1::jsonb, updated_at = NOW()`, [JSON.stringify(DEFAULT_GAMES)]).catch(() => {
+    await pool6.query(`INSERT INTO store_config (key, value, updated_at) VALUES ('games', $1::jsonb, NOW()) ON CONFLICT (key) DO UPDATE SET value = $1::jsonb, updated_at = NOW()`, [JSON.stringify(DEFAULT_GAMES)]).catch(() => {
     });
     [
       store,
@@ -48579,7 +49085,7 @@ async function initStoreDb() {
 initStoreDb();
 
 // artifacts/api-server/src/routes/analytics.ts
-var pool6 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
+var pool7 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router6 = (0, import_express6.Router)();
 var seenSessionsToday = /* @__PURE__ */ new Set();
 setInterval(() => {
@@ -48594,7 +49100,7 @@ router6.post("/analytics/heartbeat", async (req, res) => {
     }
     const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
     const userAgent = req.headers["user-agent"] || "";
-    await pool6.query(`
+    await pool7.query(`
       INSERT INTO visitor_sessions (session_id, ip, user_agent, last_seen, created_at)
       VALUES ($1, $2, $3, NOW(), NOW())
       ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()
@@ -48604,7 +49110,7 @@ router6.post("/analytics/heartbeat", async (req, res) => {
     const sessionKey = `${todayStr}_${sessionId}`;
     if (!seenSessionsToday.has(sessionKey)) {
       seenSessionsToday.add(sessionKey);
-      await pool6.query(`
+      await pool7.query(`
         INSERT INTO analytics_daily (date, visits, cart_adds, subscribers)
         VALUES (CURRENT_DATE, 1, 0, 0)
         ON CONFLICT (date) DO UPDATE SET visits = analytics_daily.visits + 1
@@ -48618,7 +49124,7 @@ router6.post("/analytics/heartbeat", async (req, res) => {
 });
 router6.post("/analytics/cart-event", async (_req, res) => {
   try {
-    await pool6.query(`
+    await pool7.query(`
       INSERT INTO analytics_daily (date, visits, cart_adds, subscribers)
       VALUES (CURRENT_DATE, 0, 1, 0)
       ON CONFLICT (date) DO UPDATE SET cart_adds = analytics_daily.cart_adds + 1
@@ -48631,7 +49137,7 @@ router6.post("/analytics/cart-event", async (_req, res) => {
 });
 router6.get("/analytics/live-visitors", async (_req, res) => {
   try {
-    const { rows } = await pool6.query(`
+    const { rows } = await pool7.query(`
       SELECT COUNT(DISTINCT session_id) as online
       FROM visitor_sessions
       WHERE last_seen > NOW() - INTERVAL '3 minutes'
@@ -48661,24 +49167,24 @@ router6.get("/admin/analytics", async (req, res) => {
       gamesRes
     ] = await Promise.all([
       // 1. Real online visitors in last 3 minutes
-      pool6.query(`
+      pool7.query(`
         SELECT COUNT(DISTINCT session_id) as online
         FROM visitor_sessions
         WHERE last_seen > NOW() - INTERVAL '3 minutes'
       `).catch(() => ({ rows: [{ online: "1" }] })),
       // 2. Real registered customers count
-      pool6.query(`
+      pool7.query(`
         SELECT COUNT(*) as total_customers FROM customers
       `).catch(() => ({ rows: [{ total_customers: "0" }] })),
       // 3. Real completed orders count
-      pool6.query(`
+      pool7.query(`
         SELECT 
           COUNT(*) as total_orders,
           COUNT(*) FILTER (WHERE status IN ('completed', 'delivered')) as completed_orders
         FROM store_orders
       `).catch(() => ({ rows: [{ total_orders: "0", completed_orders: "0" }] })),
       // 4. Real total visits from daily analytics
-      pool6.query(`
+      pool7.query(`
         SELECT
           COALESCE(SUM(visits), 0) AS visits,
           COALESCE(SUM(cart_adds), 0) AS cart_adds,
@@ -48686,7 +49192,7 @@ router6.get("/admin/analytics", async (req, res) => {
         FROM analytics_daily
       `).catch(() => ({ rows: [{ visits: "0", cart_adds: "0", subscribers: "0" }] })),
       // 5. Real timeline for requested range
-      pool6.query(`
+      pool7.query(`
         WITH dates AS (
           SELECT generate_series(
             CURRENT_DATE - ($1 - 1) * INTERVAL '1 day',
@@ -48704,7 +49210,7 @@ router6.get("/admin/analytics", async (req, res) => {
         ORDER BY d.date ASC
       `, [days]).catch(() => ({ rows: [] })),
       // 6. Real Top Selling Items from store_orders
-      pool6.query(`
+      pool7.query(`
         SELECT COALESCE(game_name, product_type, '\u0637\u0644\u0628 \u0645\u062A\u062C\u0631') as name, COUNT(*) as count
         FROM store_orders
         WHERE game_name IS NOT NULL OR product_type IS NOT NULL
@@ -48713,14 +49219,14 @@ router6.get("/admin/analytics", async (req, res) => {
         LIMIT 6
       `).catch(() => ({ rows: [] })),
       // 7. Recent Orders Log from store_orders
-      pool6.query(`
+      pool7.query(`
         SELECT id, order_number, customer_name, COALESCE(game_name, product_type, '\u0637\u0644\u0628 \u062C\u062F\u064A\u062F') as product, status, created_at
         FROM store_orders
         ORDER BY created_at DESC
         LIMIT 8
       `).catch(() => ({ rows: [] })),
       // 8. Active games count from store_config
-      pool6.query(`
+      pool7.query(`
         SELECT value FROM store_config WHERE key = 'games' LIMIT 1
       `).catch(() => ({ rows: [] }))
     ]);
@@ -48786,243 +49292,6 @@ var analytics_default = router6;
 
 // artifacts/api-server/src/routes/orders.ts
 var import_express7 = __toESM(require_express2(), 1);
-
-// artifacts/api-server/src/lib/db.ts
-var FALLBACK_B64 = "cG9zdGdyZXNxbDovL25lb25kYl9vd25lcjpucGdfd0NNQThXZEJTYzVzQGVwLXJlc3RsZXNzLXRyZWUtYjIwaXQyNGgtcG9vbGVyLmMtNi5ldS1jZW50cmFsLTEuYXdzLm5lb24udGVjaC9uZW9uZGI/c3NsbW9kZT1yZXF1aXJl";
-function getDatabaseUrl() {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  if (process.env.POSTGRES_URL) return process.env.POSTGRES_URL;
-  try {
-    return Buffer.from(FALLBACK_B64, "base64").toString("utf-8");
-  } catch {
-    return "";
-  }
-}
-var pool7 = new esm_default.Pool({
-  connectionString: getDatabaseUrl()
-});
-
-// artifacts/api-server/src/lib/telegram.ts
-var DEFAULT_CONFIG = {
-  enabled: true,
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  chatId: process.env.TELEGRAM_CHAT_ID || ""
-};
-function escapeHtml(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-var memoryConfig = {
-  enabled: true,
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  chatId: process.env.TELEGRAM_CHAT_ID || ""
-};
-async function getTelegramConfig() {
-  if (pool7) {
-    try {
-      const { rows } = await pool7.query(
-        `SELECT value FROM store_config WHERE key = 'telegram_config' LIMIT 1`
-      );
-      if (rows.length > 0 && rows[0].value) {
-        const cfg = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
-        memoryConfig = {
-          enabled: cfg.enabled ?? true,
-          botToken: cfg.botToken || process.env.TELEGRAM_BOT_TOKEN || memoryConfig.botToken || "",
-          chatId: cfg.chatId || process.env.TELEGRAM_CHAT_ID || memoryConfig.chatId || ""
-        };
-        return memoryConfig;
-      }
-    } catch (e) {
-      console.warn("Could not load telegram_config from DB:", e);
-    }
-  }
-  return memoryConfig;
-}
-async function saveTelegramConfig(cfg) {
-  const current = await getTelegramConfig();
-  const updated = {
-    enabled: cfg.enabled !== void 0 ? !!cfg.enabled : current.enabled,
-    botToken: (cfg.botToken !== void 0 ? cfg.botToken : current.botToken).trim(),
-    chatId: (cfg.chatId !== void 0 ? cfg.chatId : current.chatId).trim()
-  };
-  memoryConfig = { ...updated };
-  if (pool7) {
-    try {
-      await pool7.query(
-        `INSERT INTO store_config (key, value, updated_at)
-         VALUES ('telegram_config', $1, NOW())
-         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-        [JSON.stringify(updated)]
-      );
-    } catch (e) {
-      console.error("Failed to save telegram config:", e);
-    }
-  }
-  return updated;
-}
-async function sendTelegramMessage(text, inlineKeyboard) {
-  const config = await getTelegramConfig();
-  if (!config.enabled || !config.botToken || !config.chatId) {
-    return { ok: false, reason: "Telegram bot not configured or disabled" };
-  }
-  try {
-    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
-    const sanitizedKeyboard = [];
-    if (inlineKeyboard && inlineKeyboard.length > 0) {
-      inlineKeyboard.forEach((row) => {
-        const validRow = row.filter((btn) => {
-          if (btn.url) {
-            return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(btn.url);
-          }
-          return !!btn.callback_data;
-        });
-        if (validRow.length > 0) sanitizedKeyboard.push(validRow);
-      });
-    }
-    const payload = {
-      chat_id: config.chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: false
-    };
-    if (sanitizedKeyboard.length > 0) {
-      payload.reply_markup = { inline_keyboard: sanitizedKeyboard };
-    }
-    let res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    let data = await res.json();
-    if (!data.ok) {
-      console.warn("Telegram send failed, retrying plain text:", data.description);
-      const plainText = text.replace(/<[^>]+>/g, "");
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: config.chatId,
-          text: plainText
-        })
-      });
-      data = await res.json();
-    }
-    return data;
-  } catch (err) {
-    console.error("Telegram notification error:", err);
-    return { ok: false, error: err.message };
-  }
-}
-async function sendTelegramOrderNotification(order) {
-  try {
-    const orderNum = order.order_number || `#${order.id}`;
-    const customerName = escapeHtml(order.customer_name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643");
-    const cleanPhone = (order.customer_phone || order.contact_whatsapp || "").replace(/\D/g, "");
-    const rawPhone = escapeHtml(order.customer_phone || order.contact_whatsapp || "\u063A\u064A\u0631 \u0645\u062D\u062F\u062F");
-    const igRaw = (order.contact_instagram || "").replace(/^@/, "").trim();
-    const game = escapeHtml(order.game_name || order.subscription_type || order.product_type || "\u0645\u0646\u062A\u062C \u0631\u0642\u0645\u064A");
-    const platform = order.platform ? escapeHtml(`(${order.platform})`) : "";
-    const paid = order.customer_paid ? `$${parseFloat(order.customer_paid).toFixed(2)}` : "\u2014";
-    const payment = escapeHtml(order.payment_platform || "\u062F\u0641\u0639 \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A");
-    let suppliers2 = [];
-    if (pool7) {
-      try {
-        const { rows } = await pool7.query(
-          "SELECT id, name, phone FROM suppliers WHERE is_active = true ORDER BY id ASC LIMIT 3"
-        );
-        suppliers2 = rows;
-      } catch (_) {
-      }
-    }
-    if (suppliers2.length === 0) {
-      suppliers2 = [{ id: 1, name: "\u0627\u0644\u0645\u0648\u0631\u062F \u0627\u0644\u0645\u0639\u062A\u0645\u062F", phone: "962775585112" }];
-    }
-    let customTemplate = `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064A\u0643\u0645 \u0623\u062E\u064A {supplier_name} \u{1F44B}
-\u0637\u0644\u0628 \u062D\u0633\u0627\u0628 \u062C\u062F\u064A\u062F \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u{1F3AE}:
-
-\u{1F3F7}\uFE0F \u0627\u0644\u0644\u0639\u0628\u0629 / \u0627\u0644\u0645\u0646\u062A\u062C: *{game_name}* ({platform})
-\u{1F4E6} \u0631\u0642\u0645 \u0627\u0644\u0637\u0644\u0628: *#{order_number}*
-
-\u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`;
-    if (pool7) {
-      try {
-        const { rows: tRows } = await pool7.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
-        if (tRows.length > 0 && tRows[0].value) {
-          const val = typeof tRows[0].value === "string" ? JSON.parse(tRows[0].value) : tRows[0].value;
-          if (val.template) customTemplate = val.template;
-        }
-      } catch (_) {
-      }
-    }
-    const formatSupplierMessage = (supName) => {
-      const t = customTemplate.replace(/\{supplier_name\}/g, supName).replace(/\{game_name\}/g, order.game_name || order.product_type || "\u0645\u0646\u062A\u062C").replace(/\{platform\}/g, order.platform || "PS5").replace(/\{order_number\}/g, String(orderNum).replace(/^#/, "")).replace(/\{customer_name\}/g, order.customer_name || "\u0639\u0645\u064A\u0644").replace(/\{paid\}/g, paid);
-      return encodeURIComponent(t);
-    };
-    const qrRequestText = encodeURIComponent(
-      `\u0645\u0631\u062D\u0628\u0627\u064B \u0623\u062E\u064A ${order.customer_name || "\u0627\u0644\u0639\u0645\u064A\u0644"} \u{1F3AE}
-\u0634\u0643\u0631\u0627\u064B \u0644\u0634\u0631\u0627\u0626\u0643 \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 \u26A1
-
-\u0644\u062A\u0633\u0644\u064A\u0645 \u0648\u062A\u0641\u0639\u064A\u0644 \u0637\u0644\u0628\u0643 (${order.game_name || "\u0627\u0644\u0637\u0644\u0628"}) \u0641\u0648\u0631\u0627\u064B:
-\u064A\u0631\u062C\u0649 \u0641\u062A\u062D \u0634\u0627\u0634\u0629 \u0627\u0644\u0633\u0648\u0646\u064A \u0648\u0627\u062E\u062A\u064A\u0627\u0631 (\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0639\u0628\u0631 \u0643\u0648\u062F QR) \u0648\u062A\u0635\u0648\u064A\u0631 \u0627\u0644\u0643\u0648\u062F \u0648\u0625\u0631\u0633\u0627\u0644\u0647 \u0644\u0646\u0627 \u0647\u0646\u0627 \u{1F4F8}`
-    );
-    const messageHtml = `\u{1F525} <b>\u0637\u0644\u0628 \u0634\u0631\u0627\u0621 \u062C\u062F\u064A\u062F #${escapeHtml(orderNum)}</b>
-
-\u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> <b>${game}</b> ${platform}
-\u{1F464} <b>\u0627\u0644\u0639\u0645\u064A\u0644:</b> <b>${customerName}</b>
-\u{1F4F1} <b>\u0627\u0644\u0647\u0627\u062A\u0641:</b> <code>${rawPhone}</code>
-${igRaw ? `\u{1F4F8} <b>\u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645:</b> @${escapeHtml(igRaw)}
-` : ""}\u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>${paid}</b> (${payment})
-
-\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-<b>\u{1F4CB} \u0645\u0631\u0627\u062D\u0644 \u062A\u0646\u0641\u064A\u0630 \u0627\u0644\u0637\u0644\u0628 \u0628\u0627\u0644\u062A\u0631\u062A\u064A\u0628:</b>
-
-<b>1\uFE0F\u20E3 \u0627\u0644\u0645\u0631\u062D\u0644\u0629 \u0627\u0644\u0623\u0648\u0644\u0649: \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0637\u0644\u0628 \u0644\u0644\u0645\u0648\u0631\u062F</b>
-\u0625\u0631\u0633\u0627\u0644 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0644\u0639\u0628\u0629 \u0644\u0644\u0645\u0648\u0631\u062F \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062A\u0633\u0627\u0628 \u0644\u0645\u0639\u0631\u0641\u0629 \u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u062A\u062C\u0647\u064A\u0632 \u0627\u0644\u062D\u0633\u0627\u0628.
-
-<b>2\uFE0F\u20E3 \u0627\u0644\u0645\u0631\u062D\u0644\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629: \u0627\u0633\u062A\u0644\u0627\u0645 \u0648\u062A\u0633\u062C\u064A\u0644 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628</b>
-\u062A\u0633\u062C\u064A\u0644 \u0625\u064A\u0645\u064A\u0644 \u0648\u0628\u0627\u0633\u0648\u0648\u0631\u062F \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646 \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0628\u0627\u0644\u0645\u0648\u0642\u0639.
-
-<b>3\uFE0F\u20E3 \u0627\u0644\u0645\u0631\u062D\u0644\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629: \u062A\u0633\u0644\u064A\u0645 \u0627\u0644\u0639\u0645\u064A\u0644 \u0648\u0625\u0643\u0645\u0627\u0644 \u0627\u0644\u0637\u0644\u0628</b>
-\u0637\u0644\u0628 \u0643\u0648\u062F \u0627\u0644\u062F\u062E\u0648\u0644 (QR) \u0639\u0628\u0631 \u0648\u0627\u062A\u0633\u0627\u0628 \u0623\u0648 \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0648\u062A\u0633\u0644\u064A\u0645 \u0627\u0644\u062D\u0633\u0627\u0628 \u0644\u0644\u0639\u0645\u064A\u0644.`;
-    const inlineButtons = [];
-    suppliers2.forEach((sup) => {
-      const supClean = (sup.phone || "").replace(/\D/g, "");
-      if (supClean && supClean.length >= 8) {
-        inlineButtons.push([
-          {
-            text: `1\uFE0F\u20E3 \u{1F69A} \u0625\u0631\u0633\u0627\u0644 \u0644\u0644\u0645\u0648\u0631\u062F: ${sup.name} (\u0648\u0627\u062A\u0633\u0627\u0628)`,
-            url: `https://wa.me/${supClean}?text=${formatSupplierMessage(sup.name)}`
-          }
-        ]);
-      }
-    });
-    inlineButtons.push([
-      {
-        text: `2\uFE0F\u20E3 \u{1F4DD} \u062A\u0633\u062C\u064A\u0644 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0628\u0627\u0644\u0645\u0648\u0642\u0639`,
-        url: `https://www.dukkank.store/admin/orders`
-      }
-    ]);
-    const customerButtons = [];
-    if (igRaw) {
-      customerButtons.push({
-        text: `3\uFE0F\u20E3 \u{1F4F8} \u0625\u0646\u0633\u062A\u063A\u0631\u0627\u0645 \u0627\u0644\u0639\u0645\u064A\u0644`,
-        url: `https://instagram.com/${igRaw}`
-      });
-    }
-    if (cleanPhone && cleanPhone.length >= 8) {
-      customerButtons.push({
-        text: `3\uFE0F\u20E3 \u{1F4F2} \u0648\u0627\u062A\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064A\u0644 (\u0637\u0644\u0628 QR)`,
-        url: `https://wa.me/${cleanPhone}?text=${qrRequestText}`
-      });
-    }
-    if (customerButtons.length > 0) inlineButtons.push(customerButtons);
-    return await sendTelegramMessage(messageHtml, inlineButtons);
-  } catch (e) {
-    console.error("Failed to format/send Telegram order notification:", e);
-    return { ok: false, error: e.message };
-  }
-}
-
-// artifacts/api-server/src/routes/orders.ts
 var router7 = (0, import_express7.Router)();
 var storeOrders = [
   {
@@ -49054,9 +49323,9 @@ var suppliers = [
   }
 ];
 async function initDb() {
-  if (!pool7) return;
+  if (!pool4) return;
   try {
-    await pool7.query(`
+    await pool4.query(`
       CREATE TABLE IF NOT EXISTS suppliers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(200) NOT NULL,
@@ -49124,7 +49393,7 @@ async function initDb() {
     ];
     for (const m of migrations) {
       try {
-        await pool7.query(m);
+        await pool4.query(m);
       } catch (_) {
       }
     }
@@ -49134,10 +49403,10 @@ async function initDb() {
 }
 initDb();
 router7.get("/admin/store-orders", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  if (pool7) {
+  if (!requireAdmin2(req, res)) return;
+  if (pool4) {
     try {
-      const { rows } = await pool7.query("SELECT * FROM store_orders ORDER BY created_at DESC");
+      const { rows } = await pool4.query("SELECT * FROM store_orders ORDER BY created_at DESC");
       res.json(rows);
       return;
     } catch (e) {
@@ -49146,12 +49415,12 @@ router7.get("/admin/store-orders", async (req, res) => {
   res.json(storeOrders);
 });
 router7.post("/admin/store-orders", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const body = req.body || {};
   const orderNum = body.order_number || `ORD-${Math.floor(1e3 + Math.random() * 9e3)}`;
-  if (pool7) {
+  if (pool4) {
     try {
-      const { rows } = await pool7.query(
+      const { rows } = await pool4.query(
         `INSERT INTO store_orders (
           order_number, customer_name, customer_phone, customer_email, product_type,
           game_name, subscription_type, subscription_duration, contact_instagram,
@@ -49231,13 +49500,13 @@ router7.post("/admin/store-orders", async (req, res) => {
   res.status(201).json(newOrder);
 });
 router7.put("/admin/store-orders/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const body = req.body || {};
   const costNum = body.cost_price !== void 0 && body.cost_price !== "" && !isNaN(Number(body.cost_price)) ? Number(body.cost_price) : null;
-  if (pool7) {
+  if (pool4) {
     try {
-      const { rows } = await pool7.query(
+      const { rows } = await pool4.query(
         `UPDATE store_orders SET
           customer_name=COALESCE($1,customer_name),
           status=COALESCE($2,status),
@@ -49265,11 +49534,11 @@ router7.put("/admin/store-orders/:id", async (req, res) => {
   res.json(storeOrders[idx]);
 });
 router7.delete("/admin/store-orders/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
-  if (pool7) {
+  if (pool4) {
     try {
-      await pool7.query("DELETE FROM store_orders WHERE id::text=$1 OR order_number=$1", [id]);
+      await pool4.query("DELETE FROM store_orders WHERE id::text=$1 OR order_number=$1", [id]);
     } catch (e) {
     }
   }
@@ -49278,15 +49547,15 @@ router7.delete("/admin/store-orders/:id", async (req, res) => {
   res.json({ ok: true });
 });
 router7.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const { supplier_id, cost_price } = req.body || {};
   const supId = supplier_id && !isNaN(Number(supplier_id)) ? Number(supplier_id) : null;
   const costNum = cost_price !== void 0 && cost_price !== "" && !isNaN(Number(cost_price)) ? Number(cost_price) : null;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool7) {
+  if (pool4) {
     try {
-      const { rows } = await pool7.query(
+      const { rows } = await pool4.query(
         `UPDATE store_orders SET
           status = 'supplier_sent',
           supplier_id = $1,
@@ -49321,14 +49590,14 @@ router7.put("/admin/store-orders/:id/forward-supplier", async (req, res) => {
   res.json(storeOrders[idx]);
 });
 router7.put("/admin/store-orders/:id/receive-account", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const { account_credentials, cost_price } = req.body || {};
   const costNum = cost_price !== void 0 && cost_price !== "" && !isNaN(Number(cost_price)) ? Number(cost_price) : null;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool7) {
+  if (pool4) {
     try {
-      const { rows } = await pool7.query(
+      const { rows } = await pool4.query(
         `UPDATE store_orders SET
           status = 'account_received',
           account_credentials = $1,
@@ -49363,12 +49632,12 @@ router7.put("/admin/store-orders/:id/receive-account", async (req, res) => {
   res.json(storeOrders[idx]);
 });
 router7.put("/admin/store-orders/:id/deliver", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool7) {
+  if (pool4) {
     try {
-      const { rows } = await pool7.query(
+      const { rows } = await pool4.query(
         `UPDATE store_orders SET
           status = 'delivered',
           delivered_at = NOW(),
@@ -49399,12 +49668,12 @@ router7.put("/admin/store-orders/:id/deliver", async (req, res) => {
   res.json(storeOrders[idx]);
 });
 router7.put("/admin/store-orders/:id/complete", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const now = (/* @__PURE__ */ new Date()).toISOString();
-  if (pool7) {
+  if (pool4) {
     try {
-      const { rows } = await pool7.query(
+      const { rows } = await pool4.query(
         `UPDATE store_orders SET
           status = 'completed',
           completed_at = NOW(),
@@ -49435,12 +49704,12 @@ router7.put("/admin/store-orders/:id/complete", async (req, res) => {
   res.json(storeOrders[idx]);
 });
 router7.get("/admin/suppliers", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const list = await dbLoad("suppliers", suppliers);
   res.json(Array.isArray(list) ? list : suppliers);
 });
 router7.post("/admin/suppliers", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const { name, phone, notes } = req.body || {};
   if (!name || !phone) {
     res.status(400).json({ error: "\u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0631\u062F \u0648\u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062A\u0641 \u0645\u0637\u0644\u0648\u0628\u0627\u0646" });
@@ -49461,7 +49730,7 @@ router7.post("/admin/suppliers", async (req, res) => {
   res.status(201).json(newSupplier);
 });
 router7.put("/admin/suppliers/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const { name, phone, notes, is_active } = req.body || {};
   const list = await dbLoad("suppliers", suppliers);
@@ -49482,7 +49751,7 @@ router7.put("/admin/suppliers/:id", async (req, res) => {
   res.json(arr[idx]);
 });
 router7.delete("/admin/suppliers/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const id = req.params.id;
   const list = await dbLoad("suppliers", suppliers);
   const arr = Array.isArray(list) ? [...list] : [...suppliers];
@@ -49491,7 +49760,7 @@ router7.delete("/admin/suppliers/:id", async (req, res) => {
   res.json({ ok: true });
 });
 router7.get("/admin/customer-profile/:phone", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const phone = req.params.phone;
   const matchingOrders = storeOrders.filter(
     (o) => o.customer_phone === phone || o.contact_whatsapp === phone
@@ -49512,7 +49781,7 @@ router7.get("/admin/customer-profile/:phone", async (req, res) => {
   });
 });
 router7.get("/admin/telegram/config", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const cfg = await getTelegramConfig();
   res.json({
     enabled: cfg.enabled,
@@ -49522,7 +49791,7 @@ router7.get("/admin/telegram/config", async (req, res) => {
   });
 });
 router7.put("/admin/telegram/config", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const updated = await saveTelegramConfig(req.body || {});
   res.json({
     enabled: updated.enabled,
@@ -49532,7 +49801,7 @@ router7.put("/admin/telegram/config", async (req, res) => {
   });
 });
 router7.post("/admin/telegram/test", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const testMsg = `\u{1F3AE} <b>\u0627\u062E\u062A\u0628\u0627\u0631 \u0625\u0634\u0639\u0627\u0631\u0627\u062A \u062F\u064F\u0643\u0627\u0646\u0643 \u0639\u0628\u0631 \u0627\u0644\u062A\u064A\u0644\u064A\u062C\u0631\u0627\u0645</b> \u{1F680}
 
 \u2705 \u062A\u0645 \u0631\u0628\u0637 \u0627\u0644\u0628\u0648\u062A \u0628\u0646\u062C\u0627\u062D \u0645\u0639 \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645!
@@ -49557,10 +49826,10 @@ var DEFAULT_SUPPLIER_TEMPLATE = `\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u06
 
 \u064A\u0631\u062C\u0649 \u062A\u062C\u0647\u064A\u0632 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062D\u0633\u0627\u0628 (\u0627\u0644\u0625\u064A\u0645\u064A\u0644\u060C \u0627\u0644\u0628\u0627\u0633\u0648\u0648\u0631\u062F\u060C \u0623\u0643\u0648\u0627\u062F \u0627\u0644\u0623\u0645\u0627\u0646) \u0648\u0627\u0644\u062A\u0643\u0644\u0641\u0629 \u0648\u0625\u0631\u0633\u0627\u0644\u0647\u0627 \u0623\u0648\u0644 \u0645\u0627 \u064A\u062C\u0647\u0632 \u26A1`;
 router7.get("/admin/supplier-template", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  if (pool7) {
+  if (!requireAdmin2(req, res)) return;
+  if (pool4) {
     try {
-      const { rows } = await pool7.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
+      const { rows } = await pool4.query("SELECT value FROM store_config WHERE key = 'supplier_message_template' LIMIT 1");
       if (rows.length > 0 && rows[0].value) {
         const val = typeof rows[0].value === "string" ? JSON.parse(rows[0].value) : rows[0].value;
         res.json({ template: val.template || DEFAULT_SUPPLIER_TEMPLATE });
@@ -49572,11 +49841,11 @@ router7.get("/admin/supplier-template", async (req, res) => {
   res.json({ template: DEFAULT_SUPPLIER_TEMPLATE });
 });
 router7.put("/admin/supplier-template", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const template = req.body?.template || DEFAULT_SUPPLIER_TEMPLATE;
-  if (pool7) {
+  if (pool4) {
     try {
-      await pool7.query(
+      await pool4.query(
         `INSERT INTO store_config (key, value, updated_at)
          VALUES ('supplier_message_template', $1, NOW())
          ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
@@ -49589,8 +49858,8 @@ router7.put("/admin/supplier-template", async (req, res) => {
   res.json({ ok: true, template });
 });
 router7.post("/admin/run-migration", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
-  if (!pool7) {
+  if (!requireAdmin2(req, res)) return;
+  if (!pool4) {
     res.status(500).json({ error: "No DB connection pool" });
     return;
   }
@@ -49620,7 +49889,7 @@ router7.post("/admin/run-migration", async (req, res) => {
   const results = [];
   for (const m of migrations) {
     try {
-      await pool7.query(m);
+      await pool4.query(m);
       results.push({ query: m, status: "ok" });
     } catch (e) {
       results.push({ query: m, status: "error", error: e.message });
@@ -49633,23 +49902,23 @@ router7.post("/orders", (req, res) => {
   res.status(201).json({ ok: true, id: `ord-${Date.now()}` });
 });
 router7.post("/admin/reset-store-data", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   try {
-    if (pool7) {
-      await pool7.query("DELETE FROM store_orders").catch(() => {
+    if (pool4) {
+      await pool4.query("DELETE FROM store_orders").catch(() => {
       });
-      await pool7.query("DELETE FROM analytics_daily").catch(() => {
+      await pool4.query("DELETE FROM analytics_daily").catch(() => {
       });
-      await pool7.query("DELETE FROM visitor_sessions").catch(() => {
+      await pool4.query("DELETE FROM visitor_sessions").catch(() => {
       });
-      await pool7.query("DELETE FROM notify_requests").catch(() => {
+      await pool4.query("DELETE FROM notify_requests").catch(() => {
       });
-      await pool7.query(
+      await pool4.query(
         `INSERT INTO store_config (key, value) VALUES ('order_counter', '1000')
          ON CONFLICT (key) DO UPDATE SET value = '1000', updated_at = NOW()`
       ).catch(() => {
       });
-      await pool7.query(
+      await pool4.query(
         `INSERT INTO store_config (key, value) VALUES ('analytics_timeline', '[]')
          ON CONFLICT (key) DO UPDATE SET value = '[]', updated_at = NOW()`
       ).catch(() => {
@@ -49800,7 +50069,7 @@ router9.get("/store", async (_req, res) => {
   res.json(data);
 });
 router9.put("/admin/store", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("store", DEFAULT_STORE);
   const updated = { ...current, ...req.body };
   await dbSave("store", updated);
@@ -49856,11 +50125,11 @@ router9.post("/subscribers", (req, res) => {
   res.json({ ok: true });
 });
 router9.get("/admin/subscribers", (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   res.json([...subscribers].map((email) => ({ email })));
 });
 router9.delete("/admin/subscribers/:email", (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   subscribers.delete(decodeURIComponent(req.params.email));
   res.json({ ok: true });
 });
@@ -49888,12 +50157,12 @@ router9.post("/notify-requests", async (req, res) => {
   res.status(201).json(item);
 });
 router9.get("/admin/notify-requests", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const list = await dbLoad("notifyRequests", []);
   res.json(Array.isArray(list) ? list : []);
 });
 router9.delete("/admin/notify-requests/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("notifyRequests", []);
   const list = (Array.isArray(current) ? current : []).filter((n) => n && n.id !== req.params.id);
   await dbSave("notifyRequests", list);
@@ -49942,7 +50211,7 @@ var memAuditLogs = [
   }
 ];
 router9.get("/admin/audit", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const list = await dbLoad("audit_logs", memAuditLogs);
   res.json(Array.isArray(list) ? list : memAuditLogs);
 });
@@ -49956,12 +50225,12 @@ router10.get("/games", async (_req, res) => {
   res.json([...list].filter((g) => g.available !== false).sort((a, b) => (a.order ?? 99) - (b.order ?? 99)));
 });
 router10.get("/admin/games", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const list = await dbLoad("games", DEFAULT_GAMES);
   res.json(list);
 });
 router10.post("/admin/games", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("games", DEFAULT_GAMES);
   const game = { ...req.body, id: req.body.id || `game-${Date.now()}` };
   current.push(game);
@@ -49969,7 +50238,7 @@ router10.post("/admin/games", async (req, res) => {
   res.json(game);
 });
 router10.put("/admin/games/reorder", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const { orderedIds } = req.body || {};
   const current = await dbLoad("games", DEFAULT_GAMES);
   if (Array.isArray(orderedIds)) {
@@ -49982,7 +50251,7 @@ router10.put("/admin/games/reorder", async (req, res) => {
   res.json({ ok: true, games: current });
 });
 router10.put("/admin/games/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("games", DEFAULT_GAMES);
   const idx = current.findIndex((g) => g.id === req.params.id);
   if (idx !== -1) {
@@ -49994,7 +50263,7 @@ router10.put("/admin/games/:id", async (req, res) => {
   }
 });
 router10.delete("/admin/games/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("games", DEFAULT_GAMES);
   const idx = current.findIndex((g) => g.id === req.params.id);
   if (idx !== -1) {
@@ -50010,7 +50279,7 @@ router10.get("/bundles", async (_req, res) => {
   res.json(list);
 });
 router10.post("/admin/bundles", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("bundles", DEFAULT_BUNDLES);
   const b = { ...req.body, id: req.body.id || `bundle-${Date.now()}` };
   current.push(b);
@@ -50018,7 +50287,7 @@ router10.post("/admin/bundles", async (req, res) => {
   res.json(b);
 });
 router10.put("/admin/bundles/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("bundles", DEFAULT_BUNDLES);
   const idx = current.findIndex((b) => b.id === req.params.id);
   if (idx !== -1) {
@@ -50030,7 +50299,7 @@ router10.put("/admin/bundles/:id", async (req, res) => {
   }
 });
 router10.delete("/admin/bundles/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("bundles", DEFAULT_BUNDLES);
   const idx = current.findIndex((b) => b.id === req.params.id);
   if (idx !== -1) {
@@ -50051,7 +50320,7 @@ router11.get("/subscriptions", async (_req, res) => {
   res.json(list);
 });
 router11.post("/admin/subscriptions", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("subscriptions", DEFAULT_SUBSCRIPTIONS);
   const sub = { ...req.body, id: req.body.id || `sub-${Date.now()}` };
   current.push(sub);
@@ -50059,7 +50328,7 @@ router11.post("/admin/subscriptions", async (req, res) => {
   res.json(sub);
 });
 router11.put("/admin/subscriptions/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("subscriptions", DEFAULT_SUBSCRIPTIONS);
   const idx = current.findIndex((s) => s.id === req.params.id);
   if (idx !== -1) {
@@ -50071,7 +50340,7 @@ router11.put("/admin/subscriptions/:id", async (req, res) => {
   }
 });
 router11.delete("/admin/subscriptions/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("subscriptions", DEFAULT_SUBSCRIPTIONS);
   const idx = current.findIndex((s) => s.id === req.params.id);
   if (idx !== -1) {
@@ -50092,7 +50361,7 @@ router12.get("/reviews", async (_req, res) => {
   res.json([...list].sort((a, b) => (a.order ?? 99) - (b.order ?? 99)));
 });
 router12.post("/admin/reviews", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("reviews", DEFAULT_REVIEWS);
   const r = { ...req.body, id: Date.now() };
   current.push(r);
@@ -50100,7 +50369,7 @@ router12.post("/admin/reviews", async (req, res) => {
   res.json(r);
 });
 router12.put("/admin/reviews/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("reviews", DEFAULT_REVIEWS);
   const id = Number(req.params.id);
   const idx = current.findIndex((x) => x.id === id);
@@ -50113,7 +50382,7 @@ router12.put("/admin/reviews/:id", async (req, res) => {
   }
 });
 router12.delete("/admin/reviews/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("reviews", DEFAULT_REVIEWS);
   const id = Number(req.params.id);
   const idx = current.findIndex((x) => x.id === id);
@@ -50130,7 +50399,7 @@ router12.get("/faqs", async (_req, res) => {
   res.json([...list].sort((a, b) => (a.order ?? 99) - (b.order ?? 99)));
 });
 router12.put("/admin/faqs", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const list = Array.isArray(req.body) ? req.body : req.body?.faqs;
   if (list) {
     await dbSave("faqs", list);
@@ -50140,7 +50409,7 @@ router12.put("/admin/faqs", async (req, res) => {
   }
 });
 router12.post("/admin/faqs", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("faqs", DEFAULT_FAQS);
   const f = { ...req.body, id: req.body?.id || `faq-${Date.now()}` };
   current.push(f);
@@ -50148,7 +50417,7 @@ router12.post("/admin/faqs", async (req, res) => {
   res.json(f);
 });
 router12.put("/admin/faqs/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("faqs", DEFAULT_FAQS);
   const targetId = String(req.params.id);
   const idx = current.findIndex((x) => String(x.id) === targetId);
@@ -50161,7 +50430,7 @@ router12.put("/admin/faqs/:id", async (req, res) => {
   }
 });
 router12.delete("/admin/faqs/:id", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("faqs", DEFAULT_FAQS);
   const targetId = String(req.params.id);
   const idx = current.findIndex((x) => String(x.id) === targetId);
@@ -50183,7 +50452,7 @@ router13.get("/sections", async (_req, res) => {
   res.json(list);
 });
 router13.put("/admin/sections", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const newSecs = Array.isArray(req.body) ? req.body : Array.isArray(req.body?.sections) ? req.body.sections : null;
   if (newSecs) {
     await dbSave("sections", newSecs);
@@ -50197,7 +50466,7 @@ router13.get("/launch-announcement", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/launch-announcement", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const updated = req.body;
   await dbSave("launchAnnouncement", updated);
   res.json(updated);
@@ -50207,7 +50476,7 @@ router13.get("/promo", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/promo", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("promo", DEFAULT_PROMO);
   const updated = { ...DEFAULT_PROMO, ...current, ...req.body };
   await dbSave("promo", updated);
@@ -50218,7 +50487,7 @@ router13.get("/social-proof", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/social-proof", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("socialProof", DEFAULT_SOCIAL_PROOF);
   const updated = { ...current, ...req.body };
   await dbSave("socialProof", updated);
@@ -50229,7 +50498,7 @@ router13.get("/wa-templates", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/wa-templates", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("waTemplates", DEFAULT_WA_TEMPLATES);
   const updated = { ...current, ...req.body };
   await dbSave("waTemplates", updated);
@@ -50240,7 +50509,7 @@ router13.get("/content", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/content", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("content", DEFAULT_CONTENT);
   const updated = { ...current, ...req.body };
   await dbSave("content", updated);
@@ -50251,7 +50520,7 @@ router13.get("/site-settings", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/site-settings", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const current = await dbLoad("siteSettings", DEFAULT_SITE_SETTINGS);
   const updated = { ...DEFAULT_SITE_SETTINGS, ...current, ...req.body };
   await dbSave("siteSettings", updated);
@@ -50262,7 +50531,7 @@ router13.get("/theme", async (_req, res) => {
   res.json(data);
 });
 router13.put("/admin/theme", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdmin2(req, res)) return;
   const theme = req.body || {};
   await dbSave("theme", theme);
   res.json(theme);

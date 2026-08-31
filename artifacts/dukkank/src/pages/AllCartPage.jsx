@@ -36,6 +36,7 @@ import {
     Instagram,
 } from "lucide-react";
 import { toast } from "sonner";
+import { trackPageView, trackCheckoutStart, trackWhatsAppClick } from "../lib/tracker";
 
 async function validateCoupon(code, total) {
     try {
@@ -78,6 +79,13 @@ const UPSELL_PRODUCTS = [
 
 export default function AllCartPage() {
     const { items, totalPrice, totalQty, inc, dec, remove, clear, add: addToCart } = useCart();
+
+    useEffect(() => {
+        trackPageView("/cart", "السلة والدفع");
+        if (items && items.length > 0) {
+            trackCheckoutStart(items, totalPrice);
+        }
+    }, []);
     const { format, code, convert } = useCurrency();
     const { store, waTemplates } = useStoreData();
     const { customer, addOrderToHistory } = useCustomer();

@@ -41,9 +41,11 @@ import AffiliateTab       from "../components/admin/AffiliateTab";
 import BackupTab          from "../components/admin/BackupTab";
 import PerformanceTab     from "../components/admin/PerformanceTab";
 import GiftsTab           from "../components/admin/GiftsTab";
+import LiveVisitorsTab     from "../components/admin/LiveVisitorsTab";
 
 const TABS = [
     // ── الإحصائيات والتقارير
+    { value: "liveRadar",    label: "📡 رادار الزوار والنشاط (حي)", group: "analytics" },
     { value: "analytics",    label: "📊 الإحصائيات العامة",   group: "analytics" },
     { value: "orders",          label: "📦 إدارة الطلبات (OrderDukkank)",group: "analytics" },
     { value: "completedOrders", label: "🗃️ أرشيف الحسابات المسلمة", group: "analytics" },
@@ -219,6 +221,7 @@ export default function AdminDashboard() {
                     </TabsList>
 
                     {/* Tab contents (Lazy rendered per active tab) */}
+                    <TabsContent value="liveRadar"    className="mt-0">{tab === "liveRadar" && <LiveVisitorsTab />}</TabsContent>
                     <TabsContent value="analytics"    className="mt-0">{tab === "analytics" && <AnalyticsTab />}</TabsContent>
                     <TabsContent value="orders"          className="mt-0">{tab === "orders" && <OrdersDashboardTab />}</TabsContent>
                     <TabsContent value="completedOrders" className="mt-0">{tab === "completedOrders" && <CompletedOrdersTab />}</TabsContent>

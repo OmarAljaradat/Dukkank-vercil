@@ -11,6 +11,7 @@ import { QuickViewModal } from "./QuickViewModal";
 import { SecondaryExplainerModal } from "./SecondaryExplainerModal";
 import { HelpCircle } from "lucide-react";
 import { apiRecordCartAdd } from "../lib/api";
+import { trackGameClick, trackAddToCart, trackSecondaryExplainer } from "../lib/tracker";
 import { toast } from "sonner";
 
 const TIER_LABEL = {
@@ -50,13 +51,16 @@ export const GameCard = ({ game }) => {
 
     const handleTierSelect = (t) => {
         setTier(t);
+        trackGameClick(game.name, t, game[t]);
         if (t === "secondary") {
             setExplainerOpen(true);
+            trackSecondaryExplainer(`game_${game.id}`);
         }
     };
 
     const handleAdd = () => {
         if (!canBuy || price == null) return;
+        trackAddToCart({ name: game.name, tier, price });
         add({ key: `game-${game.id}-${tier}`, type: "game", title: game.name, subtitle: TIER_LABEL_FULL[tier], price });
         apiRecordCartAdd({ itemType: "game", itemId: game.id, itemName: game.name });
         setAdding(true);

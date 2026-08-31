@@ -1,3 +1,4 @@
+import { trackWhatsAppClick } from "./tracker";
 import { STORE as FALLBACK_STORE } from "../data/products";
 
 const fmtPriceUSD = (n) =>
