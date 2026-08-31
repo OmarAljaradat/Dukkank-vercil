@@ -87,9 +87,9 @@ export const DEFAULT_SUBSCRIPTIONS = [
     accent: "blue",
     visible: true,
     durations: [
-      { id: "ess-1m",  label: "شهر واحد",  four: 6.5, five: 10.0, secondary: 4.5, originalFour: 10.0,  originalFive: 10.0,  originalSecondary: 10.0, costPriceFour: 2.5, costPriceFive: 6.5, costPriceSecondary: 2.0, stockStatus: "available" },
-      { id: "ess-3m",  label: "٣ شهور",    four: 14.0, five: 19.0, secondary: 9.0, originalFour: 25.0,  originalFive: 25.0,  originalSecondary: 25.0, costPriceFour: 4.0, costPriceFive: 15.0, costPriceSecondary: 3.5, stockStatus: "available" },
-      { id: "ess-12m", label: "سنة كاملة", four: 27.0, five: 47.0, secondary: 19.0, originalFour: 80.0,  originalFive: 80.0,  originalSecondary: 80.0, costPriceFour: 9.0, costPriceFive: 32.0, costPriceSecondary: 7.0, stockStatus: "available" },
+      { id: "ess-1m",  label: "شهر واحد",  four: 6.5, five: 10.0, secondary: null, originalFour: 10.0,  originalFive: 10.0,  originalSecondary: null, costPriceFour: 2.5, costPriceFive: 6.5, costPriceSecondary: null, stockStatus: "available" },
+      { id: "ess-3m",  label: "٣ شهور",    four: 14.0, five: 19.0, secondary: null, originalFour: 25.0,  originalFive: 25.0,  originalSecondary: null, costPriceFour: 4.0, costPriceFive: 15.0, costPriceSecondary: null, stockStatus: "available" },
+      { id: "ess-12m", label: "سنة كاملة", four: 27.0, five: 47.0, secondary: null, originalFour: 80.0,  originalFive: 80.0,  originalSecondary: null, costPriceFour: 9.0, costPriceFive: 32.0, costPriceSecondary: null, stockStatus: "available" },
     ],
   },
   {
@@ -100,8 +100,8 @@ export const DEFAULT_SUBSCRIPTIONS = [
     visible: true,
     durations: [
       { id: "ext-1m",  label: "شهر واحد",  four: 8.0,  five: 14.0, secondary: 6.5, originalFour: 15.0,  originalFive: 15.0,  originalSecondary: 15.0, costPriceFour: 4.0, costPriceFive: 10.0, costPriceSecondary: 3.0, stockStatus: "available" },
-      { id: "ext-3m",  label: "٣ شهور",    four: 19.0, five: 26.0, secondary: 15.0, originalFour: 40.0,  originalFive: 40.0,  originalSecondary: 40.0, costPriceFour: 7.0, costPriceFive: 22.0, costPriceSecondary: 5.5, stockStatus: "available" },
-      { id: "ext-12m", label: "سنة كاملة", four: 41.0, five: 59.0, secondary: 33.0, originalFour: 135.0, originalFive: 135.0, originalSecondary: 135.0, costPriceFour: 15.0, costPriceFive: 50.0, costPriceSecondary: 12.0, stockStatus: "available" },
+      { id: "ext-3m",  label: "٣ شهور",    four: 19.0, five: 26.0, secondary: 15.0, originalFour: 40.0,  originalFive: 40.0,  originalSecondary: 25.0, costPriceFour: 7.0, costPriceFive: 22.0, costPriceSecondary: 5.5, stockStatus: "available" },
+      { id: "ext-12m", label: "سنة كاملة", four: 41.0, five: 59.0, secondary: 33.0, originalFour: 135.0, originalFive: 135.0, originalSecondary: 80.0, costPriceFour: 15.0, costPriceFive: 50.0, costPriceSecondary: 12.0, stockStatus: "available" },
     ],
   },
   {
@@ -111,9 +111,9 @@ export const DEFAULT_SUBSCRIPTIONS = [
     accent: "amber",
     visible: true,
     durations: [
-      { id: "del-1m",  label: "شهر واحد",  four: 11.0, five: 16.0, secondary: 7.5, originalFour: 18.0,  originalFive: 18.0,  originalSecondary: 18.0, costPriceFour: 6.0, costPriceFive: 11.0, costPriceSecondary: 4.0, stockStatus: "available" },
-      { id: "del-3m",  label: "٣ شهور",    four: 22.0, five: 33.0, secondary: 16.0, originalFour: 50.0,  originalFive: 50.0,  originalSecondary: 50.0, costPriceFour: 12.0, costPriceFive: 24.0, costPriceSecondary: 7.0, stockStatus: "available" },
-      { id: "del-12m", label: "سنة كاملة", four: 49.0, five: 69.0, secondary: 35.0, originalFour: 160.0, originalFive: 160.0, originalSecondary: 160.0, costPriceFour: 22.0, costPriceFive: 55.0, costPriceSecondary: 16.0, stockStatus: "available" },
+      { id: "del-1m",  label: "شهر واحد",  four: 11.0, five: 16.0, secondary: null, originalFour: 18.0,  originalFive: 18.0,  originalSecondary: null, costPriceFour: 6.0, costPriceFive: 11.0, costPriceSecondary: null, stockStatus: "available" },
+      { id: "del-3m",  label: "٣ شهور",    four: 22.0, five: 33.0, secondary: null, originalFour: 50.0,  originalFive: 50.0,  originalSecondary: null, costPriceFour: 12.0, costPriceFive: 24.0, costPriceSecondary: null, stockStatus: "available" },
+      { id: "del-12m", label: "سنة كاملة", four: 49.0, five: 69.0, secondary: null, originalFour: 160.0, originalFive: 160.0, originalSecondary: null, costPriceFour: 22.0, costPriceFive: 55.0, costPriceSecondary: null, stockStatus: "available" },
     ],
   },
 ];

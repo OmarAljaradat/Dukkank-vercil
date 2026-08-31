@@ -47496,9 +47496,9 @@ var DEFAULT_SUBSCRIPTIONS = [
     accent: "blue",
     visible: true,
     durations: [
-      { id: "ess-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 6.5, five: 10, secondary: 4.5, originalFour: 10, originalFive: 10, originalSecondary: 10, costPriceFour: 2.5, costPriceFive: 6.5, costPriceSecondary: 2, stockStatus: "available" },
-      { id: "ess-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 14, five: 19, secondary: 9, originalFour: 25, originalFive: 25, originalSecondary: 25, costPriceFour: 4, costPriceFive: 15, costPriceSecondary: 3.5, stockStatus: "available" },
-      { id: "ess-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 27, five: 47, secondary: 19, originalFour: 80, originalFive: 80, originalSecondary: 80, costPriceFour: 9, costPriceFive: 32, costPriceSecondary: 7, stockStatus: "available" }
+      { id: "ess-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 6.5, five: 10, secondary: null, originalFour: 10, originalFive: 10, originalSecondary: null, costPriceFour: 2.5, costPriceFive: 6.5, costPriceSecondary: null, stockStatus: "available" },
+      { id: "ess-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 14, five: 19, secondary: null, originalFour: 25, originalFive: 25, originalSecondary: null, costPriceFour: 4, costPriceFive: 15, costPriceSecondary: null, stockStatus: "available" },
+      { id: "ess-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 27, five: 47, secondary: null, originalFour: 80, originalFive: 80, originalSecondary: null, costPriceFour: 9, costPriceFive: 32, costPriceSecondary: null, stockStatus: "available" }
     ]
   },
   {
@@ -47509,8 +47509,8 @@ var DEFAULT_SUBSCRIPTIONS = [
     visible: true,
     durations: [
       { id: "ext-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 8, five: 14, secondary: 6.5, originalFour: 15, originalFive: 15, originalSecondary: 15, costPriceFour: 4, costPriceFive: 10, costPriceSecondary: 3, stockStatus: "available" },
-      { id: "ext-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 19, five: 26, secondary: 15, originalFour: 40, originalFive: 40, originalSecondary: 40, costPriceFour: 7, costPriceFive: 22, costPriceSecondary: 5.5, stockStatus: "available" },
-      { id: "ext-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 41, five: 59, secondary: 33, originalFour: 135, originalFive: 135, originalSecondary: 135, costPriceFour: 15, costPriceFive: 50, costPriceSecondary: 12, stockStatus: "available" }
+      { id: "ext-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 19, five: 26, secondary: 15, originalFour: 40, originalFive: 40, originalSecondary: 25, costPriceFour: 7, costPriceFive: 22, costPriceSecondary: 5.5, stockStatus: "available" },
+      { id: "ext-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 41, five: 59, secondary: 33, originalFour: 135, originalFive: 135, originalSecondary: 80, costPriceFour: 15, costPriceFive: 50, costPriceSecondary: 12, stockStatus: "available" }
     ]
   },
   {
@@ -47520,9 +47520,9 @@ var DEFAULT_SUBSCRIPTIONS = [
     accent: "amber",
     visible: true,
     durations: [
-      { id: "del-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 11, five: 16, secondary: 7.5, originalFour: 18, originalFive: 18, originalSecondary: 18, costPriceFour: 6, costPriceFive: 11, costPriceSecondary: 4, stockStatus: "available" },
-      { id: "del-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 22, five: 33, secondary: 16, originalFour: 50, originalFive: 50, originalSecondary: 50, costPriceFour: 12, costPriceFive: 24, costPriceSecondary: 7, stockStatus: "available" },
-      { id: "del-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 49, five: 69, secondary: 35, originalFour: 160, originalFive: 160, originalSecondary: 160, costPriceFour: 22, costPriceFive: 55, costPriceSecondary: 16, stockStatus: "available" }
+      { id: "del-1m", label: "\u0634\u0647\u0631 \u0648\u0627\u062D\u062F", four: 11, five: 16, secondary: null, originalFour: 18, originalFive: 18, originalSecondary: null, costPriceFour: 6, costPriceFive: 11, costPriceSecondary: null, stockStatus: "available" },
+      { id: "del-3m", label: "\u0663 \u0634\u0647\u0648\u0631", four: 22, five: 33, secondary: null, originalFour: 50, originalFive: 50, originalSecondary: null, costPriceFour: 12, costPriceFive: 24, costPriceSecondary: null, stockStatus: "available" },
+      { id: "del-12m", label: "\u0633\u0646\u0629 \u0643\u0627\u0645\u0644\u0629", four: 49, five: 69, secondary: null, originalFour: 160, originalFive: 160, originalSecondary: null, costPriceFour: 22, costPriceFive: 55, costPriceSecondary: null, stockStatus: "available" }
     ]
   }
 ];
