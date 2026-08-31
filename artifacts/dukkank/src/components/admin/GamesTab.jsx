@@ -460,7 +460,8 @@ Rules:
         setGames(updatedList);
         try {
             await apiUpdateGame(g.id, updatedPayload);
-            toast.success(`حُفظ سعر ${platform === 'five' ? 'PS5' : 'PS4'}: $${parsed ?? 0}`);
+            const pLabel = platform === 'five' ? 'PS5' : platform === 'four' ? 'PS4' : 'سكندري';
+            toast.success(`حُفظ سعر ${pLabel}: ${parsed ?? 0}`);
             onChanged?.();
         } catch {}
     };
@@ -603,19 +604,20 @@ Rules:
                     <table className="w-full text-right border-collapse min-w-[900px]">
                         <thead>
                             <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-100 dark:border-white/10 text-slate-500 dark:text-slate-400 text-xs font-black">
-                                <th className="p-4 w-40 text-center">الموقع المباشر (#)</th>
+                                <th className="p-4 w-36 text-center">الموقع المباشر (#)</th>
                                 <th className="p-4">اسم اللعبة الغلاف</th>
-                                <th className="p-4 w-32 text-center">سعر PS5 ($)</th>
-                                <th className="p-4 w-32 text-center">سعر PS4 ($)</th>
-                                <th className="p-4 w-44 text-center">حالة وتعداد المخزون</th>
-                                <th className="p-4 w-36 text-center">الشارات والظهور</th>
+                                <th className="p-4 w-28 text-center text-blue-600 dark:text-blue-400">سعر PS5 ($)</th>
+                                <th className="p-4 w-28 text-center text-cyan-600 dark:text-cyan-400">سعر PS4 ($)</th>
+                                <th className="p-4 w-28 text-center text-amber-600 dark:text-amber-400">سعر سكندري ($)</th>
+                                <th className="p-4 w-40 text-center">حالة وتعداد المخزون</th>
+                                <th className="p-4 w-32 text-center">الشارات والظهور</th>
                                 <th className="p-4 w-28 text-center">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-xs font-bold">
                             {paginatedGames.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="p-12 text-center text-slate-400">
+                                    <td colSpan={8} className="p-12 text-center text-slate-400">
                                         <PackageX className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                         <span>لا توجد ألعاب مطابقة للبحث.</span>
                                     </td>
