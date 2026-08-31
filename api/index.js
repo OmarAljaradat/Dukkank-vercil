@@ -46808,8 +46808,8 @@ var pool4 = new esm_default.Pool({
 // artifacts/api-server/src/lib/telegram.ts
 var DEFAULT_ORDERS_BOT = {
   enabled: true,
-  botToken: process.env.ORDERS_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "",
-  chatId: process.env.ORDERS_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID || "1965859902"
+  botToken: process.env.ORDERS_TELEGRAM_BOT_TOKEN || "8510906546:AAHtxyyIJ9-tXyA7Keua_0n9GHSthtSIaEU",
+  chatId: process.env.ORDERS_TELEGRAM_CHAT_ID || "1965859902"
 };
 var DEFAULT_RADAR_BOT = {
   enabled: true,
@@ -46870,13 +46870,13 @@ async function saveDualTelegramConfig(cfg) {
   const updated = {
     ordersBot: {
       enabled: cfg.ordersBot?.enabled !== void 0 ? !!cfg.ordersBot.enabled : current.ordersBot.enabled,
-      botToken: (cfg.ordersBot?.botToken !== void 0 ? cfg.ordersBot.botToken : current.ordersBot.botToken).trim(),
-      chatId: (cfg.ordersBot?.chatId !== void 0 ? cfg.ordersBot.chatId : current.ordersBot.chatId).trim()
+      botToken: (cfg.ordersBot?.botToken !== void 0 && cfg.ordersBot.botToken !== "" ? cfg.ordersBot.botToken : current.ordersBot.botToken || DEFAULT_ORDERS_BOT.botToken).trim(),
+      chatId: (cfg.ordersBot?.chatId !== void 0 && cfg.ordersBot.chatId !== "" ? cfg.ordersBot.chatId : current.ordersBot.chatId || DEFAULT_ORDERS_BOT.chatId).trim()
     },
     radarBot: {
       enabled: cfg.radarBot?.enabled !== void 0 ? !!cfg.radarBot.enabled : current.radarBot.enabled,
-      botToken: (cfg.radarBot?.botToken !== void 0 ? cfg.radarBot.botToken : current.radarBot.botToken).trim(),
-      chatId: (cfg.radarBot?.chatId !== void 0 ? cfg.radarBot.chatId : current.radarBot.chatId).trim(),
+      botToken: (cfg.radarBot?.botToken !== void 0 && cfg.radarBot.botToken !== "" ? cfg.radarBot.botToken : current.radarBot.botToken || DEFAULT_RADAR_BOT.botToken).trim(),
+      chatId: (cfg.radarBot?.chatId !== void 0 && cfg.radarBot.chatId !== "" ? cfg.radarBot.chatId : current.radarBot.chatId || DEFAULT_RADAR_BOT.chatId).trim(),
       notifyCart: cfg.radarBot?.notifyCart !== void 0 ? !!cfg.radarBot.notifyCart : current.radarBot.notifyCart,
       notifyCheckout: cfg.radarBot?.notifyCheckout !== void 0 ? !!cfg.radarBot.notifyCheckout : current.radarBot.notifyCheckout,
       notifyWhatsApp: cfg.radarBot?.notifyWhatsApp !== void 0 ? !!cfg.radarBot.notifyWhatsApp : current.radarBot.notifyWhatsApp,
@@ -46947,7 +46947,9 @@ async function sendTelegramOrderNotification(order) {
   try {
     const config = await getDualTelegramConfig();
     const { enabled, botToken, chatId } = config.ordersBot;
-    if (!enabled || !botToken || !chatId) {
+    const token = botToken || DEFAULT_ORDERS_BOT.botToken;
+    const chat = chatId || DEFAULT_ORDERS_BOT.chatId;
+    if (!enabled || !token || !chat) {
       return { ok: false, reason: "Orders bot not configured" };
     }
     const orderNum = order.order_number || `#${order.id}`;
@@ -46968,7 +46970,7 @@ async function sendTelegramOrderNotification(order) {
 \u{1F3AE} <b>\u0627\u0644\u0645\u0646\u062A\u062C:</b> ${escapeHtml(itemTitle)} ${escapeHtml(platform)}
 \u{1F4B0} <b>\u0627\u0644\u0645\u0628\u0644\u063A \u0627\u0644\u0645\u062F\u0641\u0648\u0639:</b> <b>$${paid}</b> (${escapeHtml(pMethod)})
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-\u26A1 <i>\u062A\u0645 \u062A\u0623\u0643\u064A\u062F \u0627\u0644\u062F\u0641\u0639 \u0648\u062C\u0627\u0647\u0632 \u0644\u0644\u062A\u0633\u0644\u064A\u0645.</i>
+\u26A1 <i>\u062A\u0645 \u0627\u0633\u062A\u0644\u0627\u0645 \u0648\u062A\u0623\u0643\u064A\u062F \u0627\u0644\u062F\u0641\u0639 \u0648\u062C\u0627\u0647\u0632 \u0644\u0644\u062A\u0633\u0644\u064A\u0645.</i>
     `.trim();
     const inlineButtons = [];
     const actionRow = [];
@@ -46985,7 +46987,7 @@ async function sendTelegramOrderNotification(order) {
       }
     }
     if (actionRow.length > 0) inlineButtons.push(actionRow);
-    return await postToTelegram(botToken, chatId, messageHtml, inlineButtons);
+    return await postToTelegram(token, chat, messageHtml, inlineButtons);
   } catch (e) {
     console.error("Orders Telegram notification failed:", e);
     return { ok: false, error: e };
@@ -46994,7 +46996,9 @@ async function sendTelegramOrderNotification(order) {
 async function sendTelegramActivityNotification(event) {
   const config = await getDualTelegramConfig();
   const { enabled, botToken, chatId, notifyCart, notifyCheckout, notifyWhatsApp, notifyGameClick, notifySearch, notifyPageView } = config.radarBot;
-  if (!enabled || !botToken || !chatId) return { ok: false, reason: "Radar bot not configured" };
+  const token = botToken || DEFAULT_RADAR_BOT.botToken;
+  const chat = chatId || DEFAULT_RADAR_BOT.chatId;
+  if (!enabled || !token || !chat) return { ok: false, reason: "Radar bot not configured" };
   const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
   if (eventType === "add_to_cart" && notifyCart === false) return { ok: false };
   if (eventType === "checkout_start" && notifyCheckout === false) return { ok: false };
@@ -47047,12 +47051,12 @@ async function sendTelegramActivityNotification(event) {
 \u{1F4F1} <b>\u0627\u0644\u062C\u0647\u0627\u0632:</b> ${escapeHtml(deviceInfo || "\u0645\u062A\u0635\u0641\u062D \u0648\u064A\u0628")}
 \u{1F310} <b>\u0627\u0644\u0635\u0641\u062D\u0629:</b> <code>${escapeHtml(pageUrl || "/")}</code>
 \u23F1\uFE0F <b>\u0627\u0644\u062A\u0648\u0642\u064A\u062A:</b> ${timeStr}`;
-  return await postToTelegram(botToken, chatId, msg);
+  return await postToTelegram(token, chat, msg);
 }
 async function sendTelegramMessage(text, inlineKeyboard) {
   const config = await getDualTelegramConfig();
-  const token = config.ordersBot.botToken || config.radarBot.botToken;
-  const chat = config.ordersBot.chatId || config.radarBot.chatId;
+  const token = config.ordersBot.botToken || DEFAULT_ORDERS_BOT.botToken;
+  const chat = config.ordersBot.chatId || DEFAULT_ORDERS_BOT.chatId;
   return await postToTelegram(token, chat, text, inlineKeyboard);
 }
 async function getTelegramConfig() {
@@ -47068,7 +47072,7 @@ async function saveTelegramConfig(cfg) {
   const dual = {
     ordersBot: {
       enabled: cfg.ordersEnabled !== void 0 ? !!cfg.ordersEnabled : cfg.enabled ?? true,
-      botToken: cfg.ordersBotToken !== void 0 ? cfg.ordersBotToken : cfg.botToken || "",
+      botToken: cfg.ordersBotToken !== void 0 ? cfg.ordersBotToken : cfg.botToken || DEFAULT_ORDERS_BOT.botToken,
       chatId: cfg.ordersChatId !== void 0 ? cfg.ordersChatId : cfg.chatId || "1965859902"
     },
     radarBot: {
