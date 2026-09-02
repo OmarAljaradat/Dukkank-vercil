@@ -463,16 +463,17 @@ export function DataProvider({ children }) {
                 const defaultDur = defaultSub?.durations?.[idx] || {};
                 return {
                     ...defaultDur,
-                    ...d,
                     ...localDur,
-                    originalFour: localDur.originalFour ?? d.originalFour ?? defaultDur.originalFour,
-                    originalFive: localDur.originalFive ?? d.originalFive ?? defaultDur.originalFive,
+                    ...d, // Server fetched duration takes priority
+                    originalFour: d.originalFour ?? localDur.originalFour ?? defaultDur.originalFour,
+                    originalFive: d.originalFive ?? localDur.originalFive ?? defaultDur.originalFive,
                 };
             });
 
             return {
-                ...item,
+                ...(defaultSub || {}),
                 ...(localMatch || {}),
+                ...item, // Server fetched item takes priority
                 durations: mergedDurations,
                 visible,
                 hidden

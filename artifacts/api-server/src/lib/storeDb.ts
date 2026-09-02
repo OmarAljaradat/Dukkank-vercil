@@ -87,7 +87,7 @@ export const DEFAULT_SUBSCRIPTIONS = [
     accent: "blue",
     visible: true,
     durations: [
-      { id: "ess-1m",  label: "شهر واحد",  four: 6.5, five: 10.0, secondary: null, originalFour: 10.0,  originalFive: 10.0,  originalSecondary: null, costPriceFour: 2.5, costPriceFive: 6.5, costPriceSecondary: null, stockStatus: "available" },
+      { id: "ess-1m",  label: "شهر واحد",  four: 6.5, five: null, secondary: null, originalFour: 10.0,  originalFive: null,  originalSecondary: null, costPriceFour: 2.5, costPriceFive: null, costPriceSecondary: null, stockStatus: "available" },
       { id: "ess-3m",  label: "٣ شهور",    four: 14.0, five: 19.0, secondary: null, originalFour: 25.0,  originalFive: 25.0,  originalSecondary: null, costPriceFour: 4.0, costPriceFive: 15.0, costPriceSecondary: null, stockStatus: "available" },
       { id: "ess-12m", label: "سنة كاملة", four: 27.0, five: 47.0, secondary: null, originalFour: 80.0,  originalFive: 80.0,  originalSecondary: null, costPriceFour: 9.0, costPriceFive: 32.0, costPriceSecondary: null, stockStatus: "available" },
     ],
@@ -99,7 +99,7 @@ export const DEFAULT_SUBSCRIPTIONS = [
     accent: "red",
     visible: true,
     durations: [
-      { id: "ext-1m",  label: "شهر واحد",  four: 8.0,  five: 14.0, secondary: 6.5, originalFour: 15.0,  originalFive: 15.0,  originalSecondary: 15.0, costPriceFour: 4.0, costPriceFive: 10.0, costPriceSecondary: 3.0, stockStatus: "available" },
+      { id: "ext-1m",  label: "شهر واحد",  four: 8.0,  five: null, secondary: 6.5, originalFour: 15.0,  originalFive: null,  originalSecondary: 15.0, costPriceFour: 4.0, costPriceFive: null, costPriceSecondary: 3.0, stockStatus: "available" },
       { id: "ext-3m",  label: "٣ شهور",    four: 19.0, five: 26.0, secondary: 15.0, originalFour: 40.0,  originalFive: 40.0,  originalSecondary: 25.0, costPriceFour: 7.0, costPriceFive: 22.0, costPriceSecondary: 5.5, stockStatus: "available" },
       { id: "ext-12m", label: "سنة كاملة", four: 41.0, five: 59.0, secondary: 33.0, originalFour: 135.0, originalFive: 135.0, originalSecondary: 80.0, costPriceFour: 15.0, costPriceFive: 50.0, costPriceSecondary: 12.0, stockStatus: "available" },
     ],
