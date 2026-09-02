@@ -34749,15 +34749,15 @@ var require_pg_pool = __commonJS({
       });
       return { callback: cb, result };
     }
-    function makeIdleListener(pool9, client) {
+    function makeIdleListener(pool8, client) {
       return function idleListener(err) {
         err.client = client;
         client.removeListener("error", idleListener);
         client.on("error", () => {
-          pool9.log("additional client error after disconnection due to error", err);
+          pool8.log("additional client error after disconnection due to error", err);
         });
-        pool9._remove(client);
-        pool9.emit("error", err, client);
+        pool8._remove(client);
+        pool8.emit("error", err, client);
       };
     }
     var Pool2 = class extends EventEmitter {
@@ -50594,62 +50594,145 @@ var promo_default = router13;
 
 // artifacts/api-server/src/routes/payments.ts
 var import_express14 = __toESM(require_express2(), 1);
-var pool8 = new esm_default.Pool({ connectionString: process.env.DATABASE_URL });
 var router14 = (0, import_express14.Router)();
 var PAYTABS_PROFILE_ID = process.env.PAYTABS_PROFILE_ID || "182320";
 var PAYTABS_SERVER_KEY = process.env.PAYTABS_SERVER_KEY || "SJJ9HHGZJD-J9J29NZ9KD-W96L9RBTN9";
 var PAYTABS_CLIENT_KEY = process.env.PAYTABS_CLIENT_KEY || "CQK29R-BR2K6P-6MPQ9P-MTPVQN";
 var PAYTABS_ENDPOINT = process.env.PAYTABS_ENDPOINT || "https://secure-jordan.paytabs.com/payment/request";
 var paymentOrdersStore = /* @__PURE__ */ new Map();
-async function createStoreOrderFromPayment(order) {
+async function initPaymentsDb() {
   try {
-    const { rows: seqRows } = await pool8.query(
-      "UPDATE order_number_seq SET last_number = last_number + 1 RETURNING last_number"
-    );
-    const num = seqRows[0]?.last_number ?? 1;
-    const orderNumber = `DK-${String(num).padStart(5, "0")}`;
-    const firstItem = order.items[0];
-    const isSubscription = firstItem?.name?.includes("\u0628\u0627\u0642\u0629") || firstItem?.name?.includes("\u0627\u0634\u062A\u0631\u0627\u0643") || firstItem?.name?.includes("Plus");
+    await pool4.query(`
+            CREATE TABLE IF NOT EXISTS order_number_seq (
+                id INT PRIMARY KEY DEFAULT 1,
+                last_number INT NOT NULL DEFAULT 1000
+            );
+            INSERT INTO order_number_seq (id, last_number) VALUES (1, 1000)
+            ON CONFLICT (id) DO NOTHING;
+
+            CREATE TABLE IF NOT EXISTS payment_sessions (
+                cart_id VARCHAR(100) PRIMARY KEY,
+                tran_ref VARCHAR(100),
+                order_number VARCHAR(50),
+                customer_name VARCHAR(200),
+                customer_phone VARCHAR(50),
+                customer_email VARCHAR(200),
+                customer_instagram VARCHAR(100),
+                notes TEXT,
+                items_json JSONB,
+                total_price NUMERIC(10,2),
+                currency VARCHAR(20),
+                usd_total NUMERIC(10,2),
+                status VARCHAR(50) DEFAULT 'pending',
+                paytabs_result JSONB,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            );
+
+            ALTER TABLE store_orders ALTER COLUMN contact_whatsapp DROP NOT NULL;
+            ALTER TABLE store_orders ALTER COLUMN customer_phone DROP NOT NULL;
+            ALTER TABLE store_orders ALTER COLUMN customer_email DROP NOT NULL;
+            ALTER TABLE store_orders ALTER COLUMN game_name DROP NOT NULL;
+            ALTER TABLE store_orders ALTER COLUMN product_type DROP NOT NULL;
+        `);
+  } catch (e) {
+    console.warn("[Payments DB Init Warning]:", e?.message);
+  }
+}
+initPaymentsDb();
+async function fulfillSuccessfulPayment(cartId, tranRef, paytabsData) {
+  try {
+    let session = null;
+    try {
+      const { rows } = await pool4.query("SELECT * FROM payment_sessions WHERE cart_id = $1", [cartId]);
+      session = rows[0];
+    } catch (e) {
+    }
+    const fallbackMem = paymentOrdersStore.get(cartId);
+    const customerName = session?.customer_name || fallbackMem?.customer?.name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643";
+    const customerPhone = session?.customer_phone || fallbackMem?.customer?.phone || "\u062A\u0645 \u0627\u0644\u062F\u0641\u0639 \u0623\u0648\u0646\u0644\u0627\u064A\u0646";
+    const customerEmail = session?.customer_email || fallbackMem?.customer?.email || "customer@dukkank.com";
+    const customerInsta = session?.customer_instagram || fallbackMem?.customer?.instagram || null;
+    const items = session?.items_json || fallbackMem?.items || [{ name: "\u0637\u0644\u0628 \u0623\u0644\u0639\u0627\u0628 \u0645\u062F\u0641\u0648\u0639 \u0639\u0628\u0631 PayTabs", price: session?.total_price || 0, quantity: 1 }];
+    const totalPrice = Number(session?.total_price || fallbackMem?.totalPrice || 0);
+    const currency = session?.currency || fallbackMem?.currency || "SAR";
+    const existingOrder = await pool4.query(
+      "SELECT * FROM store_orders WHERE notes LIKE $1 OR paytabs_tran_ref = $2 LIMIT 1",
+      [`%${cartId}%`, tranRef || "NONEXISTENT"]
+    ).catch(() => ({ rows: [] }));
+    if (existingOrder.rows.length > 0) {
+      console.log(`[OrderDukkank] Order already exists for ${cartId} (Order: ${existingOrder.rows[0].order_number})`);
+      return existingOrder.rows[0].order_number;
+    }
+    let orderNumber = `DK-${Date.now().toString().slice(-5)}`;
+    try {
+      const { rows: seqRows } = await pool4.query(
+        "UPDATE order_number_seq SET last_number = last_number + 1 WHERE id = 1 RETURNING last_number"
+      );
+      if (seqRows[0]?.last_number) {
+        orderNumber = `DK-${String(seqRows[0].last_number).padStart(5, "0")}`;
+      }
+    } catch (e) {
+    }
+    const firstItem = Array.isArray(items) ? items[0] : null;
+    const isSubscription = firstItem?.name?.includes("\u0628\u0627\u0642\u0629") || firstItem?.name?.includes("\u0627\u0634\u062A\u0631\u0627\u0643") || firstItem?.name?.includes("Plus") || firstItem?.name?.includes("\u0623\u0633\u0627\u0633\u064A") || firstItem?.name?.includes("\u0625\u0636\u0627\u0641\u064A") || firstItem?.name?.includes("\u0641\u0627\u062E\u0631");
     const productType = isSubscription ? "subscription" : "game";
-    const gameName = order.items.map((i) => i.name).join(" + ");
-    const platform = firstItem?.platform || null;
-    const customerPaid = order.totalPrice || 0;
-    const gatewayFee = +(customerPaid * 0.05).toFixed(2);
-    const { rows: insertedRows } = await pool8.query(
+    const gameName = Array.isArray(items) ? items.map((i) => i.name || i.title).join(" + ") : "\u0637\u0644\u0628 \u0623\u0644\u0639\u0627\u0628 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643";
+    const platform = firstItem?.platform || "PS5";
+    const gatewayFee = +(totalPrice * 0.05).toFixed(2);
+    const { rows: insertedRows } = await pool4.query(
       `INSERT INTO store_orders (
-        order_number, customer_name, product_type, game_name, platform,
-        contact_whatsapp, customer_phone, customer_email, contact_instagram,
-        status, customer_paid, payment_platform, gateway_fee,
-        order_source, paytabs_tran_ref, items_json, notes
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
+                order_number, customer_name, product_type, game_name, platform,
+                contact_whatsapp, customer_phone, customer_email, contact_instagram,
+                status, customer_paid, payment_platform, gateway_fee,
+                order_source, paytabs_tran_ref, items_json, notes
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
       [
         orderNumber,
-        order.customer.name,
+        customerName,
         productType,
         gameName,
         platform,
-        order.customer.phone,
-        order.customer.phone,
-        order.customer.email,
-        order.customer.instagram || null,
+        customerPhone,
+        customerPhone,
+        customerEmail,
+        customerInsta,
         "new",
-        customerPaid,
+        totalPrice,
         "PayTabs",
         gatewayFee,
         "paytabs",
-        order.tranRef || null,
-        JSON.stringify(order.items),
-        `\u0637\u0644\u0628 \u0623\u0648\u0646\u0644\u0627\u064A\u0646 \u2014 ${order.currency} ${order.totalPrice}`
+        tranRef || null,
+        JSON.stringify(items),
+        `\u0637\u0644\u0628 \u0623\u0648\u0646\u0644\u0627\u064A\u0646 (${cartId}) \u2014 ${currency} ${totalPrice}`
       ]
     );
+    await pool4.query(
+      `UPDATE payment_sessions SET
+                status = 'completed',
+                order_number = $1,
+                tran_ref = COALESCE($2, tran_ref),
+                paytabs_result = $3,
+                updated_at = NOW()
+            WHERE cart_id = $4`,
+      [orderNumber, tranRef || null, paytabsData ? JSON.stringify(paytabsData) : null, cartId]
+    ).catch(() => {
+    });
+    if (fallbackMem) {
+      fallbackMem.status = "completed";
+      fallbackMem.orderNumber = orderNumber;
+      fallbackMem.tranRef = tranRef;
+      paymentOrdersStore.set(cartId, fallbackMem);
+    }
     if (insertedRows && insertedRows[0]) {
-      sendTelegramOrderNotification(insertedRows[0]).catch(() => {
+      sendTelegramOrderNotification(insertedRows[0]).catch((tgErr) => {
+        console.error("[Telegram Order Notification Failed]:", tgErr?.message);
       });
     }
-    console.log(`[OrderDukkank] Auto-created store order ${orderNumber} from PayTabs payment ${order.id}`);
+    console.log(`[OrderDukkank] Auto-created store order ${orderNumber} from PayTabs payment ${cartId}`);
     return orderNumber;
   } catch (err) {
-    console.error("[OrderDukkank] Failed to create store order from payment:", err?.message);
+    console.error("[OrderDukkank] Critical Error fulfilling payment:", err?.message);
     return null;
   }
 }
@@ -50681,16 +50764,46 @@ router14.post("/payments/checkout", async (req, res) => {
     const inputCurr = String(currency || "SAR").toUpperCase();
     const displayAmt = Number(totalPrice) || 0;
     const rate = CURRENCY_RATES[inputCurr] || 3.75;
-    const usdAmt = usdTotal ? Number(usdTotal) : displayAmt / rate;
+    const usdAmt = usdTotal ? Number(usdTotal) : +(displayAmt / rate).toFixed(2);
     const paytabsAmount = Math.max(0.1, +(usdAmt * 0.71).toFixed(2));
     const paytabsCurrency = "JOD";
+    const custName = String(customer.name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643").trim();
+    const custPhone = String(customer.phone || "0791234567").trim();
+    const custEmail = String(customer.email || "").trim() || `${cartId.toLowerCase()}@dukkank.com`;
+    const custInsta = customer.instagram ? String(customer.instagram).trim() : null;
+    try {
+      await pool4.query(
+        `INSERT INTO payment_sessions (
+                    cart_id, customer_name, customer_phone, customer_email, customer_instagram,
+                    notes, items_json, total_price, currency, usd_total, status
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending')
+                ON CONFLICT (cart_id) DO UPDATE SET
+                    customer_name=$2, customer_phone=$3, customer_email=$4, customer_instagram=$5,
+                    total_price=$8, updated_at=NOW()`,
+        [
+          cartId,
+          custName,
+          custPhone,
+          custEmail,
+          custInsta,
+          customer.notes || null,
+          JSON.stringify(items),
+          displayAmt,
+          inputCurr,
+          usdAmt
+        ]
+      );
+    } catch (dbErr) {
+      console.error("[Payment Session DB Insert Error]:", dbErr?.message);
+    }
     const newOrder = {
       id: cartId,
       customer: {
-        name: String(customer.name || "\u0639\u0645\u064A\u0644 \u062F\u064F\u0643\u0627\u0646\u0643").trim(),
-        email: String(customer.email || "").trim() || `${cartId.toLowerCase()}@dukkank.com`,
-        phone: String(customer.phone || "0791234567").trim(),
-        notes: customer.notes || ""
+        name: custName,
+        email: custEmail,
+        phone: custPhone,
+        notes: customer.notes || "",
+        instagram: custInsta || void 0
       },
       items,
       totalPrice: displayAmt,
@@ -50700,21 +50813,36 @@ router14.post("/payments/checkout", async (req, res) => {
       timestamp: Date.now()
     };
     paymentOrdersStore.set(cartId, newOrder);
-    const reqOrigin = req.headers.origin || `${req.protocol}://${req.get("host")}`;
-    const returnUrl = `${req.protocol}://${req.get("host")}/api/payments/return?cartId=${cartId}&origin=${encodeURIComponent(reqOrigin)}`;
+    const proto = req.headers["x-forwarded-proto"] || "https";
+    const host = req.get("host") || "www.dukkank.store";
+    let clientOrigin = "";
+    const refHeader = req.headers.origin || req.headers.referer;
+    if (refHeader) {
+      try {
+        const u = new URL(refHeader);
+        if (!u.hostname.includes("localhost")) {
+          clientOrigin = `${u.protocol}//${u.host}`;
+        }
+      } catch {
+      }
+    }
+    if (!clientOrigin) {
+      clientOrigin = `${proto}://${host}`;
+    }
+    const returnUrl = `${proto}://${host}/api/payments/return?cartId=${cartId}&origin=${encodeURIComponent(clientOrigin)}`;
     const paytabsBody = {
       profile_id: Number(PAYTABS_PROFILE_ID) || 182320,
       tran_type: "sale",
       tran_class: "ecom",
       cart_id: cartId,
-      cart_description: `\u0637\u0644\u0628 \u0631\u0642\u0645 ${cartId} \u0645\u0646 \u0645\u062A\u062C\u0631 \u062F\u064F\u0643\u0627\u0646\u0643 (${displayAmt} ${inputCurr})`,
+      cart_description: `\u0637\u0644\u0628 \u062F\u064F\u0643\u0627\u0646\u0643 #${cartId} (${displayAmt} ${inputCurr})`,
       cart_currency: paytabsCurrency,
       cart_amount: paytabsAmount,
       return: returnUrl,
       customer_details: {
-        name: newOrder.customer.name,
-        email: newOrder.customer.email,
-        phone: newOrder.customer.phone,
+        name: custName,
+        email: custEmail,
+        phone: custPhone,
         street1: "Amman",
         city: "Amman",
         state: "Amman",
@@ -50722,13 +50850,14 @@ router14.post("/payments/checkout", async (req, res) => {
         ip: req.ip || "127.0.0.1"
       },
       user_defined: {
-        udf1: cartId
+        udf1: cartId,
+        udf2: clientOrigin
       }
     };
     if (process.env.PAYTABS_CALLBACK_URL) {
       paytabsBody.callback = process.env.PAYTABS_CALLBACK_URL;
     }
-    console.log(`[PayTabs Checkout] Initiating order ${cartId} with amount ${paytabsAmount} ${paytabsCurrency} (Original: ${displayAmt} ${inputCurr})`);
+    console.log(`[PayTabs Checkout] Initiating order ${cartId} for ${paytabsAmount} ${paytabsCurrency}`);
     const response = await fetch(PAYTABS_ENDPOINT, {
       method: "POST",
       headers: {
@@ -50742,6 +50871,11 @@ router14.post("/payments/checkout", async (req, res) => {
     if (data && data.redirect_url) {
       newOrder.tranRef = data.tran_ref;
       paymentOrdersStore.set(cartId, newOrder);
+      await pool4.query(
+        "UPDATE payment_sessions SET tran_ref = $1, updated_at = NOW() WHERE cart_id = $2",
+        [data.tran_ref || null, cartId]
+      ).catch(() => {
+      });
       res.json({
         ok: true,
         orderId: cartId,
@@ -50751,7 +50885,7 @@ router14.post("/payments/checkout", async (req, res) => {
       return;
     }
     console.warn("[PayTabs Fallback] Gateway returned:", data);
-    const fallbackReturn = `${reqOrigin}/?payment=success&orderId=${cartId}`;
+    const fallbackReturn = `${clientOrigin}/?payment=success&orderId=${cartId}`;
     res.json({
       ok: true,
       orderId: cartId,
@@ -50761,92 +50895,156 @@ router14.post("/payments/checkout", async (req, res) => {
   } catch (err) {
     console.error("[PayTabs Checkout Error]:", err);
     const cartId = "DK-" + Date.now().toString(36).toUpperCase();
-    const reqOrigin = req.headers.origin || `${req.protocol}://${req.get("host")}`;
+    const clientOrigin = `https://${req.get("host") || "www.dukkank.store"}`;
     res.json({
       ok: true,
       orderId: cartId,
-      redirectUrl: `${reqOrigin}/?payment=success&orderId=${cartId}`,
+      redirectUrl: `${clientOrigin}/?payment=success&orderId=${cartId}`,
       tranRef: `TST-${Date.now()}`
     });
   }
 });
-var handleReturn = (req, res) => {
+var handleReturn = async (req, res) => {
   try {
     const payload = { ...req.query, ...req.body };
     console.log("[PayTabs Return Payload]:", JSON.stringify(payload));
-    const cartId = String(payload.cartId || payload.cart_id || payload.user_defined?.udf1 || "");
-    const targetOrigin = String(payload.origin || payload.reqOrigin || "http://localhost:5173");
-    const respStatus = String(payload.respStatus || payload.payment_result?.response_status || payload.respCode || "").toUpperCase();
-    const respMessage = payload.respMessage || payload.payment_result?.response_message || "\u062A\u0645 \u0631\u0641\u0636 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0629 \u0645\u0646 \u0627\u0644\u0628\u0646\u0643 \u0627\u0644\u0645\u0639\u0627\u0644\u062C";
-    const isApproved = respStatus === "A" || respStatus === "100" || respStatus === "H" || String(payload.respCode) === "100" || String(payload.payment_result?.response_status || "").toUpperCase() === "A" || String(payload.tranRef || payload.tran_ref || "").startsWith("TST");
-    if (cartId && paymentOrdersStore.has(cartId)) {
-      const order = paymentOrdersStore.get(cartId);
-      order.status = isApproved ? "completed" : "failed";
-      order.paytabsResult = payload;
-      paymentOrdersStore.set(cartId, order);
-      if (isApproved) {
-        createStoreOrderFromPayment(order).catch(() => {
-        });
-      }
+    const cartId = String(
+      payload.cartId || payload.cart_id || payload.user_defined?.udf1 || req.query.cartId || ""
+    ).trim();
+    const host = req.get("host") || "www.dukkank.store";
+    const proto = req.headers["x-forwarded-proto"] || "https";
+    const defaultProdOrigin = `${proto}://${host}`;
+    let targetOrigin = String(payload.origin || payload.user_defined?.udf2 || req.query.origin || "").trim();
+    if (!targetOrigin || targetOrigin.includes("localhost") || targetOrigin.startsWith("http://localhost")) {
+      targetOrigin = defaultProdOrigin;
     }
-    if (isApproved) {
-      console.log(`[PayTabs Return] Order ${cartId} APPROVED! Redirecting to success page.`);
-      res.redirect(`${targetOrigin}/?payment=success&orderId=${cartId}`);
-    } else {
-      console.log(`[PayTabs Return] Order ${cartId} DECLINED (${respStatus}). Redirecting to declined page.`);
-      res.redirect(`${targetOrigin}/?payment=declined&orderId=${cartId}&reason=${encodeURIComponent(respMessage)}`);
+    const respStatus = String(payload.respStatus || payload.payment_result?.response_status || "").toUpperCase();
+    const respCode = String(payload.respCode || payload.payment_result?.response_code || "");
+    const respMessage = String(payload.respMessage || payload.payment_result?.response_message || "\u062A\u0645\u062A \u0627\u0644\u0639\u0645\u0644\u064A\u0629 \u0628\u0646\u062C\u0627\u062D");
+    const tranRef = String(payload.tranRef || payload.tran_ref || "");
+    const isApproved = respStatus === "A" || respStatus === "H" || respStatus === "100" || respCode === "100" || respStatus === "APPROVED" || respMessage.toLowerCase().includes("authoris") || respMessage.toLowerCase().includes("approv") || tranRef.startsWith("TST");
+    if (isApproved && cartId) {
+      console.log(`[PayTabs Return] Order ${cartId} APPROVED! Fulfilling order...`);
+      const orderNum = await fulfillSuccessfulPayment(cartId, tranRef, payload);
+      res.redirect(`${targetOrigin}/?payment=success&orderId=${encodeURIComponent(cartId)}&orderNumber=${encodeURIComponent(orderNum || cartId)}`);
+      return;
     }
+    if (!isApproved) {
+      console.log(`[PayTabs Return] Order ${cartId} DECLINED (${respStatus} / ${respCode}). Reason: ${respMessage}`);
+      await pool4.query(
+        "UPDATE payment_sessions SET status = 'failed', paytabs_result = $1, updated_at = NOW() WHERE cart_id = $2",
+        [JSON.stringify(payload), cartId]
+      ).catch(() => {
+      });
+      res.redirect(`${targetOrigin}/?payment=declined&orderId=${encodeURIComponent(cartId)}&reason=${encodeURIComponent(respMessage)}`);
+      return;
+    }
+    res.redirect(`${targetOrigin}/?payment=success&orderId=${encodeURIComponent(cartId)}`);
   } catch (err) {
-    console.error("[PayTabs Return Error]:", err);
-    res.redirect("/?payment=declined&reason=" + encodeURIComponent("\u062D\u062F\u062B \u062E\u0637\u0623 \u0623\u062B\u0646\u0627\u0621 \u0645\u0639\u0627\u0644\u062C\u0629 \u0646\u062A\u064A\u062C\u0629 \u0627\u0644\u062F\u0641\u0639"));
+    console.error("[PayTabs Return Handler Error]:", err?.message);
+    const host = req.get("host") || "www.dukkank.store";
+    const proto = req.headers["x-forwarded-proto"] || "https";
+    res.redirect(`${proto}://${host}/?payment=declined&reason=${encodeURIComponent("\u062D\u062F\u062B \u062E\u0637\u0623 \u0623\u062B\u0646\u0627\u0621 \u0627\u0633\u062A\u0644\u0627\u0645 \u0646\u062A\u064A\u062C\u0629 \u0627\u0644\u062F\u0641\u0639")}`);
   }
 };
 router14.get("/payments/return", handleReturn);
 router14.post("/payments/return", handleReturn);
-router14.post("/payments/webhook", (req, res) => {
+router14.post("/payments/webhook", async (req, res) => {
   try {
     const body = req.body;
     console.log("[PayTabs Webhook Received]:", JSON.stringify(body));
-    const cartId = body?.cart_id || body?.user_defined?.udf1;
-    const tranRef = body?.tran_ref;
-    const responseStatus = body?.payment_result?.response_status;
-    if (cartId && paymentOrdersStore.has(cartId)) {
-      const order = paymentOrdersStore.get(cartId);
-      order.tranRef = tranRef || order.tranRef;
-      order.paytabsResult = body;
-      if (responseStatus === "A") {
-        order.status = "completed";
-        console.log(`[PayTabs Webhook] Order ${cartId} marked as COMPLETED`);
-        createStoreOrderFromPayment(order).catch(() => {
-        });
+    const cartId = String(body?.cart_id || body?.user_defined?.udf1 || "").trim();
+    const tranRef = String(body?.tran_ref || "");
+    const responseStatus = String(body?.payment_result?.response_status || body?.respStatus || "").toUpperCase();
+    if (cartId) {
+      if (responseStatus === "A" || responseStatus === "H" || responseStatus === "100") {
+        console.log(`[PayTabs Webhook] Payment ${cartId} APPROVED via webhook! Fulfilling...`);
+        await fulfillSuccessfulPayment(cartId, tranRef, body);
       } else {
-        order.status = "failed";
-        console.log(`[PayTabs Webhook] Order ${cartId} marked as FAILED with status ${responseStatus}`);
+        console.log(`[PayTabs Webhook] Payment ${cartId} marked as FAILED (${responseStatus})`);
+        await pool4.query(
+          "UPDATE payment_sessions SET status = 'failed', paytabs_result = $1, updated_at = NOW() WHERE cart_id = $2",
+          [JSON.stringify(body), cartId]
+        ).catch(() => {
+        });
       }
-      paymentOrdersStore.set(cartId, order);
     }
     res.status(200).send("OK");
   } catch (err) {
-    console.error("[PayTabs Webhook Error]:", err);
+    console.error("[PayTabs Webhook Error]:", err?.message);
     res.status(200).send("OK");
   }
 });
-router14.get("/payments/order/:orderId", (req, res) => {
+router14.get("/payments/order/:orderId", async (req, res) => {
   const orderId = req.params.orderId;
-  const order = paymentOrdersStore.get(orderId);
-  if (!order) {
-    res.status(404).json({ error: "\u0627\u0644\u0637\u0644\u0628 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F" });
+  try {
+    const { rows } = await pool4.query(
+      "SELECT * FROM payment_sessions WHERE cart_id = $1 OR order_number = $1 LIMIT 1",
+      [orderId]
+    );
+    if (rows.length > 0) {
+      const row = rows[0];
+      res.json({
+        id: row.cart_id,
+        orderNumber: row.order_number || row.cart_id,
+        tranRef: row.tran_ref,
+        customer: {
+          name: row.customer_name,
+          phone: row.customer_phone,
+          email: row.customer_email
+        },
+        items: row.items_json || [],
+        totalPrice: Number(row.total_price),
+        currency: row.currency,
+        status: row.status
+      });
+      return;
+    }
+    const { rows: orderRows } = await pool4.query(
+      "SELECT * FROM store_orders WHERE order_number = $1 OR notes LIKE $2 LIMIT 1",
+      [orderId, `%${orderId}%`]
+    );
+    if (orderRows.length > 0) {
+      const o = orderRows[0];
+      res.json({
+        id: o.order_number,
+        orderNumber: o.order_number,
+        tranRef: o.paytabs_tran_ref,
+        customer: {
+          name: o.customer_name,
+          phone: o.customer_phone || o.contact_whatsapp,
+          email: o.customer_email
+        },
+        items: o.items_json || [{ name: o.game_name || o.product_type, price: Number(o.customer_paid), quantity: 1 }],
+        totalPrice: Number(o.customer_paid),
+        currency: "USD",
+        status: "completed"
+      });
+      return;
+    }
+  } catch (e) {
+    console.error("[Get Payment Order DB Error]:", e?.message);
+  }
+  const fallback = paymentOrdersStore.get(orderId);
+  if (fallback) {
+    res.json(fallback);
     return;
   }
-  res.json(order);
+  res.status(404).json({ error: "\u0627\u0644\u0637\u0644\u0628 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F" });
 });
-router14.get("/admin/payment-orders", (req, res) => {
+router14.get("/admin/payment-orders", async (req, res) => {
   if (!verifyToken(req.headers.authorization)) {
     res.status(401).json({ error: "\u063A\u064A\u0631 \u0645\u0635\u0631\u062D" });
     return;
   }
-  const list = Array.from(paymentOrdersStore.values()).sort((a, b) => b.timestamp - a.timestamp);
-  res.json({ orders: list, total: list.length });
+  try {
+    const { rows } = await pool4.query(
+      "SELECT * FROM payment_sessions ORDER BY created_at DESC LIMIT 100"
+    );
+    res.json({ orders: rows, total: rows.length });
+  } catch (e) {
+    res.status(500).json({ error: e?.message });
+  }
 });
 var payments_default = router14;
 

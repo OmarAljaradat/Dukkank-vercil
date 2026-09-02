@@ -10,6 +10,8 @@ export function PaymentResultModal() {
     const [status, setStatus] = useState("success"); // "success" | "declined"
     const [declineReason, setDeclineReason] = useState("");
     const [order, setOrder] = useState(null);
+    const [orderId, setOrderId] = useState("");
+    const [orderNumber, setOrderNumber] = useState("");
     const { format } = useCurrency();
     const { clear, items } = useCart();
     const { addOrderToHistory } = useCustomer();
@@ -17,11 +19,14 @@ export function PaymentResultModal() {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const pStatus = params.get("payment");
-        const orderId = params.get("orderId");
+        const oId = params.get("orderId") || "";
+        const oNum = params.get("orderNumber") || "";
         const reason = params.get("reason");
 
         if (pStatus === "success" || pStatus === "declined") {
             setStatus(pStatus);
+            setOrderId(oId);
+            setOrderNumber(oNum);
             setDeclineReason(reason || "تم رفض المعاملة من البنك المعالج (يرجى التأكد من رصيد البطاقة وسريانها)");
             setOpen(true);
 
@@ -29,20 +34,20 @@ export function PaymentResultModal() {
                 // Clear cart only on successful payment!
                 clear();
 
-                if (orderId) {
-                    apiGetPaymentOrder(orderId)
+                if (oId) {
+                    apiGetPaymentOrder(oId)
                         .then((data) => {
                             setOrder(data);
                             addOrderToHistory({
-                                id: data.id || orderId,
-                                items: (data.items || []).map((i) => i.name || i.title || "منتج رقمي"),
-                                total: format(data.totalPrice || 0),
+                                id: data?.orderNumber || data?.id || oNum || oId,
+                                items: (data?.items || []).map((i) => i.name || i.title || "منتج رقمي"),
+                                total: format(data?.totalPrice || 0),
                                 status: "مكتمل",
                             });
                         })
                         .catch(() => {
                             addOrderToHistory({
-                                id: orderId,
+                                id: oNum || oId,
                                 items: ["طلب تم تأكيده بالدفع"],
                                 total: "تم الدفع",
                                 status: "مكتمل",
@@ -82,25 +87,29 @@ export function PaymentResultModal() {
                     </h2>
                     <p className="text-sm text-[hsl(var(--brand-ink))]/70 leading-relaxed">
                         {isSuccess
-                            ? "شكراً لك! تم استلام دفعتك وتأكيد طلبك عبر **PayTabs** بنجاح."
+                            ? "شكراً لك! تم استلام دفعتك وتأكيد طلبك عبر بوابة الدفع بنجاح. جاري تسليم طلبك بأسرع وقت."
                             : declineReason}
                     </p>
                 </div>
 
-                {order && (
+                {(order || orderId || orderNumber) && (
                     <div className="bg-[hsl(var(--brand-cream))]/60 rounded-2xl p-4 border border-[hsl(var(--brand-ink))]/10 text-right space-y-2 text-xs">
                         <div className="flex justify-between border-b border-[hsl(var(--brand-ink))]/10 pb-2">
-                            <span className="text-[hsl(var(--brand-ink))]/60">رقم الفاتورة:</span>
-                            <span className="font-mono font-bold text-[hsl(var(--brand-blue-deep))]">{order.id}</span>
+                            <span className="text-[hsl(var(--brand-ink))]/60">رقم الطلب والفاتورة:</span>
+                            <span className="font-mono font-bold text-[hsl(var(--brand-blue-deep))]">
+                                {order?.orderNumber || orderNumber || order?.id || orderId}
+                            </span>
                         </div>
-                        <div className="flex justify-between border-b border-[hsl(var(--brand-ink))]/10 pb-2">
-                            <span className="text-[hsl(var(--brand-ink))]/60">اسم العميل:</span>
-                            <span className="font-bold text-[hsl(var(--brand-ink))]">{order.customer?.name}</span>
-                        </div>
+                        {order?.customer?.name && (
+                            <div className="flex justify-between border-b border-[hsl(var(--brand-ink))]/10 pb-2">
+                                <span className="text-[hsl(var(--brand-ink))]/60">اسم العميل:</span>
+                                <span className="font-bold text-[hsl(var(--brand-ink))]">{order.customer.name}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between">
                             <span className="text-[hsl(var(--brand-ink))]/60">حالة العملية:</span>
                             <span className={`font-bold ${isSuccess ? "text-emerald-600" : "text-red-600"}`}>
-                                {isSuccess ? `مكتملة (${format(order.totalPrice)})` : "مرفوضة من البنك"}
+                                {isSuccess ? `مدفوعة ومكتملة بنجاح ✅ ${order?.totalPrice ? `(${format(order.totalPrice)})` : ""}` : "مرفوضة من البنك"}
                             </span>
                         </div>
                     </div>
