@@ -31,7 +31,6 @@ import {
     Sparkles,
     Gift,
     Zap,
-    TrendingUp,
     HeartHandshake,
     Instagram,
 } from "lucide-react";
@@ -70,12 +69,6 @@ async function validateCoupon(code, total) {
     }
     return { error: "كود الخصم غير صحيح أو منتهي" };
 }
-
-const UPSELL_PRODUCTS = [
-    { id: "upsell-psplus", title: "اشتراك PlayStation Plus فاخر (12 شهر)", price: 24.99, badge: "خصم 15% 🏷️", icon: "⭐" },
-    { id: "upsell-fc26",   title: "EA Sports FC 26 — نسخة الألتيميت",        price: 19.99, badge: "الأكثر طلباً 🔥", icon: "⚽" },
-    { id: "upsell-gtav",   title: "Grand Theft Auto V — PS5 Edition",        price: 12.00, badge: "عروض الأسبوع 💥", icon: "🚗" },
-];
 
 export default function AllCartPage() {
     const { items, totalPrice, totalQty, inc, dec, remove, clear, add: addToCart } = useCart();
@@ -401,43 +394,6 @@ export default function AllCartPage() {
                                         </button>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* FEATURE 1: SMART UPSELLING & FREQUENTLY BOUGHT TOGETHER */}
-                            <div className="bg-white dark:bg-white/[0.04] rounded-3xl border border-[hsl(var(--brand-ink))]/10 p-6 space-y-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="font-extrabold text-base text-[hsl(var(--brand-ink))] flex items-center gap-2">
-                                        <TrendingUp className="w-5 h-5 text-amber-500" />
-                                        <span>منتجات يشتريها العملاء عادة مع هذا الطلب 🔥</span>
-                                    </h3>
-                                    <span className="text-[11px] text-amber-600 font-bold bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-full">خصومات فورية</span>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {UPSELL_PRODUCTS.map((prod) => (
-                                        <div key={prod.id} className="bg-[hsl(var(--brand-cream))]/60 dark:bg-white/[0.04] p-4 rounded-2xl border border-[hsl(var(--brand-ink))]/10 space-y-3 flex flex-col justify-between">
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-xl">{prod.icon}</span>
-                                                    <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-extrabold text-[10px]">{prod.badge}</span>
-                                                </div>
-                                                <h4 className="font-extrabold text-xs text-[hsl(var(--brand-ink))] leading-snug">{prod.title}</h4>
-                                                <div className="font-black text-xs text-[hsl(var(--brand-red))]">{format(prod.price)}</div>
-                                            </div>
-
-                                            <button
-                                                onClick={() => {
-                                                    addToCart({ key: prod.id, title: prod.title, price: prod.price, quantity: 1 });
-                                                    toast.success(`تمت إضافة ${prod.title} للسلة!`);
-                                                }}
-                                                className="w-full h-9 rounded-xl bg-[hsl(var(--brand-blue-deep))] text-white text-[11px] font-bold flex items-center justify-center gap-1 shadow-sm hover:scale-[1.02] active:scale-95 transition-all"
-                                            >
-                                                <Plus className="w-3.5 h-3.5" />
-                                                <span>إضافة للسلة 🛒</span>
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
 
                         </div>
