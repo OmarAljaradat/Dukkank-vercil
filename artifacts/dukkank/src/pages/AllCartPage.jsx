@@ -147,15 +147,49 @@ export default function AllCartPage() {
             toast.error("السلة فارغة، يرجى إضافة ألعاب أولاً");
             return;
         }
+
+        // 1. الإلزام بإنشاء حساب أو تسجيل الدخول
+        if (!customer) {
+            toast.error("يلزم تسجيل الدخول أو إنشاء حساب أولاً لمتابعة الطلب واستلام الحساب الرقمي 🔐");
+            setAuthOpen(true);
+            return;
+        }
+
+        // 2. التحقق من الاسم ورقم الهاتف
+        const effectiveName = customerName.trim() || customer?.name;
+        const effectivePhone = customerPhone.trim() || customer?.phone;
+
+        if (!effectiveName || effectiveName === "عميل دُكانك") {
+            toast.error("يرجى إدخال اسمك الكريم لإصدار الفاتورة والضمان");
+            return;
+        }
+
+        const cleanPhone = (effectivePhone || "").replace(/\D/g, "");
+        if (!cleanPhone || cleanPhone.length < 8) {
+            toast.error("يرجى إدخال رقم هاتف / واتساب صالح لتسليم الحساب");
+            return;
+        }
+
         setShowCurrencyNotice(true);
     };
 
     const handleExecuteCheckout = async () => {
         if (items.length === 0) return;
 
-        const effectiveName = customerName.trim() || customer?.name || "عميل دُكانك";
-        const effectivePhone = customerPhone.trim() || customer?.phone || "0791234567";
-        const effectiveEmail = customerEmail.trim() || customer?.email || "customer@dukkank.com";
+        if (!customer) {
+            toast.error("يلزم تسجيل الدخول أو إنشاء حساب أولاً 🔐");
+            setAuthOpen(true);
+            return;
+        }
+
+        const effectiveName = customerName.trim() || customer?.name;
+        const effectivePhone = customerPhone.trim() || customer?.phone;
+        const effectiveEmail = customerEmail.trim() || customer?.email || `${effectivePhone || "cust"}@dukkank.com`;
+
+        if (!effectiveName || !effectivePhone) {
+            toast.error("يرجى التأكد من كتابة الاسم ورقم الهاتف للمتابعة");
+            return;
+        }
 
         setPayLoading(true);
         try {
@@ -406,25 +440,75 @@ export default function AllCartPage() {
                                     <span>تفاصيل المشتري وإتمام الدفع</span>
                                 </h3>
 
+                                {/* ── Account Status Banner ── */}
+                                {customer ? (
+                                    <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-500/25 flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-1.5 text-xs font-black text-emerald-800 dark:text-emerald-300">
+                                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                                <span>حساب موثق: {customer.name || "عميل دُكانك"}</span>
+                                            </div>
+                                            <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400 font-semibold dir-ltr text-right">
+                                                {customer.phone || customer.email}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAuthOpen(true)}
+                                            className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer px-2 py-1 rounded-lg bg-emerald-100/60 dark:bg-emerald-900/40"
+                                        >
+                                            تعديل الحساب
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-500/30 space-y-2.5">
+                                        <div className="flex items-center gap-2 text-xs font-black text-amber-900 dark:text-amber-300">
+                                            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                                            <span>يلزم إنشاء حساب أو تسجيل الدخول للمتابعة</span>
+                                        </div>
+                                        <p className="text-[11px] text-amber-800/80 dark:text-amber-400 leading-relaxed font-semibold">
+                                            لحفظ مشترياتك، وتفعيل الضمان الذهبي، واستلام بيانات الحساب، يجب تسجيل الدخول أو إنشاء حساب جديد.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAuthOpen(true)}
+                                            className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                                        >
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                            <span>تسجيل الدخول / إنشاء حساب الآن 🔑</span>
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="space-y-3">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">الاسم الكامل (اختياري)</label>
+                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/80 flex items-center gap-1">
+                                            <span>الاسم الكامل</span>
+                                            <span className="text-red-500 text-xs">*</span>
+                                            <span className="text-[10px] text-[hsl(var(--brand-ink))]/50 font-normal">(مطلوب للفاتورة والضمان)</span>
+                                        </label>
                                         <input
                                             type="text"
                                             value={customerName}
                                             onChange={(e) => setCustomerName(e.target.value)}
-                                            placeholder="أدخل اسمك الكامل (افتراضي: عميل دُكانك)"
+                                            placeholder="أدخل اسمك الكريم"
+                                            required
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-xs font-bold focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]"
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">رقم الهاتف / الواتساب (اختياري)</label>
+                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/80 flex items-center gap-1">
+                                            <span>رقم الواتساب / الهاتف</span>
+                                            <span className="text-red-500 text-xs">*</span>
+                                            <span className="text-[10px] text-[hsl(var(--brand-ink))]/50 font-normal">(مطلوب لإرسال الحساب)</span>
+                                        </label>
                                         <input
                                             type="tel"
                                             value={customerPhone}
                                             onChange={(e) => setCustomerPhone(e.target.value)}
-                                            placeholder="079... أو 00962..."
+                                            placeholder="مثال: 079... أو 00962..."
+                                            required
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-xs font-bold focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]"
                                         />
                                     </div>
@@ -442,7 +526,7 @@ export default function AllCartPage() {
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">البريد الإلكتروني (اختياري)</label>
+                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">البريد الإلكتروني (اختياري / للفاتورة الإلكترونية)</label>
                                         <input
                                             type="email"
                                             value={customerEmail}
@@ -451,8 +535,6 @@ export default function AllCartPage() {
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-xs font-bold focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]"
                                         />
                                     </div>
-
-                                    {/* GIFT ORDER TOGGLE (Temporarily Paused / Coming Soon) */}
 
                                 </div>
 
@@ -487,10 +569,19 @@ export default function AllCartPage() {
                                     onClick={handlePreCheckout}
                                     data-testid="checkout-pay-button"
                                     disabled={payLoading}
-                                    className="w-full h-13 rounded-2xl bg-gradient-to-r from-[hsl(var(--brand-blue-deep))] to-blue-700 text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                                    className={`w-full h-13 rounded-2xl text-white font-extrabold text-sm shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${
+                                        !customer
+                                            ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800"
+                                            : "bg-gradient-to-r from-[hsl(var(--brand-blue-deep))] to-blue-700"
+                                    }`}
                                 >
                                     {payLoading ? (
                                         <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : !customer ? (
+                                        <>
+                                            <Lock className="w-4 h-4" />
+                                            <span>تسجيل الدخول والمتابعة للدفع 🔐</span>
+                                        </>
                                     ) : (
                                         <>
                                             <Lock className="w-4 h-4" />
