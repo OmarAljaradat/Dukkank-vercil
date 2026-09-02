@@ -47531,7 +47531,7 @@ var DEFAULT_GAMES = [
     "id": "ea-sports-fc-27",
     "name": "EA SPORTS FC 27",
     "sub": "\u0627\u0646\u0637\u0644\u0627\u0642\u0629 \u0627\u0644\u0645\u0648\u0633\u0645 \u0627\u0644\u0643\u0631\u0648\u064A \u0627\u0644\u062C\u062F\u064A\u062F \u2014 \u0645\u062A\u0639\u0629 \u0643\u0631\u0629 \u0627\u0644\u0642\u062F\u0645 \u0627\u0644\u062D\u0642\u064A\u0642\u064A\u0629 \u0648 Ultimate Team",
-    "image": "/games/ea-sports-fc-27.jpg",
+    "image": "/games/fc27-cover.jpg",
     "gradientFrom": "#059669",
     "gradientTo": "#022c22",
     "five": 39,

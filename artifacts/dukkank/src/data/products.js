@@ -92,7 +92,7 @@ export const GAMES = [
         "id": "ea-sports-fc-27",
         "name": "EA SPORTS FC 27",
         "sub": "انطلاقة الموسم الكروي الجديد — متعة كرة القدم الحقيقية و Ultimate Team",
-        "image": "/games/ea-sports-fc-27.jpg",
+        "image": "/games/fc27-cover.jpg",
         "gradientFrom": "#059669",
         "gradientTo": "#022c22",
         "five": 39,
