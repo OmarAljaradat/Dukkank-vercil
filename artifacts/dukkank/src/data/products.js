@@ -131,7 +131,7 @@ export const GAMES = [
         "id": "gta-6",
         "name": "Grand Theft Auto VI (GTA 6)",
         "sub": "الإصدار الأضخم في تاريخ الألعاب — رحلة ملحمية في عالم فايس سيتي المفتوح",
-        "image": "/games/gta-6.jpg",
+        "image": "/games/gta6-cover.jpg",
         "gradientFrom": "#db2777",
         "gradientTo": "#4c1d95",
         "five": 45,

@@ -47570,7 +47570,7 @@ var DEFAULT_GAMES = [
     "id": "gta-6",
     "name": "Grand Theft Auto VI (GTA 6)",
     "sub": "\u0627\u0644\u0625\u0635\u062F\u0627\u0631 \u0627\u0644\u0623\u0636\u062E\u0645 \u0641\u064A \u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u2014 \u0631\u062D\u0644\u0629 \u0645\u0644\u062D\u0645\u064A\u0629 \u0641\u064A \u0639\u0627\u0644\u0645 \u0641\u0627\u064A\u0633 \u0633\u064A\u062A\u064A \u0627\u0644\u0645\u0641\u062A\u0648\u062D",
-    "image": "/games/gta-6.jpg",
+    "image": "/games/gta6-cover.jpg",
     "gradientFrom": "#db2777",
     "gradientTo": "#4c1d95",
     "five": 45,
