@@ -148,14 +148,7 @@ export default function AllCartPage() {
             return;
         }
 
-        // 1. الإلزام بإنشاء حساب أو تسجيل الدخول
-        if (!customer) {
-            toast.error("يلزم تسجيل الدخول أو إنشاء حساب أولاً لمتابعة الطلب واستلام الحساب الرقمي 🔐");
-            setAuthOpen(true);
-            return;
-        }
-
-        // 2. التحقق من الاسم ورقم الهاتف
+        // 1. التحقق من الاسم ورقم الهاتف (بدون إلزام بإنشاء حساب)
         const effectiveName = customerName.trim() || customer?.name;
         const effectivePhone = customerPhone.trim() || customer?.phone;
 
@@ -175,12 +168,6 @@ export default function AllCartPage() {
 
     const handleExecuteCheckout = async () => {
         if (items.length === 0) return;
-
-        if (!customer) {
-            toast.error("يلزم تسجيل الدخول أو إنشاء حساب أولاً 🔐");
-            setAuthOpen(true);
-            return;
-        }
 
         const effectiveName = customerName.trim() || customer?.name;
         const effectivePhone = customerPhone.trim() || customer?.phone;
@@ -461,21 +448,20 @@ export default function AllCartPage() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-500/30 space-y-2.5">
-                                        <div className="flex items-center gap-2 text-xs font-black text-amber-900 dark:text-amber-300">
-                                            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                                            <span>يلزم إنشاء حساب أو تسجيل الدخول للمتابعة</span>
+                                    <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/20 border border-sky-500/20 space-y-2">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-sky-900 dark:text-sky-300">
+                                            <Sparkles className="w-4 h-4 text-sky-500 shrink-0" />
+                                            <span>أكمل طلبك بدون حساب، أو سجّل لحفظ مشترياتك</span>
                                         </div>
-                                        <p className="text-[11px] text-amber-800/80 dark:text-amber-400 leading-relaxed font-semibold">
-                                            لحفظ مشترياتك، وتفعيل الضمان الذهبي، واستلام بيانات الحساب، يجب تسجيل الدخول أو إنشاء حساب جديد.
+                                        <p className="text-[11px] text-sky-800/70 dark:text-sky-400 leading-relaxed font-medium">
+                                            يمكنك الشراء مباشرة بكتابة اسمك ورقمك فقط. إنشاء حساب يتيح لك تتبع الطلبات وتفعيل الضمان.
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => setAuthOpen(true)}
-                                            className="w-full h-10 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                                            className="w-full h-9 rounded-xl bg-sky-100 hover:bg-sky-200 dark:bg-sky-900/40 dark:hover:bg-sky-900/60 text-sky-800 dark:text-sky-200 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                         >
-                                            <Sparkles className="w-3.5 h-3.5" />
-                                            <span>تسجيل الدخول / إنشاء حساب الآن 🔑</span>
+                                            <span>تسجيل الدخول / إنشاء حساب (اختياري)</span>
                                         </button>
                                     </div>
                                 )}
