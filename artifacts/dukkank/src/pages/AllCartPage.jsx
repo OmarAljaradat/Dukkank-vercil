@@ -163,6 +163,11 @@ export default function AllCartPage() {
             return;
         }
 
+        if (!customerInstagram.trim()) {
+            toast.error("يرجى إدخال حساب إنستغرام للتواصل والتسليم");
+            return;
+        }
+
         setShowCurrencyNotice(true);
     };
 
@@ -500,12 +505,16 @@ export default function AllCartPage() {
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/70">حساب إنستغرام للتواصل والتسليم (اختياري)</label>
+                                        <label className="text-xs font-bold text-[hsl(var(--brand-ink))]/80 flex items-center gap-1">
+                                            <span>حساب إنستغرام للتواصل والتسليم</span>
+                                            <span className="text-red-500 text-xs">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             value={customerInstagram}
                                             onChange={(e) => setCustomerInstagram(e.target.value)}
                                             placeholder="@your_instagram"
+                                            required
                                             className="w-full h-11 px-3.5 rounded-xl border border-[hsl(var(--brand-ink))]/15 bg-transparent text-xs font-bold focus:outline-none focus:border-[hsl(var(--brand-blue-deep))]"
                                             dir="ltr"
                                         />
