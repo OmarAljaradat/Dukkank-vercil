@@ -251,21 +251,16 @@ const loadLocal = (key, fallback) => {
     }
 };
 
-// Persistent User Override System (Never allow serverless cold start to overwrite explicit admin choices)
-const loadOverrides = () => {
-    try {
-        const item = localStorage.getItem("dukkank_admin_overrides_v2");
-        return item ? JSON.parse(item) : { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {}, promo: {} };
-    } catch {
-        return { sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {}, promo: {} };
-    }
-};
+// Wipe legacy localStorage override keys that caused multi-device sync mismatch
+try {
+    localStorage.removeItem("dukkank_admin_overrides_v2");
+    localStorage.removeItem("dukkank_overrides");
+    localStorage.removeItem("dukkank_theme_overrides");
+    localStorage.removeItem("dukkank_live_sections");
+} catch (_) {}
 
-const saveOverrides = (overrides) => {
-    try {
-        localStorage.setItem("dukkank_admin_overrides_v2", JSON.stringify(overrides));
-    } catch {}
-};
+const loadOverrides = () => ({ sections: {}, subscriptions: {}, games: {}, theme: {}, launch: {}, promo: {} });
+const saveOverrides = () => {};
 
 export function DataProvider({ children }) {
     const [store, setStoreState] = useState(() => loadLocal("dukkank_live_store", FALLBACK_STORE));
@@ -307,15 +302,6 @@ export function DataProvider({ children }) {
 
     const setStore = (val) => { setStoreState(val); saveLocal("dukkank_live_store", val); };
     const setGames = (val) => {
-        if (Array.isArray(val)) {
-            const overrides = loadOverrides();
-            val.forEach(g => {
-                if (g && g.id) {
-                    overrides.games[g.id] = { hidden: !!g.hidden, available: g.available !== false, updatedAt: Date.now() };
-                }
-            });
-            saveOverrides(overrides);
-        }
         setGamesState(val);
         saveLocal("dukkank_live_games", val);
         setAdminGamesState(val);
@@ -324,15 +310,6 @@ export function DataProvider({ children }) {
     const setAdminGames = (val) => { setAdminGamesState(val); saveLocal("dukkank_live_admin_games", val); };
     
     const setSubscriptions = (val) => {
-        if (Array.isArray(val)) {
-            const overrides = loadOverrides();
-            val.forEach(s => {
-                if (s && s.id) {
-                    overrides.subscriptions[s.id] = { visible: s.visible !== false, hidden: !!s.hidden, updatedAt: Date.now() };
-                }
-            });
-            saveOverrides(overrides);
-        }
         setSubscriptionsState(val);
         saveLocal("dukkank_live_subscriptions", val);
     };
@@ -340,25 +317,11 @@ export function DataProvider({ children }) {
     const setBundles = (val) => { setBundlesState(val); saveLocal("dukkank_live_bundles", val); };
     
     const setSections = (val) => {
-        if (Array.isArray(val)) {
-            const overrides = loadOverrides();
-            val.forEach(s => {
-                if (s && s.id) {
-                    overrides.sections[s.id] = { visible: s.visible !== false, updatedAt: Date.now() };
-                }
-            });
-            saveOverrides(overrides);
-        }
         setSectionsState(val);
         saveLocal("dukkank_live_sections", val);
     };
 
     const setPromo = (val) => {
-        if (val && typeof val === "object") {
-            const overrides = loadOverrides();
-            overrides.promo = { ...val, updatedAt: Date.now() };
-            saveOverrides(overrides);
-        }
         setPromoState(val);
         saveLocal("dukkank_live_promo", val);
         const token = getToken();
@@ -381,21 +344,11 @@ export function DataProvider({ children }) {
     const setContent = (val) => { setContentState(val); saveLocal("dukkank_live_content", val); };
     const setSiteSettings = (val) => { setSiteSettingsState(val); saveLocal("dukkank_live_site_settings", val); };
     const setLaunchAnnouncement = (val) => {
-        if (val && typeof val === "object") {
-            const overrides = loadOverrides();
-            overrides.launch = { ...val, updatedAt: Date.now() };
-            saveOverrides(overrides);
-        }
         setLaunchAnnouncementState(val);
         saveLocal("dukkank_live_launch", val);
     };
 
     const setTheme = (val) => {
-        if (val && typeof val === "object") {
-            const overrides = loadOverrides();
-            overrides.theme = { ...val };
-            saveOverrides(overrides);
-        }
         setThemeState(val);
         saveLocal("dukkank_live_theme", val);
         if (val && typeof val === "object") applyTheme(val);
@@ -403,112 +356,48 @@ export function DataProvider({ children }) {
 
     const mergeSections = (fetched) => {
         if (!Array.isArray(fetched) || fetched.length === 0) return sections;
-        const overrides = loadOverrides();
-        const localCurrent = loadLocal("dukkank_live_sections", sections || FALLBACK_SECTIONS);
-        const localMap = new Map((localCurrent || []).map(s => [s.id, s]));
-
-        // Base array: if user has a custom ordering in localCurrent, preserve that order
-        const baseList = (localCurrent && localCurrent.length >= fetched.length) ? localCurrent : fetched;
-
-        return baseList.map(item => {
-            const serverMatch = fetched.find(f => f.id === item.id);
-            const localMatch = localMap.get(item.id);
-            const override = overrides.sections?.[item.id];
-
-            let visible = item.visible !== false;
-            if (override !== undefined && override.visible !== undefined) {
-                visible = override.visible;
-            } else if (localMatch !== undefined && localMatch.visible !== undefined) {
-                visible = localMatch.visible;
-            } else if (serverMatch !== undefined && serverMatch.visible !== undefined) {
-                visible = serverMatch.visible;
-            }
-
-            return {
-                ...item,
-                ...(serverMatch || {}),
-                ...(localMatch || {}),
-                visible
-            };
-        });
+        // PostgreSQL store_config is the single source of truth for ALL devices and browsers
+        return fetched.map(item => ({
+            id: item.id,
+            label: item.label || item.name || item.id,
+            name: item.name || item.label || item.id,
+            visible: item.visible !== false,
+        }));
     };
 
     const mergeSubscriptions = (fetched) => {
         if (!Array.isArray(fetched) || fetched.length === 0) return subscriptions;
-        const overrides = loadOverrides();
-        const localCurrent = loadLocal("dukkank_live_subscriptions", subscriptions || FALLBACK_SUBS);
-        const localMap = new Map((localCurrent || []).map(s => [s.id, s]));
-
         const defaultSubsMap = new Map((FALLBACK_SUBS || []).map(s => [s.id, s]));
 
         return fetched.map(item => {
-            const localMatch = localMap.get(item.id);
             const defaultSub = defaultSubsMap.get(item.id);
-            const override = overrides.subscriptions?.[item.id];
-
-            let visible = item.visible !== false;
-            let hidden = !!item.hidden;
-
-            if (override !== undefined) {
-                if (override.visible !== undefined) visible = override.visible;
-                if (override.hidden !== undefined) hidden = override.hidden;
-            } else if (localMatch !== undefined) {
-                if (localMatch.visible !== undefined) visible = localMatch.visible;
-                if (localMatch.hidden !== undefined) hidden = localMatch.hidden;
-            }
-
-            // Merge durations to preserve originalFive and originalFour official store prices
             const mergedDurations = (item.durations || defaultSub?.durations || []).map((d, idx) => {
-                const localDur = localMatch?.durations?.[idx] || {};
                 const defaultDur = defaultSub?.durations?.[idx] || {};
                 return {
                     ...defaultDur,
-                    ...localDur,
-                    ...d, // Server fetched duration takes priority
-                    originalFour: d.originalFour ?? localDur.originalFour ?? defaultDur.originalFour,
-                    originalFive: d.originalFive ?? localDur.originalFive ?? defaultDur.originalFive,
+                    ...d,
+                    originalFour: d.originalFour ?? defaultDur.originalFour,
+                    originalFive: d.originalFive ?? defaultDur.originalFive,
                 };
             });
 
             return {
                 ...(defaultSub || {}),
-                ...(localMatch || {}),
-                ...item, // Server fetched item takes priority
+                ...item,
                 durations: mergedDurations,
-                visible,
-                hidden
+                visible: item.visible !== false,
+                hidden: !!item.hidden,
             };
         });
     };
 
     const mergeGames = (fetched) => {
         if (!Array.isArray(fetched) || fetched.length === 0) return games && games.length > 0 ? games : FALLBACK_GAMES;
-        const overrides = loadOverrides();
-        const localCurrent = loadLocal("dukkank_live_games", games || FALLBACK_GAMES);
-        const localMap = new Map((localCurrent || []).map(g => [g.id, g]));
-
-        return fetched.map(item => {
-            const localMatch = localMap.get(item.id);
-            const override = overrides.games?.[item.id];
-
-            let hidden = !!item.hidden;
-            let available = item.available !== false;
-
-            if (override !== undefined) {
-                if (override.hidden !== undefined) hidden = override.hidden;
-                if (override.available !== undefined) available = override.available;
-            } else if (localMatch !== undefined) {
-                if (localMatch.hidden !== undefined) hidden = localMatch.hidden;
-                if (localMatch.available !== undefined) available = localMatch.available;
-            }
-
-            return {
-                ...item,
-                ...(localMatch || {}),
-                hidden,
-                available
-            };
-        });
+        return fetched.map(item => ({
+            ...item,
+            hidden: !!item.hidden,
+            available: item.available !== false,
+        }));
     };
 
     const mergeContent = (fetched) => {
@@ -527,45 +416,30 @@ export function DataProvider({ children }) {
     };
 
     const mergePromo = (fetched) => {
-        const overrides = loadOverrides();
-        const promoOverride = overrides.promo && typeof overrides.promo === "object" ? overrides.promo : {};
-        const base = {
+        if (!fetched || typeof fetched !== "object") return promo || FALLBACK_PROMO;
+        return {
             ...FALLBACK_PROMO,
-            ...(fetched || {}),
-            ...promoOverride,
-            headerBanner: { ...FALLBACK_PROMO.headerBanner, ...(fetched?.headerBanner || {}), ...(promoOverride.headerBanner || {}) },
-            flashSale: { ...FALLBACK_PROMO.flashSale, ...(fetched?.flashSale || {}), ...(promoOverride.flashSale || {}) },
-            popupModal: { ...FALLBACK_PROMO.popupModal, ...(fetched?.popupModal || {}), ...(promoOverride.popupModal || {}) },
-            rewardBox: { ...FALLBACK_PROMO.rewardBox, ...(fetched?.rewardBox || {}), ...(promoOverride.rewardBox || {}) },
-            applePayNotice: { ...FALLBACK_PROMO.applePayNotice, ...(fetched?.applePayNotice || {}), ...(promoOverride.applePayNotice || {}) },
+            ...fetched,
+            headerBanner: { ...FALLBACK_PROMO.headerBanner, ...(fetched.headerBanner || {}) },
+            flashSale: { ...FALLBACK_PROMO.flashSale, ...(fetched.flashSale || {}) },
+            popupModal: { ...FALLBACK_PROMO.popupModal, ...(fetched.popupModal || {}) },
+            rewardBox: { ...FALLBACK_PROMO.rewardBox, ...(fetched.rewardBox || {}) },
+            applePayNotice: { ...FALLBACK_PROMO.applePayNotice, ...(fetched.applePayNotice || {}) },
         };
-        return base;
     };
 
     const mergeLaunchAnnouncement = (fetched) => {
         if (fetched && typeof fetched === "object" && !Array.isArray(fetched) && Object.keys(fetched).length > 0) {
             return fetched;
         }
-        const local = loadLocal("dukkank_live_launch", null);
-        if (local && typeof local === "object") return local;
-        const overrides = loadOverrides();
-        if (overrides.launch && Object.keys(overrides.launch).length > 0) {
-            return { ...FALLBACK_LAUNCH_ANNOUNCEMENT, ...overrides.launch };
-        }
-        return FALLBACK_LAUNCH_ANNOUNCEMENT;
+        return launchAnnouncement || FALLBACK_LAUNCH_ANNOUNCEMENT;
     };
 
     const mergeThemeData = (fetched) => {
-        const overrides = loadOverrides();
-        const userTheme = overrides.theme;
-        if (userTheme && typeof userTheme === "object" && Object.keys(userTheme).length > 0) {
-            return userTheme;
+        if (fetched && typeof fetched === "object" && Object.keys(fetched).length > 0) {
+            return fetched;
         }
-        const localTheme = loadLocal("dukkank_live_theme", {});
-        if (localTheme && typeof localTheme === "object" && Object.keys(localTheme).length > 0) {
-            return localTheme;
-        }
-        return (fetched && typeof fetched === "object") ? fetched : {};
+        return {};
     };
 
     const asArray = (v, fallback) => (Array.isArray(v) && v.length > 0 ? v : fallback);
@@ -617,26 +491,18 @@ export function DataProvider({ children }) {
             if (prom) { const m = mergePromo(prom); setPromoState(m); saveLocal("dukkank_live_promo", m); }
             if (sp) { const obj = asObject(sp, socialProof); setSocialProofState(obj); saveLocal("dukkank_live_social_proof", obj); }
             if (wat) { const obj = asObject(wat, waTemplates); setWATemplatesState(obj); saveLocal("dukkank_live_wa_templates", obj); }
-            if (rvs) {
-                const localRev = loadLocal("store_reviews_list", null);
-                if (localRev && Array.isArray(localRev) && localRev.length >= 40) {
-                    setReviewsState(localRev);
-                } else {
-                    const arr = asArray(rvs, reviews);
-                    setReviewsState(arr);
-                    saveLocal("dukkank_live_reviews", arr);
-                }
-            }
+            if (rvs) { const arr = asArray(rvs, reviews); setReviewsState(arr); saveLocal("dukkank_live_reviews", arr); }
 
             if (fqs) { const arr = asArray(fqs, faqs); setFaqsState(arr); saveLocal("dukkank_live_faqs", arr); }
             if (cnt) { const m = mergeContent(cnt); setContentState(m); saveLocal("dukkank_live_content", m); }
             if (ss) { const obj = asObject(ss, siteSettings); setSiteSettingsState(obj); saveLocal("dukkank_live_site_settings", obj); }
             if (la) { const m = mergeLaunchAnnouncement(la); setLaunchAnnouncementState(m); saveLocal("dukkank_live_launch", m); }
-            if (thm || Object.keys(loadOverrides().theme || {}).length > 0) {
+            if (thm) {
                 const finalTheme = mergeThemeData(thm);
                 if (Object.keys(finalTheme).length > 0) {
                     setThemeState(finalTheme);
                     saveLocal("dukkank_live_theme", finalTheme);
+                    applyTheme(finalTheme);
                 }
             }
 
