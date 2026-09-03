@@ -48,6 +48,34 @@ router.get("/robots.txt", (req, res) => {
   res.send(content);
 });
 
+// ── SEO Config (DB-backed, visible to all visitors) ───────────────────────────
+const DEFAULT_SEO = {
+  title: "دُكانك | متجر الاشتراكات والألعاب الرقمية",
+  description: "اشتراكات PlayStation Plus وألعاب رقمية أصلية بأفضل الأسعار، مع تسليم فوري ودعم مباشر على واتساب.",
+  keywords: "بلايستيشن بلاس, ألعاب رقمية, اشتراكات PS4 PS5, دُكانك",
+  ogImage: "",
+  siteName: "دُكانك - Dukkank",
+  siteNameEn: "Dukkank",
+  lang: "ar",
+  locale: "ar_JO",
+  canonical: "https://dukkank.com",
+  googleVerification: "",
+  robotsCustom: "",
+};
+
+router.get("/seo", async (_req, res) => {
+  const data = await dbLoad("seo", DEFAULT_SEO);
+  res.json({ ...DEFAULT_SEO, ...data });
+});
+
+router.put("/admin/seo", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const current = await dbLoad("seo", DEFAULT_SEO);
+  const updated = { ...DEFAULT_SEO, ...current, ...req.body };
+  await dbSave("seo", updated);
+  res.json(updated);
+});
+
 // ── Subscribers ───────────────────────────────────────────────────────────────
 const subscribers = new Set<string>();
 

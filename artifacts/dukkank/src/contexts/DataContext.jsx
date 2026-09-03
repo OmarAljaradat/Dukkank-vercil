@@ -297,6 +297,7 @@ export function DataProvider({ children }) {
     const [siteSettings, setSiteSettingsState] = useState(() => loadLocal("dukkank_live_site_settings", FALLBACK_SITE_SETTINGS));
     const [launchAnnouncement, setLaunchAnnouncementState] = useState(() => loadLocal("dukkank_live_launch", FALLBACK_LAUNCH_ANNOUNCEMENT));
     const [theme, setThemeState] = useState(() => loadLocal("dukkank_live_theme", {}));
+    const [seo, setSeoState] = useState(() => loadLocal("dukkank_live_seo", null));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -352,6 +353,11 @@ export function DataProvider({ children }) {
         setThemeState(val);
         saveLocal("dukkank_live_theme", val);
         if (val && typeof val === "object") applyTheme(val);
+    };
+
+    const setSeo = (val) => {
+        setSeoState(val);
+        saveLocal("dukkank_live_seo", val);
     };
 
     const mergeSections = (fetched) => {
@@ -464,6 +470,7 @@ export function DataProvider({ children }) {
                 axios.get(`${API}/site-settings?t=${t}`),
                 axios.get(`${API}/launch-announcement?t=${t}`),
                 axios.get(`${API}/theme?t=${t}`),
+                axios.get(`${API}/seo?t=${t}`),
             ]);
 
             const getVal = (idx) => (results[idx]?.status === "fulfilled" ? results[idx].value?.data : null);
@@ -482,6 +489,7 @@ export function DataProvider({ children }) {
             const ss = getVal(11);
             const la = getVal(12);
             const thm = getVal(13);
+            const seoData = getVal(14);
 
             if (s) { const obj = asObject(s, store); setStoreState(obj); saveLocal("dukkank_live_store", obj); }
             if (subs) { const m = mergeSubscriptions(subs); setSubscriptionsState(m); saveLocal("dukkank_live_subscriptions", m); }
@@ -504,6 +512,11 @@ export function DataProvider({ children }) {
                     saveLocal("dukkank_live_theme", finalTheme);
                     applyTheme(finalTheme);
                 }
+            }
+
+            if (seoData && typeof seoData === "object") {
+                setSeoState(seoData);
+                saveLocal("dukkank_live_seo", seoData);
             }
 
             const token = getToken();
@@ -597,6 +610,8 @@ export function DataProvider({ children }) {
                 setLaunchAnnouncement,
                 theme,
                 setTheme,
+                seo,
+                setSeo,
                 loading,
                 error,
                 reload: fetchAll,

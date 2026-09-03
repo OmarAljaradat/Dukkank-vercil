@@ -465,7 +465,7 @@ function VisitorTracker() {
 }
 
 function ThemeAndSeoLoader() {
-    const { theme: storeTheme } = useStoreData();
+    const { theme: storeTheme, seo: storeSeo } = useStoreData();
 
     useEffect(() => {
         if (storeTheme && typeof storeTheme === "object" && Object.keys(storeTheme).length > 0) {
@@ -478,78 +478,19 @@ function ThemeAndSeoLoader() {
         }
     }, [storeTheme]);
 
+    // Apply SEO from DB whenever it changes — works for ALL visitors on ALL devices
+    useEffect(() => {
+        const seoSource = storeSeo || getSeo();
+        applySeoData(seoSource);
+    }, [storeSeo]);
+
     useEffect(() => {
         const handleThemeChange = (e: any) => {
             if (e.detail) applyTheme(e.detail);
         };
         window.addEventListener("dukkank-theme-change", handleThemeChange);
 
-        const applySeoData = (seo: any) => {
-            if (!seo) return;
-            const currentTitle = seo.title || "دُكانك | متجر الاشتراكات والألعاب الرقمية";
-            const currentDesc = seo.description || "متجر دُكانك لشراء وتفعيل اشتراكات PlayStation Plus والألعاب الرقمية الأصلية بأفضل الأسعار مع تسليم فوري ودعم مباشر.";
-            const currentKeywords = seo.keywords || "بلايستيشن, العاب, بلس, PS Plus, دكانك, العاب رقمية, شحن كوينز";
-            const currentOgImage = seo.ogImage || "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=1200&q=80";
-
-            document.title = currentTitle;
-
-            const setMeta = (attr: string, name: string, content: string) => {
-                let tag = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
-                if (!tag) {
-                    tag = document.createElement("meta");
-                    tag.setAttribute(attr, name);
-                    document.head.appendChild(tag);
-                }
-                tag.content = content;
-            };
-
-            setMeta("name", "description", currentDesc);
-            setMeta("name", "keywords", currentKeywords);
-
-            // Open Graph (WhatsApp, Facebook, Discord)
-            setMeta("property", "og:title", currentTitle);
-            setMeta("property", "og:description", currentDesc);
-            setMeta("property", "og:image", currentOgImage);
-            setMeta("property", "og:url", window.location.href);
-            setMeta("property", "og:type", "website");
-            setMeta("property", "og:site_name", "دُكانك - Dukkank");
-
-            // Twitter Cards (X)
-            setMeta("name", "twitter:card", "summary_large_image");
-            setMeta("name", "twitter:title", currentTitle);
-            setMeta("name", "twitter:description", currentDesc);
-            setMeta("name", "twitter:image", currentOgImage);
-
-            // JSON-LD Structured Data Schema for Google Search Console
-            let schemaTag = document.querySelector("#dukkank-store-schema") as HTMLScriptElement | null;
-            if (!schemaTag) {
-                schemaTag = document.createElement("script");
-                schemaTag.id = "dukkank-store-schema";
-                schemaTag.type = "application/ld+json";
-                document.head.appendChild(schemaTag);
-            }
-            schemaTag.textContent = JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "OnlineStore",
-                "name": "دُكانك - Dukkank",
-                "description": currentDesc,
-                "url": window.location.origin,
-                "image": currentOgImage,
-                "currenciesAccepted": "USD, SAR, KWD, AED, JOD",
-                "paymentAccepted": "Credit Card, Apple Pay, Mada, Cash",
-                "priceRange": "$$",
-                "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": `${window.location.origin}/all-games?q={search_term_string}`,
-                    "query-input": "required name=search_term_string"
-                }
-            });
-        };
-
-        // Apply initially
-        applySeoData(getSeo());
-
-        // Listen to dynamic changes from SEO tab
+        // Listen for live updates from admin panel (same browser session)
         const handleSeoChange = (e: any) => {
             if (e.detail) applySeoData(e.detail);
         };
@@ -562,6 +503,91 @@ function ThemeAndSeoLoader() {
     }, []);
     return null;
 }
+
+const applySeoData = (seo: any) => {
+    if (!seo) return;
+    const currentTitle = seo.title || "دُكانك | متجر الاشتراكات والألعاب الرقمية";
+    const currentDesc = seo.description || "متجر دُكانك لشراء وتفعيل اشتراكات PlayStation Plus والألعاب الرقمية الأصلية بأفضل الأسعار مع تسليم فوري ودعم مباشر.";
+    const currentKeywords = seo.keywords || "بلايستيشن, العاب, بلس, PS Plus, دكانك, العاب رقمية, شحن كوينز";
+    const currentOgImage = seo.ogImage || "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=1200&q=80";
+    const currentSiteName = seo.siteName || "دُكانك - Dukkank";
+    const currentLang = seo.lang || "ar";
+    const currentLocale = seo.locale || "ar_JO";
+    const currentCanonical = seo.canonical || "";
+    const currentGoogleVerif = seo.googleVerification || "";
+
+    document.title = currentTitle;
+    document.documentElement.lang = currentLang;
+
+    const setMeta = (attr: string, name: string, content: string) => {
+        let tag = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
+        if (!tag) {
+            tag = document.createElement("meta");
+            tag.setAttribute(attr, name);
+            document.head.appendChild(tag);
+        }
+        tag.content = content;
+    };
+
+    const setLink = (rel: string, href: string) => {
+        let tag = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+        if (!tag) {
+            tag = document.createElement("link");
+            tag.rel = rel;
+            document.head.appendChild(tag);
+        }
+        tag.href = href;
+    };
+
+    setMeta("name", "description", currentDesc);
+    setMeta("name", "keywords", currentKeywords);
+
+    // Open Graph (WhatsApp, Facebook, Discord)
+    setMeta("property", "og:title", currentTitle);
+    setMeta("property", "og:description", currentDesc);
+    setMeta("property", "og:image", currentOgImage);
+    setMeta("property", "og:url", window.location.href);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:site_name", currentSiteName);
+    setMeta("property", "og:locale", currentLocale);
+
+    // Twitter Cards (X)
+    setMeta("name", "twitter:card", "summary_large_image");
+    setMeta("name", "twitter:title", currentTitle);
+    setMeta("name", "twitter:description", currentDesc);
+    setMeta("name", "twitter:image", currentOgImage);
+
+    // Canonical URL
+    if (currentCanonical) setLink("canonical", currentCanonical);
+
+    // Google Search Console Verification
+    if (currentGoogleVerif) setMeta("name", "google-site-verification", currentGoogleVerif);
+
+    // JSON-LD Structured Data Schema for Google Search Console
+    let schemaTag = document.querySelector("#dukkank-store-schema") as HTMLScriptElement | null;
+    if (!schemaTag) {
+        schemaTag = document.createElement("script");
+        schemaTag.id = "dukkank-store-schema";
+        schemaTag.type = "application/ld+json";
+        document.head.appendChild(schemaTag);
+    }
+    schemaTag.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "OnlineStore",
+        "name": currentSiteName,
+        "description": currentDesc,
+        "url": currentCanonical || window.location.origin,
+        "image": currentOgImage,
+        "currenciesAccepted": "USD, SAR, KWD, AED, JOD",
+        "paymentAccepted": "Credit Card, Apple Pay, Mada, Cash",
+        "priceRange": "$$",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": `${window.location.origin}/all-games?q={search_term_string}`,
+            "query-input": "required name=search_term_string"
+        }
+    });
+};
 
 function App() {
     return (

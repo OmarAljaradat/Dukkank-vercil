@@ -35,6 +35,10 @@ export const apiGetGames = () => client.get("/games").then((r) => r.data);
 export const apiGetBundles = () => client.get("/bundles").then((r) => r.data);
 export const apiGetReviews = () => client.get("/reviews").then((r) => r.data);
 export const apiGetFaqs = () => client.get("/faqs").then((r) => r.data);
+export const apiGetSeo = () => client.get("/seo").then((r) => r.data);
+
+// Admin: SEO
+export const apiSaveSeo = (data) => client.put("/admin/seo", data).then((r) => r.data);
 
 // Admin: Reviews
 export const apiCreateReview = (data) => client.post("/admin/reviews", data).then((r) => r.data);
