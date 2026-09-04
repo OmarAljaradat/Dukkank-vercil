@@ -77,7 +77,7 @@ export default function LiveVisitorsTab() {
         notifyWhatsApp: true,
         notifyGameClick: true,
         notifySearch: false,
-        notifyPageView: false,
+        notifyPageView: true,
     });
 
     const isLiveRef = useRef(isLive);

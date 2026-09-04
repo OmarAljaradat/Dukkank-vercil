@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 
 const SESSION_KEY = "dukkank_sid";
 const INTERVAL_MS = 30_000;
@@ -11,10 +11,11 @@ function getOrCreateSessionId() {
                 ? crypto.randomUUID()
                 : Math.random().toString(36).slice(2) + Date.now().toString(36);
             sessionStorage.setItem(SESSION_KEY, sid);
+            return { sid, isNew: true };
         }
-        return sid;
+        return { sid, isNew: false };
     } catch {
-        return "anon-" + Math.random().toString(36).slice(2);
+        return { sid: "anon-" + Math.random().toString(36).slice(2), isNew: true };
     }
 }
 
@@ -39,26 +40,55 @@ function detectSource() {
 
 async function sendHeartbeat(sid, source) {
     try {
+        const deviceInfo = navigator.userAgent || "";
         const res = await fetch("/api/visitors/heartbeat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId: sid, source }),
+            body: JSON.stringify({ sessionId: sid, source, deviceInfo }),
         });
         if (res.status === 403) {
-            // IP blocked — redirect away
             window.location.href = "about:blank";
         }
     } catch { /* silently ignore */ }
 }
 
+async function sendPageView(sid, source) {
+    try {
+        const deviceInfo = navigator.userAgent || "";
+        const pageUrl = window.location.pathname + window.location.search;
+        await fetch("/api/visitors/track", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                sessionId: sid,
+                eventType: "page_view",
+                eventTitle: "زيارة جديدة للموقع",
+                eventData: { source },
+                pageUrl,
+                deviceInfo,
+            }),
+        });
+    } catch { /* silently ignore */ }
+}
+
 export function useVisitorHeartbeat() {
-    const sidRef = useRef(getOrCreateSessionId());
+    const { sid, isNew } = getOrCreateSessionId();
+    const sidRef = useRef(sid);
+    const isNewRef = useRef(isNew);
     const sourceRef = useRef(detectSource());
 
     useEffect(() => {
         const sid = sidRef.current;
         const source = sourceRef.current;
+
+        // Send heartbeat immediately
         sendHeartbeat(sid, source);
+
+        // If new session → send page_view to trigger Telegram notification
+        if (isNewRef.current) {
+            sendPageView(sid, source);
+        }
+
         const id = setInterval(() => sendHeartbeat(sid, source), INTERVAL_MS);
         return () => clearInterval(id);
     }, []);

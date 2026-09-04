@@ -28,14 +28,14 @@ const DEFAULT_ORDERS_BOT: BotConfig = {
 
 const DEFAULT_RADAR_BOT: RadarBotConfig = {
   enabled: true,
-  botToken: process.env.RADAR_TELEGRAM_BOT_TOKEN || "8809778826:AAGImBVxU-E-rez4Ic3Sy_IWlde-jxi-Htw",
+  botToken: process.env.RADAR_TELEGRAM_BOT_TOKEN || "8928288709:AAGqgWtJfHzWWhE77rsEgI-lgJh99AR8l5A",
   chatId: process.env.RADAR_TELEGRAM_CHAT_ID || "1965859902",
   notifyCart: true,
   notifyCheckout: true,
   notifyWhatsApp: true,
   notifyGameClick: true,
   notifySearch: false,
-  notifyPageView: false,
+  notifyPageView: true,
 };
 
 let memoryConfig: DualTelegramConfig = {
@@ -67,14 +67,14 @@ export async function getDualTelegramConfig(): Promise<DualTelegramConfig> {
             },
             radarBot: {
               enabled: cfg.radarBot?.enabled ?? true,
-              botToken: cfg.radarBot?.botToken || DEFAULT_RADAR_BOT.botToken,
+              botToken: (cfg.radarBot?.botToken && !cfg.radarBot.botToken.startsWith("8809778826")) ? cfg.radarBot.botToken : DEFAULT_RADAR_BOT.botToken,
               chatId: cfg.radarBot?.chatId || DEFAULT_RADAR_BOT.chatId,
               notifyCart: cfg.radarBot?.notifyCart !== undefined ? !!cfg.radarBot.notifyCart : true,
               notifyCheckout: cfg.radarBot?.notifyCheckout !== undefined ? !!cfg.radarBot.notifyCheckout : true,
               notifyWhatsApp: cfg.radarBot?.notifyWhatsApp !== undefined ? !!cfg.radarBot.notifyWhatsApp : true,
               notifyGameClick: cfg.radarBot?.notifyGameClick !== undefined ? !!cfg.radarBot.notifyGameClick : true,
               notifySearch: cfg.radarBot?.notifySearch !== undefined ? !!cfg.radarBot.notifySearch : false,
-              notifyPageView: cfg.radarBot?.notifyPageView !== undefined ? !!cfg.radarBot.notifyPageView : false,
+              notifyPageView: cfg.radarBot?.notifyPageView !== undefined ? !!cfg.radarBot.notifyPageView : true,
             },
           };
           return memoryConfig;
@@ -232,6 +232,67 @@ export async function sendTelegramOrderNotification(order: any) {
   }
 }
 
+// Geo-lookup cache to avoid hammering the API
+const geoCache = new Map<string, { city: string; country: string; flag: string; org: string; ts: number }>();
+
+async function geoLookup(ip: string): Promise<{ city: string; country: string; flag: string; org: string }> {
+  const blank = { city: "غير معروف", country: "غير معروف", flag: "🌍", org: "" };
+  if (!ip || ip === "::1" || ip.startsWith("127.") || ip.startsWith("192.168.") || ip.startsWith("10.")) return blank;
+
+  const cached = geoCache.get(ip);
+  if (cached && Date.now() - cached.ts < 3600_000) return cached;
+
+  try {
+    const res = await fetch(`https://ipapi.co/${ip}/json/`, {
+      headers: { "User-Agent": "dukkank-store/1.0" },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return blank;
+    const d = await res.json() as any;
+    const countryCode = (d.country_code || "").toUpperCase();
+    // Convert country code to flag emoji
+    const flag = countryCode.length === 2
+      ? [...countryCode].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join("")
+      : "🌍";
+    const result = {
+      city: d.city || d.region || "غير معروف",
+      country: d.country_name || "غير معروف",
+      flag,
+      org: (d.org || "").replace(/^AS\d+\s*/, "").slice(0, 40),
+      ts: Date.now(),
+    };
+    geoCache.set(ip, result);
+    return result;
+  } catch {
+    return blank;
+  }
+}
+
+function parseDevice(deviceInfo: string = ""): { device: string; os: string; browser: string } {
+  const ua = deviceInfo.toLowerCase();
+  let device = "🖥️ حاسوب";
+  if (/iphone/.test(ua)) device = "📱 iPhone";
+  else if (/ipad/.test(ua)) device = "📟 iPad";
+  else if (/android.*mobile/.test(ua)) device = "📱 Android";
+  else if (/android/.test(ua)) device = "📟 Android Tablet";
+
+  let os = "غير محدد";
+  if (/windows/.test(ua)) os = "Windows";
+  else if (/mac os/.test(ua)) os = "macOS";
+  else if (/iphone os/.test(ua) || /ios/.test(ua)) os = "iOS";
+  else if (/android/.test(ua)) os = "Android";
+  else if (/linux/.test(ua)) os = "Linux";
+
+  let browser = "متصفح";
+  if (/chrome/.test(ua) && !/edg/.test(ua)) browser = "Chrome";
+  else if (/firefox/.test(ua)) browser = "Firefox";
+  else if (/safari/.test(ua) && !/chrome/.test(ua)) browser = "Safari";
+  else if (/edg/.test(ua)) browser = "Edge";
+  else if (/samsung/.test(ua)) browser = "Samsung Browser";
+
+  return { device, os, browser };
+}
+
 // ── 2. Radar & Activity Bot Dispatcher ──
 export async function sendTelegramActivityNotification(event: {
   sessionId: string;
@@ -249,7 +310,7 @@ export async function sendTelegramActivityNotification(event: {
 
   if (!enabled || !token || !chat) return { ok: false, reason: "Radar bot not configured" };
 
-  const { eventType, eventTitle, eventData, pageUrl, deviceInfo } = event;
+  const { eventType, eventTitle, eventData, pageUrl, deviceInfo, ipAddress } = event;
 
   if (eventType === "add_to_cart" && notifyCart === false) return { ok: false };
   if (eventType === "checkout_start" && notifyCheckout === false) return { ok: false };
@@ -258,6 +319,34 @@ export async function sendTelegramActivityNotification(event: {
   if (eventType === "search" && !notifySearch) return { ok: false };
   if (eventType === "page_view" && !notifyPageView) return { ok: false };
 
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString("ar-JO", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+  const dateStr = now.toLocaleDateString("ar-JO", { weekday: "long", day: "numeric", month: "long" });
+
+  // For page_view: rich message with geo + device
+  if (eventType === "page_view") {
+    const [geo, devParsed] = await Promise.all([
+      geoLookup(ipAddress || ""),
+      Promise.resolve(parseDevice(deviceInfo)),
+    ]);
+
+    const sourcePath = pageUrl || "/";
+    const source = eventData?.source && eventData.source !== "direct" ? eventData.source : null;
+    const refLine = source ? `\n🔗 <b>المصدر:</b> ${escapeHtml(source)}` : "";
+
+    const msg = `👤 <b>زائر جديد دخل المتجر!</b>
+━━━━━━━━━━━━━━━━━
+${geo.flag} <b>الموقع:</b> ${escapeHtml(geo.city)} — ${escapeHtml(geo.country)}
+${geo.org ? `🏢 <b>المزود:</b> ${escapeHtml(geo.org)}\n` : ""}${devParsed.device} <b>الجهاز:</b> ${devParsed.os} | ${devParsed.browser}
+🌐 <b>الصفحة:</b> <code>${escapeHtml(sourcePath)}</code>${refLine}
+━━━━━━━━━━━━━━━━━
+⏰ <b>الوقت:</b> ${timeStr}
+📅 <b>التاريخ:</b> ${dateStr}`;
+
+    return await postToTelegram(token, chat, msg);
+  }
+
+  // Other events — existing format
   let icon = "👀";
   let actionName = eventTitle || "نشاط جديد";
   if (eventType === "add_to_cart") { icon = "🛒"; actionName = "إضافة منتج إلى السلة"; }
@@ -266,8 +355,6 @@ export async function sendTelegramActivityNotification(event: {
   else if (eventType === "game_click") { icon = "🎮"; actionName = "تصفح واختيار لعبة"; }
   else if (eventType === "search") { icon = "🔍"; actionName = "بحث في المتجر"; }
   else if (eventType === "secondary_explainer") { icon = "ℹ️"; actionName = "استعراض شرح حساب السكندري"; }
-
-  const timeStr = new Date().toLocaleTimeString("ar-JO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
   let dataLines = "";
   if (eventData) {
